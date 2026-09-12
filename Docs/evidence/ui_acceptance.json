@@ -1,0 +1,16 @@
+{
+  "single_key_step": true,
+  "general_chat": true,
+  "trade_swap": "Totodile\nLv. 5\nFOLLOWING\n20 / 20 HP\nEmpty party slot\nEmpty party slot\nEmpty party slot\nEmpty party slot\nEmpty party slot",
+  "trade_balances": true,
+  "duel_turn_and_forfeit": true,
+  "wild_capture": true,
+  "change_lead": true,
+  "relogin_persistence": true,
+  "johto_travel": true,
+  "4k_no_page_overflow": true,
+  "browser_errors": [],
+  "bridge_errors": [],
+  "content_pack": "0a8cdb1a321bac58cdfce7e6",
+  "render_method": "Local DOM + real server WebSocket bridge; Chromium navigation policy unchanged. Native Windows/Edge launch not exercised."
+}

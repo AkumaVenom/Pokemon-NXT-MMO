@@ -1,0 +1,16 @@
+Expected failure against the unmodified attached 1.1.0 source; this is a source regression guard, not native PowerShell execution.
+
+test_bootstrap_does_not_assign_readonly_powershell_variables (bootstrap_regression.BootstrapContractTests.test_bootstrap_does_not_assign_readonly_powershell_variables) ... FAIL
+
+======================================================================
+FAIL: test_bootstrap_does_not_assign_readonly_powershell_variables (bootstrap_regression.BootstrapContractTests.test_bootstrap_does_not_assign_readonly_powershell_variables)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/17aebd1b1835/work/Pokemon_NXT_MMO_v0.1.0-alpha_Source_AutoBuild/Tests/test_auto_bootstrap.py", line 53, in test_bootstrap_does_not_assign_readonly_powershell_variables
+    self.assertIsNone(readonly_assignment.search(line),
+AssertionError: <re.Match object; span=(8, 15), match='$home ='> is not None : bootstrap_lib.ps1:91: assignment to a PowerShell automatic variable
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

@@ -1,0 +1,13 @@
+test_blank_test_has_no_changes_and_does_not_mark_saved (__main__.GuiTests.test_blank_test_has_no_changes_and_does_not_mark_saved) ... ok
+test_clipboard_paste_and_select_all_are_native (__main__.GuiTests.test_clipboard_paste_and_select_all_are_native) ... ok
+test_close_blocked_while_worker_is_active (__main__.GuiTests.test_close_blocked_while_worker_is_active) ... ok
+test_custom_confirmation_and_validation_before_worker (__main__.GuiTests.test_custom_confirmation_and_validation_before_worker) ... ok
+test_footer_controls_reachable_at_small_resolution (__main__.GuiTests.test_footer_controls_reachable_at_small_resolution) ... ok
+test_form_save_end_to_end_fake_database (__main__.GuiTests.test_form_save_end_to_end_fake_database) ... ok
+test_masking_show_toggle_and_exact_input (__main__.GuiTests.test_masking_show_toggle_and_exact_input) ... ok
+test_wrong_password_can_be_corrected_without_restarting (__main__.GuiTests.test_wrong_password_can_be_corrected_without_restarting) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.810s
+
+OK

@@ -1,0 +1,1 @@
+{"id":"kanto_3_51","region":"Kanto","name":"Sevii Isle 7","bank":3,"map":51,"width":1,"height":1,"mapType":3,"section":156,"image":"maps/kanto/3_51.png","ground":"maps/kanto/3_51_ground.png","overlay":null,"collision":[1],"elevation":[0],"behavior":[21],"warps":[],"connections":[{"direction":2,"offset":0,"target":"kanto_3_14"}],"objects":[],"spawn":[0,0],"playable":false}

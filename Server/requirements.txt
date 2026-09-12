@@ -1,0 +1,3 @@
+# Production dependency versions checked against their official package pages.
+aiohttp==3.14.3
+PyMySQL[rsa]==1.2.0

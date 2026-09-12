@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark"><meta name="description" content="Pokemon NXT MMO - an independent, server-authoritative multiplayer alpha.">
+<title>Pokemon NXT MMO</title><link rel="stylesheet" href="styles.css"><script type="module" src="app.js"></script>
+</head>
+<body>
+<div id="boot" class="boot"><div class="emblem large" aria-hidden="true"></div><h1>POKEMON <b>NXT</b> MMO</h1><p id="boot-message">Loading your adventure…</p></div>
+<main id="login" class="login-screen hidden">
+ <section class="login-story">
+  <div class="brand"><span class="emblem" aria-hidden="true"></span><div>POKEMON <b>NXT</b><small>MASSIVELY MULTIPLAYER ONLINE</small></div></div>
+  <div class="hero-copy"><span class="eyebrow">A NEW ADVENTURE. A SHARED WORLD.</span><h1>Two regions.<br>One <em>journey.</em></h1><p>Explore Kanto and Johto. Find your partner, challenge another trainer, and build your collection together.</p></div>
+  <div class="region-preview"><article><img src="assets/maps/kanto/3_0.png" alt="Extracted Pallet Town map"><div><span>KANTO</span><strong>Pallet Town</strong></div></article><article><img src="assets/maps/johto/3_0.png" alt="Extracted New Bark Town map"><div><span>JOHTO</span><strong>New Bark Town</strong></div></article></div>
+  <div class="login-foot"><span class="pill">PLAYABLE ALPHA · 0.1.0</span><span>Independent client + dedicated world server</span></div>
+ </section>
+ <section class="login-side">
+  <div class="connection-card"><span class="status-dot" id="status-dot"></span><div><strong id="connection-label">Connecting to world…</strong><small id="connection-address"></small></div><button id="reconnect" class="icon-button" title="Reconnect to the configured server" aria-label="Reconnect">↻</button></div>
+  <div class="login-panel"><span class="eyebrow">YOUR NEXT CHAPTER</span><h2 id="login-title">Welcome back, trainer.</h2><p id="login-description" class="muted">Your team is waiting. Connect to begin.</p>
+   <div class="segmented" role="tablist" aria-label="Account mode"><button id="login-tab" class="selected" role="tab" aria-selected="true">Log in</button><button id="register-tab" role="tab" aria-selected="false">Create account</button></div>
+   <form id="auth-form" autocomplete="off">
+    <label for="username">Trainer username</label><input id="username" name="username" minlength="3" maxlength="20" pattern="[A-Za-z0-9_]{3,20}" placeholder="Your trainer name" autocomplete="username" required>
+    <label for="password">Password</label><input id="password" name="password" type="password" minlength="10" maxlength="128" placeholder="At least 10 characters" autocomplete="current-password" required>
+    <section id="registration-options" class="hidden">
+     <div class="form-row"><div><label for="home">Starting region</label><select id="home"><option>Kanto</option><option>Johto</option></select></div><div><label for="appearance">Trainer appearance</label><select id="appearance"><option value="0">Red</option><option value="7">Leaf</option></select></div></div>
+     <label>Choose your first partner</label><div id="starters" class="starter-grid"></div>
+    </section>
+    <p id="auth-error" class="form-error" role="alert"></p><button id="auth-submit" type="submit" class="primary wide" disabled>Enter world <span>→</span></button>
+   </form>
+   <p class="login-note">Your username is your visible trainer name. Passwords are not saved by this client.</p>
+  </div>
+  <div class="build-note"><strong>First playable alpha</strong><span>Exploration, captures, chat, friendly duels and trading. Original story campaigns and complete battle compatibility are not included.</span></div>
+ </section>
+</main>
+<main id="game" class="game-shell hidden">
+ <header class="topbar"><div class="brand compact"><span class="emblem" aria-hidden="true"></span><div>POKEMON <b>NXT</b><small>MMO · ALPHA 0.1.0</small></div></div><div class="world-presence"><span class="status-dot online"></span><span id="world-title">World</span><span id="population" class="pill">0 / 1000</span></div><div class="account-head"><span id="latency">— ms</span><span id="trainer-name"></span><button id="logout" class="quiet small">Log out</button></div></header>
+ <section class="world-layout">
+  <div class="world-column"><div class="map-toolbar"><div><span id="map-region" class="eyebrow">KANTO</span><h2 id="map-name">Pallet Town</h2></div><div class="toolbar-actions"><span id="coords" class="muted small-text"></span><button id="zoom-out" class="icon-button" aria-label="Zoom out">−</button><span id="zoom-value">3×</span><button id="zoom-in" class="icon-button" aria-label="Zoom in">+</button><button id="atlas-button" class="secondary">World atlas <kbd>M</kbd></button></div></div>
+   <div id="viewport" class="viewport"><canvas id="world-canvas" aria-label="Pokemon multiplayer world. Move with WASD or arrow keys. Click trainers to interact."></canvas><div id="map-loading" class="map-loading hidden">Travelling…</div><div class="world-hint"><span class="key-cluster">W A S D</span><span>Move</span><b>·</b><kbd>E</kbd><span>Interact</span><b>·</b><span>Click a trainer to challenge or trade</span></div><div id="map-source" class="map-source">ROM-independent world</div></div>
+   <section class="chat-panel"><div class="chat-header"><div class="chat-tabs"><button id="chat-general" class="selected">General <small>WORLD</small></button><button id="chat-trade">Trade <small>BUY / SELL</small></button></div><span class="chat-caption">Everyone, everywhere.</span></div><div id="chat-messages" class="chat-messages" role="log" aria-live="polite" aria-relevant="additions"></div><form id="chat-form"><span id="chat-prefix">GENERAL</span><input id="chat-input" maxlength="240" autocomplete="off" placeholder="Press Enter to chat with the world…" aria-label="Chat message"><button type="submit" class="quiet small">Send ↵</button></form></section>
+  </div>
+  <aside class="sidebar"><section class="trainer-card"><div class="trainer-card-head"><span class="eyebrow">TRAINER PASSPORT</span><span class="pill mint">ONLINE</span></div><h2 id="passport-name"></h2><div class="trainer-stats"><div><span>Funds</span><strong id="money">₽ 0</strong></div><div><span>Collection</span><strong id="collection-count">1 / 240</strong></div></div></section>
+   <section class="party-panel"><div class="section-heading"><h3>Your party</h3><span id="party-count" class="muted">1 / 6</span></div><p class="mini-note">Your first partner follows you in the world.</p><div id="party-list"></div><button id="collection-button" class="quiet wide">Manage party & collection <kbd>P</kbd></button></section>
+   <section class="action-panel"><div class="action-grid"><button id="bag-button" class="secondary">Bag & supplies <kbd>B</kbd></button><button id="heal-button" class="secondary">Restore party</button><button id="search-button" class="secondary">Search for wild</button><button id="surf-button" class="secondary">Toggle surf</button></div><div class="utility-row"><button id="save-button" class="quiet small">Save</button><button id="unstuck-button" class="quiet small">Return home</button><button id="help-button" class="quiet small">Controls <kbd>?</kbd></button></div></section>
+   <div class="alpha-note"><span class="eyebrow">ALPHA FIELD SERVICES</span><p>Fast travel, field restoration and surf are available for exploration testing.</p></div>
+  </aside>
+ </section>
+ <footer class="statusbar"><span id="world-status">Authoritative world connected</span><span>PIXEL-PERFECT WORLD · HIGH-DPI INTERFACE</span><span id="render-status"></span></footer>
+</main>
+<div id="context-menu" class="context-menu hidden" role="menu"></div>
+<div id="toasts" class="toast-stack" aria-live="polite"></div>
+<dialog id="modal"><div class="modal-header"><div><span id="modal-eyebrow" class="eyebrow">POKEMON NXT MMO</span><h2 id="modal-title"></h2></div><button id="modal-close" class="icon-button" aria-label="Close dialog">×</button></div><div id="modal-body"></div></dialog>
+<dialog id="battle-dialog"><div id="battle-content"></div></dialog>
+<div id="disconnect-overlay" class="disconnect-overlay hidden"><div class="disconnect-card"><span class="eyebrow">CONNECTION ENDED</span><h2>Your journey is saved.</h2><p id="disconnect-message">The connection to the world server was lost. Return to login to reconnect.</p><p class="muted">Committed battles, purchases and trades remain in the database. Recent movement may return to the last save.</p><button id="disconnect-login" class="primary wide">Return to login</button></div></div>
+</body></html>

@@ -1,0 +1,25 @@
+{
+  "build_tools": "1.1.1",
+  "original_archive": "Pokemon_NXT_MMO_v0.1.0-alpha_Source_AutoBuild(1).zip",
+  "original_archive_sha256": "f77d2c0aedc0f520f952cb6b7ec7da7d0229284ce8687bc1352cce6363caa4d5",
+  "original_files_compared": 11873,
+  "unchanged_original_files": 11860,
+  "changed_original_files": [
+    "BUILD_ALL.bat",
+    "Build/bootstrap_lib.ps1",
+    "Build/build.py",
+    "Build/toolchains.json",
+    "CHANGELOG.md",
+    "Docs/AUTOMATIC_BUILD.md",
+    "Docs/AUTO_BUILD_TEST_REPORT.md",
+    "Docs/BUILD_FROM_SOURCE.md",
+    "README.md",
+    "START_HERE_BUILD.md",
+    "Tests/README.md",
+    "Tests/check_bootstrap_windows.ps1",
+    "Tests/test_auto_bootstrap.py"
+  ],
+  "protected_client_server_tools_files": 11810,
+  "all_protected_files_byte_identical": true,
+  "note": "Comparison before source checksum manifest regeneration and addition of 1.1.1 validation evidence. Gameplay, assets, configs, requirements and MySQL setup files are unchanged."
+}

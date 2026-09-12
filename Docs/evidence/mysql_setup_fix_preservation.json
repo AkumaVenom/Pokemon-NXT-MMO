@@ -1,0 +1,19 @@
+{
+  "compared_original": "Pokemon_NXT_MMO_v0.1.0-alpha_Source_OneClickBuild.zip",
+  "unchanged_original_files": 11839,
+  "unchanged_client_files": 11775,
+  "unchanged_world_engine_data_files": 9,
+  "changed_original_files": [
+    "CHANGELOG.md",
+    "Docs/BUILD_FROM_SOURCE.md",
+    "Docs/BUILD_TEST_REPORT.md",
+    "Docs/QUICK_START.md",
+    "README.md",
+    "START_HERE_BUILD.md",
+    "Server/2 - Configure MySQL.cmd",
+    "Server/README_SERVER.md",
+    "Server/setup_mysql.py"
+  ],
+  "missing_original_files": [],
+  "gameplay_protocol_schema_changed": false
+}

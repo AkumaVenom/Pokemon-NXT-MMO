@@ -1,0 +1,12 @@
+{
+  "baseline": "Pokemon_NXT_MMO_v0.1.0-alpha_Source_MySQLSetupFix.zip",
+  "protected_files_checked": 11790,
+  "all_unchanged": true,
+  "areas": [
+    "Client source and all assets",
+    "Server world logic/data",
+    "MySQL setup GUI/backend/password-input scripts",
+    "Both shipped configs (client is within Client)",
+    "Server requirements.txt"
+  ]
+}

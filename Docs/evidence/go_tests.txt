@@ -1,0 +1,8 @@
+=== RUN   TestReadINI
+--- PASS: TestReadINI (0.00s)
+=== RUN   TestBadINI
+--- PASS: TestBadINI (0.00s)
+=== RUN   TestNumbersAreFiniteAndBounded
+--- PASS: TestNumbersAreFiniteAndBounded (0.00s)
+PASS
+ok  	pokemon-nxt-client	0.004s

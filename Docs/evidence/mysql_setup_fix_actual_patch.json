@@ -1,0 +1,18 @@
+[
+  {
+    "original_archive": "Pokemon_NXT_MMO_v0.1.0-alpha_Complete.zip",
+    "first_apply": "passed",
+    "second_apply": "idempotent",
+    "unchanged_original_files": 26,
+    "configuration_preserved": true,
+    "native_windows_batch_executed": false
+  },
+  {
+    "original_archive": "Pokemon_NXT_MMO_v0.1.0-alpha_Source_OneClickBuild.zip",
+    "first_apply": "passed",
+    "second_apply": "idempotent",
+    "unchanged_original_files": 25,
+    "configuration_preserved": true,
+    "native_windows_batch_executed": false
+  }
+]

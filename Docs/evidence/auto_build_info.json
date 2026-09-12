@@ -1,0 +1,71 @@
+{
+  "game": "Pokemon NXT MMO",
+  "version": "0.1.0-alpha",
+  "build_tools": "1.1.0",
+  "build_id": "build-20260912-142839-454472Z",
+  "created_utc": "2026-09-12T14:31:44.848326+00:00",
+  "target": "windows/amd64",
+  "build_host": {
+    "system": "Linux",
+    "machine": "x86_64"
+  },
+  "go": "go version go1.23.2 linux/amd64",
+  "python_environment": {
+    "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+    "packages": {
+      "aiohttp": "3.13.3",
+      "PyMySQL": null,
+      "cryptography": "46.0.4"
+    }
+  },
+  "production_dependency_pins_enforced": false,
+  "content_pack": "0a8cdb1a321bac58cdfce7e6",
+  "asset_digest": "e45afd6250e6db0c9e5834eff67ab4424e4891e1b87250d0ccf742abeadb7a50",
+  "checks": {
+    "python_tests_run": 142,
+    "python_tests_passed": 141,
+    "python_tests_skipped": 1,
+    "go_tests": "passed",
+    "windows_go_vet": "passed",
+    "launcher_platform": "Linux headless shell; Windows outputs cross-compiled, not executed",
+    "http_smoke": {
+      "index_served": true,
+      "content_policy": true,
+      "no_sniff": true,
+      "frame_denial": true,
+      "bootstrap_no_secrets": true,
+      "unexpected_host_blocked": true,
+      "server_config_inaccessible": true,
+      "directory_listing_disabled": true,
+      "traversal_blocked": true,
+      "heartbeat_requires_origin_and_token": true,
+      "heartbeat_accepted": true,
+      "js_served_as_module": true,
+      "extracted_map_served": true
+    },
+    "javascript_syntax": "passed with installed Node.js"
+  },
+  "executables": [
+    {
+      "file": "Pokemon NXT MMO.exe",
+      "architecture": "Windows x64",
+      "subsystem": 2,
+      "bytes": 5959168,
+      "sha256": "6fca6328279cc21f1d5842b5fde1b79aa296d9825933ac66b47cdf78c9a4a10e"
+    },
+    {
+      "file": "Pokemon NXT World Server.exe",
+      "architecture": "Windows x64",
+      "subsystem": 3,
+      "bytes": 1798144,
+      "sha256": "88ed3c4c7fa0678cc62f86c8e375ba71fdef37902ec4a9b9027b60de96081f74"
+    }
+  ],
+  "not_verified_by_this_build": [
+    "Native Edge app UI",
+    "MySQL/MariaDB runtime and persistence",
+    "TLS deployment",
+    "1,000 concurrent network sessions"
+  ],
+  "configuration_policy": "Release templates only. Deployed Client/config.ini and Server/config.ini are not copied."
+}

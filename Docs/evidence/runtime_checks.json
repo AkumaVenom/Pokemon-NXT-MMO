@@ -1,0 +1,20 @@
+{
+  "pack": "0a8cdb1a321bac58cdfce7e6",
+  "backend": "explicit SQLite",
+  "1920x1080_at_200_percent_dpi": {
+    "dpr": 2,
+    "css": [
+      1494.6875,
+      640.09375
+    ],
+    "backing": [
+      2989,
+      1280
+    ],
+    "overflow": false
+  },
+  "dpi_js_errors": [],
+  "native_ws_reconnect_after_server_restart": true,
+  "persisted_creature_count": 2,
+  "persisted_map": "johto_3_0"
+}

@@ -1,0 +1,7 @@
+{
+  "baseline": "Pokemon_NXT_MMO_v0.1.0-alpha_Complete.zip",
+  "unchanged_client_server_tools_files": 11806,
+  "changed_client_server_tools_files": [],
+  "missing_client_server_tools_files": [],
+  "comparison": "SHA-256 equality against original complete ZIP; original prebuilt EXEs excluded. Documentation and added build files are intentionally updated."
+}

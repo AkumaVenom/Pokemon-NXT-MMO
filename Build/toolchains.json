@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "bootstrap_version": "1.1.1",
+  "verified_on": "2026-09-13",
+  "python": {
+    "version": "3.13.15",
+    "filename": "python-3.13.15-amd64.exe",
+    "url": "https://www.python.org/ftp/python/3.13.15/python-3.13.15-amd64.exe",
+    "sha256": "edec09c4853aeae9ac36efb8c9f95b6b8e2fee65eee56d9767a8b7c69c574403",
+    "publisher": "Python Software Foundation",
+    "release_page": "https://www.python.org/downloads/release/python-31315/"
+  },
+  "go": {
+    "version": "1.27.1",
+    "filename": "go1.27.1.windows-amd64.zip",
+    "url": "https://dl.google.com/go/go1.27.1.windows-amd64.zip",
+    "sha256": "a3911b5e0e1b1053f25ed0675f4c1c6aad1e2bfcf253df2b9be4caabd2edd95d",
+    "release_page": "https://go.dev/dl/?mode=json"
+  }
+}

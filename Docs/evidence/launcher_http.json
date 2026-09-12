@@ -1,0 +1,15 @@
+{
+  "index_served": true,
+  "content_policy": true,
+  "no_sniff": true,
+  "frame_denial": true,
+  "bootstrap_no_secrets": true,
+  "unexpected_host_blocked": true,
+  "server_config_inaccessible": true,
+  "directory_listing_disabled": true,
+  "traversal_blocked": true,
+  "heartbeat_requires_origin_and_token": true,
+  "heartbeat_accepted": true,
+  "js_served_as_module": true,
+  "extracted_map_served": true
+}
