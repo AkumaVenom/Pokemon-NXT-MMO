@@ -51,8 +51,15 @@ def assemble(world: dict, root: Path) -> None:
         # Stock and prices are explicit MMO rules, not extracted original shop scripts.
         price = 2100 if key in {'firestone', 'waterstone', 'thunderstone', 'leafstone'} else 4000
         world['items'][key] = {**copy.deepcopy(item), 'price': price, 'priceSource': 'mmo-adventure'}
+    additions = read(root, 'species_additions')
+    if additions.get('format') != 1:
+        raise ValueError('Unsupported additive species catalog')
+    for key, profile in additions['species'].items():
+        if key in world['species'] and (world['species'][key]['source'], world['species'][key]['sourceId']) != (profile['source'], profile['sourceId']):
+            raise ValueError('Additive species identity conflict: ' + key)
+        world['species'].setdefault(key, copy.deepcopy(profile))
     apply_learnsets(world, root)
-    world['version'] = '0.3.3-alpha'
+    world['version'] = '0.3.4-alpha'
     validate(world)
     extend_audio(world, root)
 
@@ -99,6 +106,12 @@ def extend_audio(world: dict, root: Path) -> None:
     path = root / 'Client/app/assets/audio/catalog.json'
     catalog = json.loads(path.read_text(encoding='utf-8'))
     changed = extend_move_audio(world, catalog)
+    for key, banks in read(root, 'species_additions').get('audio', {}).items():
+        for bank, clip in banks.items():
+            if bank not in ('cries', 'reverseCries') or key not in world['species'] or clip not in catalog['clips']:
+                raise ValueError('Invalid restored species audio binding: ' + key)
+            changed |= catalog[bank].get(key) != clip
+            catalog[bank][key] = clip
     for key, m in world['maps'].items():
         if key in catalog['mapMusic'] and key in catalog['mapModes'] and 'musicId' not in m:
             continue

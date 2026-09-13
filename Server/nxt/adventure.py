@@ -6,6 +6,7 @@ rules are explicitly authored MMO rules. No command accepts a client state blob.
 from __future__ import annotations
 import copy,time
 from .security import require
+from .field_moves import migrate_cuts,public_field_moves
 
 class Adventure:
  def __init__(self,content):
@@ -21,7 +22,7 @@ class Adventure:
   for k,v in defaults.items():a.setdefault(k,copy.deepcopy(v))
   require(a.get('format')==1,'This adventure save needs a newer server.')
   self.observe(state,[m['species'] for m in state['creatures']],caught=True)
-  self.visit(state,state['map']);self.refresh_unlocks(state);return state
+  self.visit(state,state['map']);self.refresh_unlocks(state);migrate_cuts(state,self.c.maps);return state
  def observe(self,state,species,caught=False):
   a=state['adventure']
   for key in species:
@@ -89,10 +90,10 @@ class Adventure:
  def public(self,state):
   a=state['adventure'];regions=[]
   labels=self.rules.get('badgeNames',{})
-  for region,name in (('kanto','Kanto / FireRed'),('johto','Johto / Sigma')):
+  for region,name in (('kanto','Kanto / FireRed'),('johto','Johto / Crystal encounters')):
    badges=[{'id':self.badge_id(g),'name':labels.get(self.badge_id(g),f'Badge {g["order"]}'),'leader':g['name'],'earned':self.badge_id(g) in a['badges'],'order':g['order'],'map':g['map']} for g in self.gyms if self.region(g['region'])==region]
    regions.append({'id':region,'name':name,'badges':badges,'nextGym':next((b for b in badges if not b['earned']),None)})
   goals=[]
   for goal in self.rules.get('goals',[]):
    current=self.goal_current(state,goal);goals.append({'id':goal['id'],'title':goal['title'],'description':goal['description'],'current':min(current,goal['target']),'target':goal['target'],'complete':current>=goal['target'],'claimed':goal['id'] in a['claimed'],'reward':goal.get('reward',{})})
-  return {'regions':regions,'goals':goals,'trainers':{'defeated':sorted(a['trainers']),'count':len(a['trainers'])},'dex':{'seen':sorted(a['seen']),'caught':sorted(a['caught'])},'visited':list(a['visited']),'unlocks':list(a['unlocks']),'pcAvailable':self.pc_available(state),'stored':len(state['creatures'])-len(state['party'])}
+  return {'fieldMoves':public_field_moves(state),'cutTrees':copy.deepcopy(a.get('cutTrees',{})),'regions':regions,'goals':goals,'trainers':{'defeated':sorted(a['trainers']),'count':len(a['trainers'])},'dex':{'seen':sorted(a['seen']),'caught':sorted(a['caught'])},'visited':list(a['visited']),'unlocks':list(a['unlocks']),'pcAvailable':self.pc_available(state),'stored':len(state['creatures'])-len(state['party'])}

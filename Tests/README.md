@@ -62,3 +62,18 @@ original 0.3.2 timer failure rather than expect a passing corrected client:
 ```sh
 node Tests/check_battle_browser.mjs /path/to/0.3.2-source --expect-broken
 ```
+
+
+## Regional encounters and personal Cut (0.3.4)
+
+`test_regional_encounters_cut.py` validates exhaustive bindings, ordinary table probabilities/levels, day periods, floor zones, restored Nidoran identities, authoritative encounter requests, both gym unlocks, legacy saves, all 120 tree collision boundaries, stale/invalid requests and owner-only save failure/relog behavior. The source-selection test now requires every republish sidecar. Tests read clean build templates, not an operator's `Server/config.ini`.
+
+`check_adventure_ui.mjs` and `check_renderer_replication.mjs` include locked/enabled Cut, single submission, stale ownership/map updates, journal licenses and actual renderer hit/sprite filtering. Run the complete Node checks alongside the Python suite (the optional browser battle script is separate):
+
+```sh
+node --test Tests/check_adventure_ui.mjs Tests/check_renderer_replication.mjs Tests/check_registration.mjs Tests/check_learnsets.mjs Tests/check_battle_fx.mjs Tests/check_audio_engine.mjs Tests/check_audio_app_integration.mjs
+```
+
+`check_cut_browser.py` starts a disposable real service/SQLite store, registers two accounts and uses the actual client, canvas click and menu handlers in Chromium. It checks both regions and fresh-page relog; no operator data is accessed. Set `NXT_BROWSER_PATH` to your installed Chromium/Edge executable and optionally `NXT_QA_OUTPUT` for screenshots. Default transport is native browser WebSocket. `NXT_QA_BRIDGE=1` explicitly selects the local DOM/asset/aiohttp bridge, without changing browser policies. The release ran the bridge mode, not native Windows/Edge/MySQL. Playwright is optional QA tooling, not a runtime dependency.
+
+Historical test reports describe their own release counts. Read `Docs/REGIONAL_ENCOUNTERS_CUT_TEST_REPORT.md` for this release's results.

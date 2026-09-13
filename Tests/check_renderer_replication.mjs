@@ -62,3 +62,20 @@ test('a current map failure clears pending entities rather than displaying stale
  const {r,requests}=harness();const pending=r.loadMap('johto_3_0',entity(1));r.scene({map:'johto_3_0',players:[entity(2)],gone:[]});
  requests[0].reject(Error('missing map'));await assert.rejects(pending,/missing map/);assert.equal(r.pendingMap,null);assert.equal(r.map,null);assert.equal(r.players.size,0);
 });
+
+test('private cut flags hide only a matching tree, not rocks, peers or another map',()=>{
+ const {r}=harness(),tree={id:7,graphics:95},rock={id:8,graphics:96};
+ r.map={...mapData('kanto_3_19'),objects:[tree,rock]};r.hits=[{kind:'npc',id:7,map:r.map.id},{kind:'npc',id:8,map:r.map.id},{kind:'player',id:2}];
+ r.setCutTrees({'kanto_3_19':[7,8]});assert.equal(r.objectVisible(tree),false);assert.equal(r.objectVisible(rock),true);assert.equal(r.objectVisible(tree,'johto_3_19'),true);assert.deepEqual(r.hits.map(h=>h.id),[8,2]);
+ assert.equal(r.map.objects.length,2);r.resetSession();assert.equal(r.cutTrees.size,0);assert.equal(r.objectVisible(tree,'kanto_3_19'),true);
+});
+test('cuts survive an in-flight map load and the next frame excludes both sprite and click target',async()=>{
+ const {r,resolve}=harness();const loading=r.loadMap('johto_3_0',entity(1));r.setCutTrees({'johto_3_0':[7]});resolve(0,'johto_3_0');await loading;
+ const tree={id:7,graphics:95,x:2,y:2},rock={id:8,graphics:96,x:3,y:2};r.map.objects=[tree,rock];
+ r.content.objects.johto={95:{image:'tree.png',width:16,height:16,frames:1},96:{image:'rock.png',width:16,height:16,frames:1}};
+ const drawn=[];r.ctx=new Proxy({drawImage:(img)=>drawn.push(img.src)}, {get:(o,k)=>k in o?o[k]:()=>{}});r.players.clear();r.active=true;r.width=400;r.height=400;r.dpr=1;r.rootFont=16;r.map.spawn=[2,2];r.frame(101);
+ assert.equal(r.objectVisible(tree),false);assert.equal(r.hits.some(h=>h.id===7),false);assert.equal(r.hits.some(h=>h.id===8),true);assert.equal(drawn.includes('assets/tree.png'),false);assert.equal(drawn.includes('assets/rock.png'),true);assert.equal(r.hits[0].map,'johto_3_0');
+});
+test('a fresh authoritative snapshot replaces rather than merges private flags',()=>{
+ const {r}=harness();r.setCutTrees({'kanto_3_19':[7,true,'8',-1,256]});assert.equal(r.cutTrees.get('kanto_3_19').size,1);r.setCutTrees({});assert.equal(r.cutTrees.size,0);r.setCutTrees(null);assert.equal(r.cutTrees.size,0);
+});

@@ -19,7 +19,7 @@ class NetworkTests(unittest.IsolatedAsyncioTestCase):
  def setUpClass(cls):
   cls.content=Content(ROOT/'Server/data/world.json');cls.hashed=password_hash(PASSWORD)
  async def asyncSetUp(self):
-  self.tmp=tempfile.TemporaryDirectory();p=Path(self.tmp.name)/'config.ini';p.write_text((ROOT/'Server/config.ini').read_text());self.s=Settings.load(p);self.s.config.set('database','backend','sqlite');self.s.config.set('security','auth_attempts_per_minute','100');self.s=dataclasses.replace(self.s,encounter_chance=0)
+  self.tmp=tempfile.TemporaryDirectory();p=Path(self.tmp.name)/'config.ini';p.write_text((ROOT/'Build/config_templates/Server/config.ini').read_text());self.s=Settings.load(p);self.s.config.set('database','backend','sqlite');self.s.config.set('security','auth_attempts_per_minute','100');self.s=dataclasses.replace(self.s,encounter_chance=0)
   self.db=Store(self.s);self.db.acquire_lease();self.service=Service(self.s,self.content,self.db);self.service.dummy=self.hashed
   for name in ('NetworkAlice','NetworkBobby'):
    self.db.create(name,self.hashed,self.service.world.initial(name,'Kanto','fr_1',0))

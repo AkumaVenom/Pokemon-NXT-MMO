@@ -20,6 +20,18 @@ spec.loader.exec_module(builder)
 
 
 class SourceSelectionTests(unittest.TestCase):
+    def test_regional_encounter_republish_sidecars_are_required_and_preserved(self):
+        names = ("encounters_firered.json", "encounters_crystal.json", "encounter_bindings.json", "species_additions.json")
+        for name in names:
+            path = "Server/data/" + name
+            self.assertIn(name, builder.SOURCE_DATA_FILES)
+            self.assertIn(path, builder.REQUIRED_SOURCE)
+            self.assertTrue(builder.is_source_file(PurePosixPath(path)))
+            self.assertTrue((ROOT / path).is_file())
+        for path in ("Tools/publish_encounters.py", "Tools/crystal_encounter_catalog.py", "Server/nxt/encounters.py", "Server/nxt/field_moves.py"):
+            self.assertIn(path, builder.REQUIRED_SOURCE)
+            self.assertTrue(builder.is_source_file(PurePosixPath(path)))
+
     def test_required_editable_source_is_included(self):
         for name in (
             "Client/launcher/main.go", "Server/launcher/go.mod", "Server/nxt/store.py",

@@ -58,7 +58,7 @@ LENGTHS={0x00:1,0x01:1,0x0f:6,0x10:3,0x11:6,0x12:6,0x13:6,0x14:3,0x15:9,
  0x66:1,0x67:5,0x68:1,0x69:1,0x6a:1,0x6b:1,0x6c:1,0x6d:1,0x6e:3,0x6f:5,0x70:6,0x71:6}
 
 
-def normalize(name):return re.sub(r'[^a-z0-9]','',name.lower())
+def normalize(name):return re.sub(r'[^a-z0-9]','',name.lower().replace('♀','female').replace('♂','male'))
 
 def species_lookup(world,manifest,tag):
  byname={normalize(s['name']):key for key,s in world['species'].items()}

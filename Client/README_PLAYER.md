@@ -11,3 +11,10 @@ Keep display pixel_scale and ui_scale at zero for automatic 4K-aware presentatio
 This is a private networking/exploration alpha, not the complete original FireRed/Sigma story. Original campaign scripting, audio, evolution, complete abilities/moves and trainer bots are not implemented. The application can use only the matching server content pack. It has no offline mode, auto-updater or password recovery.
 
 The Windows executable is an unsigned, cross-built development binary; native Windows execution still requires acceptance testing. Follow your normal security review policy. The alpha's LAN plaintext mode is not encrypted; use isolated testing and unique passwords, or the administrator's correctly configured direct TLS server. The extracted art remains third-party material; this package does not grant public redistribution rights.
+
+
+## Regional wild Pokémon and Cut (0.3.4)
+
+Wild Pokémon follow the current map's FireRed/Crystal ordinary encounter table, not a universal starter-area list. Crystal locations change with the server's morning/day/night period. Surf encounters are separate from grass/caves; an encounter-free location does not invent a fallback.
+
+Earn the Cascade Badge from Misty to unlock Kanto Cut, or the Hive Badge from Bugsy to unlock Johto Cut. These are independent field licenses, visible in the journal. No selected battle move is automatically replaced. Approach and click a small HM tree: locked Cut is disabled; enabled Cut removes the tree and its collision for your character after saving. Other players still have their own tree. Your cleared paths remain cleared after relogging.

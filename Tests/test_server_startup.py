@@ -17,7 +17,7 @@ class StartupTests(unittest.IsolatedAsyncioTestCase):
  def setUpClass(cls):cls.content=Content(ROOT/'Server/data/world.json')
  async def asyncSetUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name);self.config=self.root/'config.ini'
-  self.original=(ROOT/'Server/config.ini').read_bytes();self.config.write_bytes(self.original)
+  self.original=(ROOT/'Build/config_templates/Server/config.ini').read_bytes();self.config.write_bytes(self.original)
   settings=Settings.load(self.config);settings.config.set('database','backend','sqlite')
   self.settings=dataclasses.replace(settings,bind_ip='127.0.0.1',port=0)
   self.services=[]

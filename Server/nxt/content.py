@@ -3,6 +3,7 @@ from __future__ import annotations
 import json,math,secrets,uuid
 from pathlib import Path
 from .growth import Growth
+from .encounters import validate_encounter_map
 TYPES=['Normal','Fighting','Flying','Poison','Ground','Rock','Bug','Ghost','Steel','Mystery','Fire','Water','Grass','Electric','Psychic','Ice','Dragon','Dark','Fairy']
 NATURES=['Hardy','Lonely','Brave','Adamant','Naughty','Bold','Docile','Relaxed','Impish','Lax','Timid','Hasty','Serious','Jolly','Naive','Modest','Mild','Quiet','Bashful','Rash','Calm','Gentle','Sassy','Careful','Quirky']
 class Content:
@@ -12,6 +13,7 @@ class Content:
   self.growth=Growth(self)
   if d['format']!=1:raise RuntimeError('Unsupported world content format')
   for k,m in self.maps.items():
+   validate_encounter_map(m,self.species)
    n=m['width']*m['height']
    if any(len(m[f])!=n for f in ('collision','behavior','elevation')):raise RuntimeError(f'Invalid collision map: {k}')
  def xp(self,level,growth=0):

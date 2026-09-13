@@ -62,8 +62,13 @@ SOURCE_DATA_FILES = {
     "world.json", "adventure.json", "adventure_rom.json", "centers.json",
     "interior_repairs.json", "interior_maps.json",
     "interior_navigation.json", "learnsets.json",
+    "encounters_firered.json", "encounters_crystal.json", "encounter_bindings.json", "species_additions.json",
 }
 REQUIRED_SOURCE = (
+    "Server/nxt/encounters.py", "Server/nxt/field_moves.py",
+    "Server/data/encounters_firered.json", "Server/data/encounters_crystal.json",
+    "Server/data/encounter_bindings.json", "Server/data/species_additions.json",
+    "Tools/publish_encounters.py", "Tools/crystal_encounter_catalog.py", "Tests/test_regional_encounters_cut.py",
     "Client/launcher/go.mod", "Client/launcher/main.go", "Client/launcher/platform_windows.go",
     "Client/app/index.html", "Client/app/app.js", "Client/app/renderer.js", "Client/app/styles.css",
     "Client/app/audio.js", "Client/app/battle_fx.js", "Client/app/battle_timing.js", "Tests/check_battle_fx.mjs", "Client/app/audio_controls.js", "Client/app/assets/audio/catalog.json",

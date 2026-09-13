@@ -56,7 +56,7 @@ def run_isolated():
  if not browser:raise SystemExit('Set NXT_BROWSER_PATH to an installed Chromium/Edge executable. Playwright is a test-only dependency.')
  with tempfile.TemporaryDirectory(prefix='nxt-ui-test-')as tmp:
   temp=Path(tmp);(temp/'data').mkdir();shutil.copy2(ROOT/'Server/data/world.json',temp/'data/world.json')
-  cfg=configparser.ConfigParser(interpolation=None);cfg.read(ROOT/'Server/config.ini');cfg.set('database','backend','sqlite');cfg.set('network','bind_ip','127.0.0.1');cfg.set('network','tls','false');cfg.set('network','allow_insecure_lan','true');cfg.set('security','auth_attempts_per_minute','100')
+  cfg=configparser.ConfigParser(interpolation=None);cfg.read(ROOT/'Build/config_templates/Server/config.ini');cfg.set('database','backend','sqlite');cfg.set('network','bind_ip','127.0.0.1');cfg.set('network','tls','false');cfg.set('network','allow_insecure_lan','true');cfg.set('security','auth_attempts_per_minute','100')
   with socket.socket()as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
   cfg.set('network','port',str(port));ENDPOINT=f'ws://127.0.0.1:{port}/world'
   with (temp/'config.ini').open('w')as f:cfg.write(f)

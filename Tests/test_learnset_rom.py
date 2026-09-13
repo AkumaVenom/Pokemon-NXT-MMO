@@ -84,13 +84,13 @@ class ShippedLearnsetAuditTests(unittest.TestCase):
         cls.world = json.loads((ROOT / 'Server/data/world.json').read_text(encoding='utf-8'))
         cls.manifest = json.loads((ROOT / 'Tools/extraction_manifest.json').read_text(encoding='utf-8'))
 
-    def test_all_876_published_species_have_explicit_source_evidence(self):
+    def test_all_877_published_species_have_explicit_source_evidence(self):
         species = self.world['species']
-        self.assertEqual(len(species), 876)
+        self.assertEqual(len(species), 877)
         self.assertEqual(set(species), set(self.data['speciesAudit']))
         self.assertEqual(set(species), set(self.data['speciesOverrides']))
         self.assertFalse(self.data['unsupported'])
-        self.assertEqual(self.data['summary']['statusCounts'], {'validated': 874, 'recovered-native-prefix': 2})
+        self.assertEqual(self.data['summary']['statusCounts'], {'validated': 875, 'recovered-native-prefix': 2})
         for key, current in species.items():
             with self.subTest(species=key):
                 audit = self.data['speciesAudit'][key]
@@ -179,7 +179,7 @@ class ShippedLearnsetAuditTests(unittest.TestCase):
 
     def test_shared_species_comparisons_do_not_apply_sigma_changes_to_firered(self):
         self.assertEqual(self.data['summary']['sharedComparisonCounts'],
-                         {'identical': 172, 'order-only': 131, 'different-entries': 82})
+                         {'identical': 173, 'order-only': 131, 'different-entries': 82})
         for key, comparison in self.data['sharedSpeciesComparisons'].items():
             source_id = str(comparison['sourceSpeciesId'])
             native = self.data['sourceCatalogAudit']['kanto'][source_id]['learnset']

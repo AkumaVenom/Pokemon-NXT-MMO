@@ -27,7 +27,7 @@ function harness(){
  const own={id:1,map:'kanto_5_4',x:7,y:5,appearance:0};
  const socket={readyState:1,sent:[],send(data){this.sent.push(JSON.parse(data));},close(){this.readyState=2;}};
  const audioCalls=[];const audio=new Proxy({settings:{}},{get:(target,key)=>key in target?target[key]:(...args)=>audioCalls.push([key,...args])});
- const renderer={players:new Map(),active:true,resize(){},scene(){},entity(){},resetSession(){},loadMap:async()=>true};
+ const renderer={cutTrees:{},setCutTrees(cuts){this.cutTrees=cuts||{};},players:new Map(),active:true,resize(){},scene(){},entity(){},resetSession(){},loadMap:async()=>true};
  const context=vm.createContext({Node:Element,document,window:new Element(),GameAudio:class{constructor(){return audio;}},WorldRenderer:class{},mountAudioControls(){},WebSocket:{OPEN:1},setInterval(){},setTimeout(){},clearTimeout(){},performance:{now:()=>0},console});
  const script=source.replace(/^import .*?;\n/gm,'').replace(/boot\(\);\s*$/,`globalThis.api={showPokemon,showCollection,showJournal,showDex,showBag,showNpcDialog,showAtlas,canTravelTo,updateAdventureAccess,setupInput,handle,loadMap,closeModal,get state(){return state;},get modal(){return modalKind;},seed(values){({content,state,session,own,ws,renderer}=values);},busy(kind){trade=kind==='trade'?{}:null;activeBattle=kind==='battle'?{}:null;},changeOwner(){session={id:2};}};`);
  vm.runInContext(script,context,{filename:'app.js'});context.api.seed({content,state,session,own,ws:socket,renderer});
@@ -119,4 +119,27 @@ test('earned atlas travel locks visited interiors while keeping their browse car
  assert.equal(h.app.canTravelTo(inside),false);assert.equal(h.app.canTravelTo(outside),true);h.app.showAtlas();const filter=h.all().find(n=>n.getAttribute('aria-label')==='Atlas region');filter.value='all';filter.dispatch('change');
  const card=h.buttons().find(n=>text(n).includes('Pokémon Center'));assert.ok(card,'Interior remains in atlas browse');assert.equal(card.disabled,true);assert.match(text(card),/Enter through its door/);assert.equal(h.byId('modal').open,true);assert.match(h.words(),/outdoor waypoints/);
  h.session.alphaAtlas=true;assert.equal(h.app.canTravelTo(inside),true);
+});
+
+test('locked Cut is visible, disabled and sends no command',()=>{
+ const h=harness();h.app.showNpcDialog({title:'Small HM tree',message:'Defeat Misty for the Cascade Badge.',npc:95,map:h.own.map,actions:['cut'],disabledActions:['cut'],fieldMove:{unlocked:false,badgeName:'Cascade Badge'}});
+ const cut=h.findButton('Cut tree — locked');assert.ok(cut);assert.equal(cut.disabled,true);assert.equal(cut.getAttribute('aria-disabled'),'true');cut.dispatch('click');assert.equal(h.socket.sent.length,0);assert.match(h.words(),/saved for your character only/);
+});
+test('unlocked Cut sends exactly one map-bound command and never removes a tree optimistically',()=>{
+ const h=harness();h.app.showNpcDialog({title:'Small HM tree',message:'Cut this tree.',npc:95,map:h.own.map,actions:['cut'],disabledActions:[],fieldMove:{unlocked:true}});
+ const cut=h.findButton('Cut tree');assert.equal(cut.disabled,false);cut.dispatch('click');cut.dispatch('click');assert.deepEqual(h.socket.sent,[{op:'npc',npc:95,map:h.own.map,action:'cut'}]);assert.deepEqual(h.renderer.cutTrees,{});
+ const next=structuredClone(h.state);next.revision++;next.adventure.cutTrees={[h.own.map]:[95]};h.app.handle(next);assert.deepEqual(h.renderer.cutTrees,next.adventure.cutTrees);
+});
+test('foreign and stale snapshots cannot hide an owner tree',()=>{
+ const h=harness();h.app.handle({...h.state,ownerId:2,revision:90,adventure:{...h.state.adventure,cutTrees:{[h.own.map]:[95]}}});assert.deepEqual(h.renderer.cutTrees,{});
+ h.app.handle({...h.state,revision:0,adventure:{...h.state.adventure,cutTrees:{[h.own.map]:[95]}}});assert.deepEqual(h.renderer.cutTrees,{});
+});
+test('delayed tree menus and old Cut controls cannot act after a map change',async()=>{
+ const h=harness(),oldMap=h.own.map;
+ h.app.showNpcDialog({title:'Small HM tree',message:'Cut.',npc:95,map:oldMap,actions:['cut'],fieldMove:{unlocked:true}});const cut=h.findButton('Cut tree');
+ await h.app.loadMap({id:'johto_3_0',entity:{...h.own,map:'johto_3_0'},name:'New Bark Town',region:'Johto'});cut.dispatch('click');assert.equal(h.socket.sent.length,0);
+ h.app.showNpcDialog({title:'Small HM tree',message:'Old map.',npc:95,map:oldMap,actions:['cut'],fieldMove:{unlocked:true}});assert.equal(h.app.modal,'');
+});
+test('journal shows independent Cut badge requirements for both regions',()=>{
+ const h=harness();h.state.adventure.fieldMoves=[{region:'kanto',unlocked:true,leader:'Misty',city:'Cerulean City',badgeName:'Cascade Badge'},{region:'johto',unlocked:false,leader:'Bugsy',city:'Azalea Town',badgeName:'Hive Badge'}];h.app.showJournal();assert.match(h.words(),/CUT UNLOCKED/);assert.match(h.words(),/CUT LOCKED/);assert.match(h.words(),/Defeat Bugsy in Azalea Town/);assert.match(h.words(),/does not replace a partner/);
 });

@@ -27,9 +27,9 @@ class PublishedLearnsetTests(unittest.TestCase):
         cls.client = read('Client/app/assets/world/client.json')
         cls.audio = read('Client/app/assets/audio/catalog.json')
 
-    def test_all_876_server_profiles_equal_the_audited_canonical_overrides(self):
+    def test_all_877_server_profiles_equal_the_audited_canonical_overrides(self):
         species = self.world['species']
-        self.assertEqual(len(species), 876)
+        self.assertEqual(len(species), 877)
         self.assertEqual(set(species), set(self.audit['speciesOverrides']))
         self.assertEqual(self.world['learnsets']['summary'], self.audit['summary'])
         self.assertEqual(self.world['learnsets']['policy'], self.audit['policy'])

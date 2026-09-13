@@ -189,6 +189,20 @@
         "johto_4"
       ],
       "description": "Surf in Johto after earning the Fog Badge."
+    },
+    {
+      "id": "cut_kanto",
+      "badges": [
+        "kanto_2"
+      ],
+      "title": "Cut — Kanto / Cascade Badge"
+    },
+    {
+      "id": "cut_johto",
+      "badges": [
+        "johto_2"
+      ],
+      "title": "Cut — Johto / Hive Badge"
     }
   ]
 }

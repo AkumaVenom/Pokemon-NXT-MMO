@@ -15,17 +15,18 @@ MIME={'.json':'application/json','.png':'image/png','.ogg':'audio/ogg','.wav':'a
 def response_payload(data,mime='application/json',status=200):
  if isinstance(data,str):data=data.encode('utf-8')
  return {'status':status,'mime':mime,'body':base64.b64encode(data).decode('ascii')}
-def source_bundle():
- """Bundle the same four application modules for the local DOM-only fixture."""
- renderer=ROOT.joinpath('renderer.js').read_text(encoding='utf-8').replace('export class WorldRenderer','class WorldRenderer')
- audio=ROOT.joinpath('audio.js').read_text(encoding='utf-8').replace('export const AUDIO_DEFAULTS','const AUDIO_DEFAULTS').replace('export class GameAudio','class GameAudio')
- controls=ROOT.joinpath('audio_controls.js').read_text(encoding='utf-8').replace('export function mountAudioControls','function mountAudioControls')
- app=ROOT.joinpath('app.js').read_text(encoding='utf-8')
- for statement in ("import {WorldRenderer} from './renderer.js';","import {GameAudio} from './audio.js';","import {mountAudioControls} from './audio_controls.js';"):app=app.replace(statement,'')
- return '(()=>{'+renderer+'\n'+audio+'\n'+controls+'\n'+app+'\nwindow.__nxtAudioHarnessShutdown=()=>audio.shutdown();\n})()'
+def source_bundle(observer=""):
+ """Bundle the six current modules for the optional local DOM-only fixture."""
+ modules=[]
+ for name in ('battle_timing.js','renderer.js','audio.js','audio_controls.js','battle_fx.js','app.js'):
+  text=ROOT.joinpath(name).read_text(encoding='utf-8')
+  text=re.sub(r"^import .*?;\n",'',text,flags=re.M)
+  text=re.sub(r"^export (?=(?:const|function|class) )",'',text,flags=re.M)
+  modules.append(text)
+ return '(()=>{'+ '\n'.join(modules)+'\n'+observer+'\nwindow.__nxtAudioHarnessShutdown=()=>audio.shutdown();\n})()'
 class Bridge:
- def __init__(self,page,endpoint='ws://127.0.0.1:7777/world'):
-  self.page=page;self.endpoint=endpoint;self.http=None;self.sockets={};self.tasks=[];self.errors=[]
+ def __init__(self,page,endpoint='ws://127.0.0.1:7777/world',observer=''):
+  self.page=page;self.endpoint=endpoint;self.observer=observer;self.http=None;self.sockets={};self.tasks=[];self.errors=[]
   self.audio_settings={'master':.8,'music':.65,'effects':.8,'cries':.85,'muted':False,'muteUnfocused':True,'lowHp':True,'chat':True}
  async def fetch_payload(self,url,options=None):
   options=options or {};path=unquote(urlsplit(url).path)
@@ -84,7 +85,7 @@ Object.defineProperty(HTMLImageElement.prototype,'src',{get(){return originalSrc
 const originalSet=HTMLImageElement.prototype.setAttribute;
 HTMLImageElement.prototype.setAttribute=function(k,v){if(k==='src'&&String(v).startsWith('assets/'))this.src=v;else originalSet.call(this,k,v);};
 ''')
-  await self.page.add_script_tag(content=source_bundle())
+  await self.page.add_script_tag(content=source_bundle(self.observer))
  async def event(self,id,type,data):
   if not self.page.is_closed():await self.page.evaluate('([id,type,data])=>window.__nxtTransportEvent(id,type,data)',[id,type,data])
  async def close(self):

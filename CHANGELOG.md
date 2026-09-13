@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.4-alpha · Regional encounters and personal HM Cut · Build tools 1.3.3 · 2026-09-13
+
+- Replace invented starter-area fallback pools with exhaustive, stable-ID FireRed/Crystal bindings across all 959 maps; 248 maps contain ordinary pools. Preserve original ordered slot weights and levels, including Crystal day periods and Surf level probabilities.
+- Resolve separate terrain/method/floor pools on the server. Zone merged Sigma caves/towers explicitly; do not spawn fallback Pokémon in encounter-free floors, labs or unsupported extra regions. Retain documented MMO encounter cadence and special-event limits.
+- Auto-grant regional Cut field licenses at Misty/Cascade and Bugsy/Hive victories. Recognize already-earned badges without resetting accounts or replacing combat moves.
+- Make all 120 small HM trees clickable, with accessible enabled/locked actions, authoritative nearby/map/badge validation and save-before-success. Persist private tree clearing across relog/map changes; remove only the owner's sprite/hit target/collision and leave shared maps/other accounts unchanged.
+- Restore the missing Nidoran♂ catalog identity, native learning/cry binding, six male encounter slots, eight source trainer entries and separate Nidoran evolution identities. Do not rewrite previously captured Pokémon.
+- Add encounter/Cut, all-tree isolation, failure injection, publisher/build sidecar and client stale-state regressions. Run two-account Chromium DOM/real-service acceptance through the optional documented QA transport bridge.
+- Keep the 0.3.3 battle-screen/timer fixes, audio assets, native maps, hosting/configuration behavior, account ownership and existing progress. Update source-data selection, docs, audit and checksums; ship full source in two mergeable ZIPs.
+
 ## 0.3.3-alpha · Battle screen correction · Build tools 1.3.3 · 2026-09-13
 
 - Invoke native browser timers with the proper global context instead of the animation controller receiver.

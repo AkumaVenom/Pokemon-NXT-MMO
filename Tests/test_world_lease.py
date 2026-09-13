@@ -16,7 +16,7 @@ class WorldLeaseTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix='NXT lease test ')
         self.root = Path(self.temp.name)
         config = self.root / 'config.ini'
-        config.write_bytes((ROOT / 'Server/config.ini').read_bytes())
+        config.write_bytes((ROOT / 'Build/config_templates/Server/config.ini').read_bytes())
         self.settings = Settings.load(config)
         self.settings.config.set('database', 'backend', 'sqlite')
         self.stores = []

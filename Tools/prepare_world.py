@@ -70,7 +70,7 @@ def main():
  catalog={};lookup={'kanto':{},'johto':{}};byname={}
  for tag,source in raw['catalogs'].items():
   for n,s in source.items():
-   i=int(n);name=s['name'];norm=re.sub(r'[^a-z0-9]','',name.lower())
+   i=int(n);name=s['name'];norm=re.sub(r'[^a-z0-9]','',name.lower().replace('♀','female').replace('♂','male'))
    if tag=='kanto' and (252<=i<=276 or i>411):continue
    if not norm or '?' in name or 'Unused' in name or min(s['baseStats'])<1 or max(s['types'])>18:continue
    if norm in byname:lookup[tag][n]=byname[norm];continue
@@ -99,12 +99,10 @@ def main():
      key=lookup[tag].get(str(slot['sourceId']))
      if key:vals.append({'species':key,'min':slot['min'],'max':slot['max']})
     if vals:converted[terrain]=vals
-   m['encounters']=converted;m['encounterSource']='rom' if converted else 'alpha-fallback'
- # Use an authored low-level fallback only where the native table is absent or custom-scripted.
+   m['encounters']=converted;m['encounterSource']='rom' if converted else 'none'
+ # Missing native tables stay empty. publish_encounters applies the audited
+ # FireRed/Crystal map policy after all recovered interiors are assembled.
  for m in raw['maps'].values():
-  if not m['encounters']:
-   ids=[16,19,10,13,25] if m['id'].startswith('kanto') else [161,163,165,167,187,179]
-   m['encounters']={'land':[{'species':f'fr_{i}','min':3,'max':7} for i in ids]}
   # Named source map IDs remain stable forever; content updates must not renumber them.
   safe=[]
   for y in range(1,m['height']-1):

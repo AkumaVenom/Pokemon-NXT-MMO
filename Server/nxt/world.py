@@ -8,6 +8,8 @@ from dataclasses import dataclass,field
 from .security import Bucket,RequestError,require,integer
 from .combat import Battle
 from .adventure import Adventure
+from .field_moves import CUT_REQUIREMENTS,cut_allowed,is_cut_tree,region,tree_cleared
+from .encounters import encounter_slots,select_encounter
 from .portals import plan_warp,return_stack
 from .async_tasks import complete_before_cancelling
 log=logging.getLogger('nxt.world')
@@ -104,26 +106,28 @@ class World:
  def nearby(self,a,b,radius=8):return a.state['map']==b.state['map'] and max(abs(a.state['x']-b.state['x']),abs(a.state['y']-b.state['y']))<=radius
  def require_peer(self,p,uid):
   integer(uid,1,2**53-1,'Trainer ID');q=self.players.get(uid);require(q is not None and not q.closed and q.id!=p.id,'That trainer is not available.');require(self.nearby(p,q),'Move closer to that trainer.');return q
- def walkable(self,m,x,y,surf=False,from_elevation=None):
+ def walkable(self,m,x,y,surf=False,from_elevation=None,state=None):
   if not(0<=x<m['width'] and 0<=y<m['height']):return False
   j=y*m['width']+x
-  if m['collision'][j]!=0 or (m['behavior'][j] in WATER and not surf):return False
+  # A cut overrides ONLY its exact occupied tile, never the shared grid.
+  cleared=any(o['x']==x and o['y']==y and tree_cleared(state,m['id'],o) for o in m['objects'])
+  if (m['collision'][j]!=0 and not cleared) or (m['behavior'][j] in WATER and not surf):return False
   elevation=m['elevation'][j]
   if from_elevation is not None and elevation not in (0,15) and from_elevation not in (0,15) and elevation!=from_elevation:return False
   # Solid environmental objects. Story-dependent NPC flags are not executed in alpha.
-  if any(o['x']==x and o['y']==y and o['graphics'] in (95,96,97) for o in m['objects']):return False
+  if any(o['x']==x and o['y']==y and o['graphics'] in (95,96,97) and not tree_cleared(state,m['id'],o) for o in m['objects']):return False
   return True
  def follower_anchor(self,p):
   m=self.c.maps[p.state['map']];x,y=p.state['x'],p.state['y'];p.fx=x;p.fy=y
   for dx,dy in ((-1,0),(1,0),(0,1),(0,-1)):
-   if self.walkable(m,x+dx,y+dy,p.state.get('surf',False)):p.fx=x+dx;p.fy=y+dy;break
+   if self.walkable(m,x+dx,y+dy,p.state.get('surf',False),state=p.state):p.fx=x+dx;p.fy=y+dy;break
  def relocation_state(self,p,key,x=None,y=None,*,surf=None):
   require(key in self.c.maps,'That destination is not in this content pack.');m=self.c.maps[key];require(m.get('playable',True),'This extracted placeholder map has no walkable area in the alpha.')
   state=copy.deepcopy(p.state)
   if surf is not None:state['surf']=surf
   if x is None:x,y=m['spawn']
-  if not self.walkable(m,x,y,state.get('surf',False)):
-   nearby=[(abs(xx-x)+abs(yy-y),xx,yy) for yy in range(max(0,y-4),min(m['height'],y+5)) for xx in range(max(0,x-4),min(m['width'],x+5)) if self.walkable(m,xx,yy)]
+  if not self.walkable(m,x,y,state.get('surf',False),state=state):
+   nearby=[(abs(xx-x)+abs(yy-y),xx,yy) for yy in range(max(0,y-4),min(m['height'],y+5)) for xx in range(max(0,x-4),min(m['width'],x+5)) if self.walkable(m,xx,yy,state.get('surf',False),state=state)]
    if nearby:_,x,y=min(nearby)
    else:x,y=m['spawn']
   state.update(map=key,x=x,y=y);self.adventure.visit(state,key);return state
@@ -154,7 +158,7 @@ class World:
     elif conndir==2:tx,ty=x-conn['offset'],target['height']-1
     elif conndir==3:tx,ty=target['width']-1,y-conn['offset']
     else:tx,ty=0,y-conn['offset']
-    if self.walkable(target,tx,ty,s.get('surf',False)):
+    if self.walkable(target,tx,ty,s.get('surf',False),state=s):
      await cross_map(target['id'],tx,ty,'connection');changed=True;accepted=True;movement='connection';break
   else:
    behavior=m['behavior'][y*m['width']+x];ledges={'right':56,'left':57,'up':58,'down':59}
@@ -169,22 +173,21 @@ class World:
     self.follower_anchor(p);p.last_encounter=time.monotonic();self.send_map(p,'warp');changed=True;accepted=True;movement='warp'
    else:
     source_elev=m['elevation'][oldy*m['width']+oldx]
-    if self.walkable(m,x,y,s.get('surf',False),None if behavior in (56,57,58,59) else source_elev):s['x']=x;s['y']=y;p.fx=oldx;p.fy=oldy;accepted=True
+    if self.walkable(m,x,y,s.get('surf',False),None if behavior in (56,57,58,59) else source_elev,state=s):s['x']=x;s['y']=y;p.fx=oldx;p.fy=oldy;accepted=True
   s=p.state;current=self.c.maps[s['map']];terrain=current['behavior'][s['y']*current['width']+s['x']]
   p.send('move',seq=seq,accepted=accepted,reason=None if accepted else 'blocked',movement=movement if accepted else None,terrain=terrain,pcAvailable=self.adventure.pc_available(p.state),entity=p.entity())
   if accepted and not changed:
    self.emit('move',player=p)
    m=self.c.maps[s['map']];j=s['y']*m['width']+s['x'];beh=m['behavior'][j]
-   if self.adventure.wild_allowed(s) and now-p.last_encounter>3 and beh in {2,8,11,16,18,21} and self.c.rng.random()<self.s.encounter_chance:await self.start_wild(p)
+   if self.adventure.wild_allowed(s) and now-p.last_encounter>3 and encounter_slots(m,s) and self.c.rng.random()<self.s.encounter_chance:await self.start_wild(p)
  async def start_wild(self,p,forced=None):
   self.free(p);require(any(m['hp']>0 for m in self.party(p)),'Your party needs healing.');m=self.c.maps[p.state['map']];j=p.state['y']*m['width']+p.state['x'];beh=m['behavior'][j]
   if forced is None:
-   require(self.adventure.wild_allowed(p.state),'Wild encounters are unavailable inside Pokemon Centers and Gyms.');require(beh in {2,8,11,16,18,21},'Step into tall grass, a cave encounter tile, or surf on water first.')
-  terrain='water' if beh in WATER else 'land';slots=m['encounters'].get(terrain)
-  if not slots:slots=[{'species':'fr_129','min':5,'max':12}] if terrain=='water' else (m['encounters'].get('land') or [{'species':'fr_19','min':3,'max':7}])
-  if forced:key,level=forced
-  else:
-   weights=[20,20,10,10,10,10,5,5,4,4,1,1] if len(slots)==12 else [1]*len(slots);e=self.c.rng.choices(slots,weights=weights,k=1)[0];key=e['species'];level=self.c.rng.randint(e['min'],e['max'])
+   require(self.adventure.wild_allowed(p.state),'Wild encounters are unavailable inside Pokemon Centers and Gyms.')
+   slots=encounter_slots(m,p.state)
+   require(bool(slots),'No wild encounters here. Try the grass, a cave floor, or an eligible Surf area on this map.')
+   key,level=select_encounter(slots,self.c.rng)
+  else:key,level=forced # Internal test/extension hook only; never accepted from a client packet.
   enemy=self.c.new_mon(key,level);state=copy.deepcopy(p.state);self.adventure.observe(state,[key]);await self.commit(p,state);b=Battle(self.c,'wild',[p.id,None],[p.username,'Wild '+self.c.species[key]['name']],[self.party(p),[enemy]],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0]);self.battles[b.id]=b;p.battle=b.id;p.last_encounter=time.monotonic();p.send('battle',battle=b.view(0))
  async def battle_action(self,p,d):
   require(p.battle in self.battles,'You are not in a battle.');b=self.battles[p.battle];require(d.get('id')==b.id,'That battle has ended.');side=b.players.index(p.id)
@@ -212,7 +215,10 @@ class World:
        if gained:b.audio('level_up',0,species=mon['species'],level=mon['level'],gained=gained)
     if b.ended and b.winner==0 and not b.rewarded:
      if trainer:
-      first=self.adventure.victory(state,trainer);b.logs.append('First victory recorded. Your reward and badge progress were saved.' if first else 'Rematch complete. First-victory rewards and EXP are not awarded again.')
+      previous_unlocks=set(state['adventure']['unlocks']);first=self.adventure.victory(state,trainer)
+      for unlocked in set(state['adventure']['unlocks'])-previous_unlocks:
+       if unlocked in ('cut_kanto','cut_johto'):b.logs.append('Cut unlocked for '+unlocked[4:].title()+'! Click a small HM tree to clear your own path.')
+      b.logs.append('First victory recorded. Your reward and badge progress were saved.' if first else 'Rematch complete. First-victory rewards and EXP are not awarded again.')
      elif not b.caught:state['money']=min(2_000_000_000,state['money']+(120 if b.kind=='trainer' else 25))
      b.rewarded=True
     self.adventure.observe(state,[m['species'] for m in state['creatures']],caught=True)
@@ -224,7 +230,7 @@ class World:
      if key and any(w.get('access',{}).get('dynamic') for w in self.c.maps[key]['warps']) and not any(e['inside']==key for e in returns):key=None
      if key is None:key=self.c.data['homes'][state['home']];returns=[];point=self.c.maps[key]['spawn']
      else:point=state['adventure'].get('lastCenterPosition') or self.c.data['centers'][key]['respawn']
-     if not isinstance(point,(list,tuple)) or len(point)!=2 or not all(type(v) is int for v in point) or not self.walkable(self.c.maps[key],*point):point=self.c.data.get('centers',{}).get(key,{}).get('respawn',self.c.maps[key]['spawn'])
+     if not isinstance(point,(list,tuple)) or len(point)!=2 or not all(type(v) is int for v in point) or not self.walkable(self.c.maps[key],*point,state=state):point=self.c.data.get('centers',{}).get(key,{}).get('respawn',self.c.maps[key]['spawn'])
      state.update(map=key,x=point[0],y=point[1],surf=False,warpReturns=returns);self.adventure.visit(state,key);b.logs.append('Your party was restored at your last Pokemon Center, or your home hub if you have not visited one.')
     state['revision']=p.state['revision']+1;records.append((p.id,state));newstates[p.id]=state
    try:await asyncio.to_thread(self.db.save_many,records)
@@ -322,9 +328,29 @@ class World:
    p=self.players.get(pid)
    if p:p.trade=None;p.send('trade_done',id=t['id'],success=False,message=message)
   self.trades.pop(t['id'],None)
+ async def cut_tree(self,p,d,o):
+  """Called only after npc identity/proximity/free-session checks under world lock."""
+  m=self.c.maps[p.state['map']];key=m['id'];rule=CUT_REQUIREMENTS.get(region(key));action=d.get('action')
+  require(rule is not None,'Cut is not supported in this region.')
+  allowed=cut_allowed(p.state);cleared=tree_cleared(p.state,key,o)
+  if action=='cut':
+   require(d.get('map')==key,'That tree menu belongs to another map. Click the tree again.')
+   require(allowed,'Cut is locked here. Defeat '+rule['leader']+' for the '+rule['badgeName']+'.')
+   if not cleared:
+    state=copy.deepcopy(p.state);cuts=state['adventure'].setdefault('cutTrees',{}).setdefault(key,[]);cuts.append(o['id']);cuts.sort()
+    await self.commit(p,state)
+   p.send('dialog',title='Path cleared',message='You used Cut. This tree is cleared and saved for your character only; other trainers must cut their own tree.',actions=[],npc=o['id'],map=key)
+   return
+  require(action in (None,'talk'),'This tree only supports Cut.')
+  message=('This tree is already cleared for your character.' if cleared else
+   'This small tree can be cut. Use Cut to clear this path for your character.' if allowed else
+   'Cut is locked in '+region(key).title()+'. Defeat '+rule['leader']+' in '+rule['city']+' and earn the '+rule['badgeName']+' to unlock it automatically.')
+  p.send('dialog',title='Small HM tree',message=message,actions=['cut'],disabledActions=[] if allowed and not cleared else ['cut'],npc=o['id'],map=key,fieldMove={'move':'Cut','unlocked':allowed,'cleared':cleared,**rule})
  async def npc(self,p,d):
   self.free(p);m=self.c.maps[p.state['map']];nid=integer(d.get('npc'),0,255,'NPC ID');o=next((o for o in m['objects'] if o['id']==nid),None);require(o is not None,'That NPC is not available.');action=d.get('action')
   require(max(abs(p.state['x']-o['x']),abs(p.state['y']-o['y']))<=2,'Move closer to speak to this character.')
+  require(d.get('map',m['id'])==m['id'],'That interaction belongs to another map. Click the object again.')
+  if is_cut_tree(o):await self.cut_tree(p,d,o);return
   center=self.c.data.get('centers',{}).get(m['id'],{});trainer=self.adventure.by_npc.get((m['id'],nid))
   if nid in center.get('nurseNpcIds',[]):
    if action=='heal':await self.heal(p,npc=nid);return
