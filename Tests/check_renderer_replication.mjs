@@ -1,0 +1,64 @@
+/** Actual renderer state under delayed local-map fetches; no browser pixels simulated. */
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import test from 'node:test';
+const source=fs.readFileSync(new URL('../Client/app/renderer.js',import.meta.url),'utf8');
+const entity=(id,map='johto_3_0',follower=id===1?'fr_152':'fr_4',x=id)=>({id,username:id===1?'Akumavenom':'Spidermight',map,x,y:10,fx:x-1,fy:10,direction:'down',appearance:0,follower,shiny:false,busy:false,surf:false});
+const mapData=id=>({id,width:30,height:30,spawn:[10,10],objects:[],image:id+'.png'});
+function harness(){
+ const requests=[];
+ const context=vm.createContext({Map,performance:{now:()=>100},ResizeObserver:class{observe(){}},Image:class{complete=true;naturalWidth=64;},requestAnimationFrame(){},fetch:url=>new Promise((resolve,reject)=>requests.push({url,resolve,reject})),console});
+ vm.runInContext(source.replace('export class WorldRenderer','class WorldRenderer')+'\nglobalThis.Renderer=WorldRenderer;',context);
+ const content={objects:{kanto:{0:{image:'trainer.png'}}},species:{fr_152:{icon:'chikorita.png'},fr_4:{icon:'charmander.png'},fr_1:{icon:'bulbasaur.png'}}};
+ const r=new context.Renderer({getContext:()=>({}),addEventListener(){}},content,()=>{});
+ const resolve=(index,id)=>requests[index].resolve({ok:true,json:async()=>mapData(id)});
+ return {r,requests,resolve};
+}
+test('first scene received before map assets finish retains both distinct followers',async()=>{
+ const {r,resolve}=harness();const pending=r.loadMap('johto_3_0',entity(1));
+ r.scene({map:'johto_3_0',players:[entity(1),entity(2)],gone:[]});resolve(0,'johto_3_0');assert.equal(await pending,true);
+ assert.equal(r.players.size,2);assert.equal(r.players.get(1).follower,'fr_152');assert.equal(r.players.get(2).follower,'fr_4');
+});
+test('pending snapshot folds latest movement, lead changes, and departure in order',async()=>{
+ const {r,resolve}=harness();const pending=r.loadMap('johto_3_0',entity(1));
+ r.scene({map:'johto_3_0',players:[entity(2)],gone:[]});
+ r.entity(entity(1,'johto_3_0','fr_4',8));
+ r.scene({map:'johto_3_0',players:[entity(1,'johto_3_0','fr_1',9)],gone:[2]});
+ resolve(0,'johto_3_0');await pending;
+ assert.equal(r.players.size,1);assert.equal(r.players.get(1).x,9);assert.equal(r.players.get(1).follower,'fr_1');
+});
+test('map arrival seeds the owner without waiting for a second scene',async()=>{
+ const {r,resolve}=harness();const pending=r.loadMap('johto_3_0',entity(1));resolve(0,'johto_3_0');await pending;
+ assert.equal(r.players.get(1).username,'Akumavenom');
+});
+test('rapid A to B to A transition rejects stale completion and old-map entities',async()=>{
+ const {r,resolve}=harness();const a=r.loadMap('johto_3_0',entity(1));
+ r.scene({map:'johto_3_0',players:[entity(2)],gone:[]});
+ const b=r.loadMap('kanto_3_0',entity(1,'kanto_3_0'));
+ r.scene({map:'johto_3_0',players:[entity(2)],gone:[]});
+ const last=r.loadMap('johto_3_0',entity(1,'johto_3_0','fr_152',12));
+ r.scene({map:'kanto_3_0',players:[entity(2,'kanto_3_0')],gone:[]});
+ resolve(1,'kanto_3_0');assert.equal(await b,false);resolve(0,'johto_3_0');assert.equal(await a,false);
+ resolve(2,'johto_3_0');assert.equal(await last,true);assert.equal(r.players.size,1);assert.equal(r.players.get(1).x,12);
+});
+test('session reset invalidates pending map, owner identity and player hit targets',async()=>{
+ const {r,resolve}=harness();r.active=true;r.selfId=1;r.hits=[{kind:'player',id:2}];
+ const loading=r.loadMap('johto_3_0',entity(1));r.scene({map:'johto_3_0',players:[entity(2)],gone:[]});r.resetSession();
+ resolve(0,'johto_3_0');assert.equal(await loading,false);assert.equal(r.players.size,0);assert.equal(r.map,null);assert.equal(r.selfId,null);assert.equal(r.hits.length,0);assert.equal(r.active,false);
+});
+test('loaded map applies a stationary follower switch only to its owning entity',async()=>{
+ const {r,resolve}=harness();const loading=r.loadMap('johto_3_0',entity(1));resolve(0,'johto_3_0');await loading;
+ r.scene({map:'johto_3_0',players:[entity(1),entity(2)],gone:[]});r.scene({map:'johto_3_0',players:[entity(2,'johto_3_0','fr_1')],gone:[]});
+ assert.equal(r.players.get(1).follower,'fr_152');assert.equal(r.players.get(2).follower,'fr_1');
+ r.scene({map:'johto_3_0',players:[],gone:[2]});assert.equal(r.players.has(2),false);
+});
+test('a failed retired map request cannot clear the current map or its players',async()=>{
+ const {r,requests,resolve}=harness();const old=r.loadMap('kanto_3_0',entity(1,'kanto_3_0'));
+ const current=r.loadMap('johto_3_0',entity(1));resolve(1,'johto_3_0');assert.equal(await current,true);
+ requests[0].reject(Error('old fetch failed'));assert.equal(await old,false);assert.equal(r.map.id,'johto_3_0');assert.equal(r.players.get(1).follower,'fr_152');
+});
+test('a current map failure clears pending entities rather than displaying stale players',async()=>{
+ const {r,requests}=harness();const pending=r.loadMap('johto_3_0',entity(1));r.scene({map:'johto_3_0',players:[entity(2)],gone:[]});
+ requests[0].reject(Error('missing map'));await assert.rejects(pending,/missing map/);assert.equal(r.pendingMap,null);assert.equal(r.map,null);assert.equal(r.players.size,0);
+});

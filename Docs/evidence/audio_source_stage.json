@@ -1,0 +1,30 @@
+{
+  "format": 1,
+  "catalogSha256": "4b77b6e089cf42154f4169e41bceef9d0592653748cdad8338c1c368ad0a8384",
+  "clipCount": 2366,
+  "mapCount": 859,
+  "speciesCryCount": 876,
+  "sourceHashes": {
+    "kanto": "729041b940afe031302d630fdbe57c0c145f3f7b6d9b8eca5e98678d0ca4d059",
+    "johto": "62d1a99f5b64a45cd4f6364273743f9d8961e9c439d8201bfeedb27c02f32c64"
+  },
+  "sourceFiles": 14330,
+  "pythonSyntax": "all packaged Python files parsed successfully",
+  "fullOggDecode": {
+    "gate": "Full payload decode of every packaged music and sound-effect OGG",
+    "read_only_assets": true,
+    "expected_files": 818,
+    "files_found": 818,
+    "files_completed": 818,
+    "passed": 818,
+    "failed": 0,
+    "all_passed": true,
+    "workers": 8,
+    "tool_version": "ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+    "decode_command": "ffmpeg -v error -nostdin -threads 1 -i <asset> -map 0:a:0 -f null -",
+    "failure_rule": "Nonzero exit code, nonempty error-level stderr, or timeout. Every stream decoded through EOF.",
+    "elapsed_seconds": 29.953,
+    "verified_at_utc": "2026-09-12T16:34:50.306382+00:00",
+    "failures": []
+  }
+}

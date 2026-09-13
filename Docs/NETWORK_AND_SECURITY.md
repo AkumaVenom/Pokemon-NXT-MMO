@@ -8,28 +8,11 @@ The private-peer check is not a firewall, VPN trust policy or reverse-proxy auth
 
 ## Direct TLS deployment
 
-For a later private internet test, provide a certificate whose subject alternative name matches the exact hostname (or IP address) clients enter. Use a certificate trusted by the operating system/browser, or an appropriately managed private CA for controlled testing. A mismatched or untrusted certificate must be fixed, not ignored.
+Run **`Server/2b - Configure Online Hosting.cmd`** to create a private-world certificate/key pair or import an existing PEM certificate chain and matching key. Enter the exact public hostname/IP clients will use. The setup validates the certificate, saves TLS network settings and exports a public-only player connection kit. Follow **`ONLINE_HOSTING.md`** for the full workflow and router setup.
 
-```ini
-; Server/config.ini
-[network]
-bind_ip = 0.0.0.0
-port = 7777
-tls = true
-certificate = certificates/server.crt
-private_key = certificates/server.key
-allow_insecure_lan = false
-```
+A generated private certificate needs explicit trust on each player's Windows account. The kit's trust script displays the hostname and fingerprint, requires confirmation, and imports only the public certificate. A publicly trusted certificate can instead be imported from your certificate provider. The client retains normal hostname and certificate verification; it has no validation bypass.
 
-```ini
-; Client/config.ini
-[server]
-host=your-certificate-hostname
-port=7777
-tls=true
-```
-
-Restart both apps. The direct service uses TLS 1.2 or newer. The client does not contain a certificate-validation bypass. Keep the private key server-only. Certificate generation/renewal, public DNS, router forwarding and successful Windows TLS deployment are not automated or tested by this alpha. Public deployment also needs a security review and load test; TLS alone does not make it production-ready.
+The world checks certificate/key paths, pairing, leaf dates and configured `network.public_host` before opening the database or acquiring ownership. Paths are resolved relative to Server/config.ini. TLS 1.2 or newer is required. Server readiness does not establish public DNS, router forwarding or client trust. No private key is placed in a Client distribution or source build. Certificate renewal and public reachability remain deployment responsibilities.
 
 MySQL belongs on loopback or a protected database network. The game client never needs DB access. `database.ssl_ca` enables CA and identity verification for a remote MySQL connection; use an absolute CA path or a path relative to Server. Do not send remote database credentials over an untrusted plaintext connection.
 

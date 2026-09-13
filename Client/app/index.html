@@ -12,11 +12,12 @@
   <div class="brand"><span class="emblem" aria-hidden="true"></span><div>POKEMON <b>NXT</b><small>MASSIVELY MULTIPLAYER ONLINE</small></div></div>
   <div class="hero-copy"><span class="eyebrow">A NEW ADVENTURE. A SHARED WORLD.</span><h1>Two regions.<br>One <em>journey.</em></h1><p>Explore Kanto and Johto. Find your partner, challenge another trainer, and build your collection together.</p></div>
   <div class="region-preview"><article><img src="assets/maps/kanto/3_0.png" alt="Extracted Pallet Town map"><div><span>KANTO</span><strong>Pallet Town</strong></div></article><article><img src="assets/maps/johto/3_0.png" alt="Extracted New Bark Town map"><div><span>JOHTO</span><strong>New Bark Town</strong></div></article></div>
-  <div class="login-foot"><span class="pill">PLAYABLE ALPHA · 0.1.0</span><span>Independent client + dedicated world server</span></div>
+  <div class="login-foot"><span class="pill">PLAYABLE ALPHA · 0.2.0</span><span>Independent client + dedicated world server</span></div>
  </section>
  <section class="login-side">
   <div class="connection-card"><span class="status-dot" id="status-dot"></span><div><strong id="connection-label">Connecting to world…</strong><small id="connection-address"></small></div><button id="reconnect" class="icon-button" title="Reconnect to the configured server" aria-label="Reconnect">↻</button></div>
   <div class="login-panel"><span class="eyebrow">YOUR NEXT CHAPTER</span><h2 id="login-title">Welcome back, trainer.</h2><p id="login-description" class="muted">Your team is waiting. Connect to begin.</p>
+   <button id="login-sound" type="button" class="quiet sound-entry" aria-haspopup="dialog" aria-controls="audio-dialog">Sound settings <span class="sound-state">Ready after first interaction</span></button>
    <div class="segmented" role="tablist" aria-label="Account mode"><button id="login-tab" class="selected" role="tab" aria-selected="true">Log in</button><button id="register-tab" role="tab" aria-selected="false">Create account</button></div>
    <form id="auth-form" autocomplete="off">
     <label for="username">Trainer username</label><input id="username" name="username" minlength="3" maxlength="20" pattern="[A-Za-z0-9_]{3,20}" placeholder="Your trainer name" autocomplete="username" required>
@@ -24,6 +25,7 @@
     <section id="registration-options" class="hidden">
      <div class="form-row"><div><label for="home">Starting region</label><select id="home"><option>Kanto</option><option>Johto</option></select></div><div><label for="appearance">Trainer appearance</label><select id="appearance"><option value="0">Red</option><option value="7">Leaf</option></select></div></div>
      <label>Choose your first partner</label><div id="starters" class="starter-grid"></div>
+     <p id="registration-summary" class="mini-note" role="status" aria-live="polite"></p>
     </section>
     <p id="auth-error" class="form-error" role="alert"></p><button id="auth-submit" type="submit" class="primary wide" disabled>Enter world <span>→</span></button>
    </form>
@@ -33,7 +35,7 @@
  </section>
 </main>
 <main id="game" class="game-shell hidden">
- <header class="topbar"><div class="brand compact"><span class="emblem" aria-hidden="true"></span><div>POKEMON <b>NXT</b><small>MMO · ALPHA 0.1.0</small></div></div><div class="world-presence"><span class="status-dot online"></span><span id="world-title">World</span><span id="population" class="pill">0 / 1000</span></div><div class="account-head"><span id="latency">— ms</span><span id="trainer-name"></span><button id="logout" class="quiet small">Log out</button></div></header>
+ <header class="topbar"><div class="brand compact"><span class="emblem" aria-hidden="true"></span><div>POKEMON <b>NXT</b><small>MMO · ALPHA 0.2.0</small></div></div><div class="world-presence"><span class="status-dot online"></span><span id="world-title">World</span><span id="population" class="pill">0 / 1000</span></div><div class="account-head"><span id="latency">— ms</span><button id="game-sound" class="quiet small" type="button" aria-haspopup="dialog" aria-controls="audio-dialog">Sound</button><span id="trainer-name"></span><button id="logout" class="quiet small">Log out</button></div></header>
  <section class="world-layout">
   <div class="world-column"><div class="map-toolbar"><div><span id="map-region" class="eyebrow">KANTO</span><h2 id="map-name">Pallet Town</h2></div><div class="toolbar-actions"><span id="coords" class="muted small-text"></span><button id="zoom-out" class="icon-button" aria-label="Zoom out">−</button><span id="zoom-value">3×</span><button id="zoom-in" class="icon-button" aria-label="Zoom in">+</button><button id="atlas-button" class="secondary">World atlas <kbd>M</kbd></button></div></div>
    <div id="viewport" class="viewport"><canvas id="world-canvas" aria-label="Pokemon multiplayer world. Move with WASD or arrow keys. Click trainers to interact."></canvas><div id="map-loading" class="map-loading hidden">Travelling…</div><div class="world-hint"><span class="key-cluster">W A S D</span><span>Move</span><b>·</b><kbd>E</kbd><span>Interact</span><b>·</b><span>Click a trainer to challenge or trade</span></div><div id="map-source" class="map-source">ROM-independent world</div></div>
@@ -41,12 +43,24 @@
   </div>
   <aside class="sidebar"><section class="trainer-card"><div class="trainer-card-head"><span class="eyebrow">TRAINER PASSPORT</span><span class="pill mint">ONLINE</span></div><h2 id="passport-name"></h2><div class="trainer-stats"><div><span>Funds</span><strong id="money">₽ 0</strong></div><div><span>Collection</span><strong id="collection-count">1 / 240</strong></div></div></section>
    <section class="party-panel"><div class="section-heading"><h3>Your party</h3><span id="party-count" class="muted">1 / 6</span></div><p class="mini-note">Your first partner follows you in the world.</p><div id="party-list"></div><button id="collection-button" class="quiet wide">Manage party & collection <kbd>P</kbd></button></section>
-   <section class="action-panel"><div class="action-grid"><button id="bag-button" class="secondary">Bag & supplies <kbd>B</kbd></button><button id="heal-button" class="secondary">Restore party</button><button id="search-button" class="secondary">Search for wild</button><button id="surf-button" class="secondary">Toggle surf</button></div><div class="utility-row"><button id="save-button" class="quiet small">Save</button><button id="unstuck-button" class="quiet small">Return home</button><button id="help-button" class="quiet small">Controls <kbd>?</kbd></button></div></section>
+   <section class="action-panel"><div class="action-grid"><button id="bag-button" class="secondary">Bag & supplies <kbd>B</kbd></button><button id="heal-button" class="secondary">Restore party</button><button id="search-button" class="secondary">Search for wild</button><button id="surf-button" class="secondary">Toggle surf</button></div><div class="utility-row"><button id="save-button" class="quiet small" title="Request an extra save of your current progress">Save now</button><button id="unstuck-button" class="quiet small">Return home</button><button id="help-button" class="quiet small">Controls <kbd>?</kbd></button></div><p class="mini-note">Progress saves automatically on the server.</p></section>
    <div class="alpha-note"><span class="eyebrow">ALPHA FIELD SERVICES</span><p>Fast travel, field restoration and surf are available for exploration testing.</p></div>
   </aside>
  </section>
  <footer class="statusbar"><span id="world-status">Authoritative world connected</span><span>PIXEL-PERFECT WORLD · HIGH-DPI INTERFACE</span><span id="render-status"></span></footer>
 </main>
+<dialog id="audio-dialog" aria-labelledby="audio-title" aria-describedby="audio-description">
+ <div class="modal-header"><div><span class="eyebrow">YOUR ADVENTURE, YOUR MIX</span><h2 id="audio-title">Sound settings</h2></div><button id="audio-close" type="button" class="icon-button" aria-label="Close sound settings">×</button></div>
+ <div class="audio-body"><p id="audio-description" class="modal-description">Music, Pokémon voices and effects from each region's original sound bank.</p>
+  <div class="audio-status-row"><span id="audio-status" role="status" aria-live="polite">Ready after your first interaction.</span><button id="audio-enable" type="button" class="secondary">Enable sound</button></div>
+  <div class="audio-slider"><label for="audio-master">Master volume</label><output id="audio-master-value" for="audio-master">80%</output><input id="audio-master" type="range" min="0" max="100" step="1" value="80"></div>
+  <div class="audio-slider"><label for="audio-music">Music</label><output id="audio-music-value" for="audio-music">65%</output><input id="audio-music" type="range" min="0" max="100" step="1" value="65"></div>
+  <div class="audio-slider"><label for="audio-effects">Sound effects</label><output id="audio-effects-value" for="audio-effects">80%</output><input id="audio-effects" type="range" min="0" max="100" step="1" value="80"></div>
+  <div class="audio-slider"><label for="audio-cries">Pokémon cries</label><output id="audio-cries-value" for="audio-cries">85%</output><input id="audio-cries" type="range" min="0" max="100" step="1" value="85"></div>
+  <div class="audio-options"><label><input id="audio-muted" type="checkbox"> Mute all sound</label><label><input id="audio-focus" type="checkbox" checked> Mute while the game is unfocused</label><label><input id="audio-lowhp" type="checkbox" checked> Low HP warning</label><label><input id="audio-chat" type="checkbox" checked> Chat notifications</label></div>
+  <p id="audio-persistence" class="mini-note">Sound preferences are saved on this PC.</p>
+ </div>
+</dialog>
 <div id="context-menu" class="context-menu hidden" role="menu"></div>
 <div id="toasts" class="toast-stack" aria-live="polite"></div>
 <dialog id="modal"><div class="modal-header"><div><span id="modal-eyebrow" class="eyebrow">POKEMON NXT MMO</span><h2 id="modal-title"></h2></div><button id="modal-close" class="icon-button" aria-label="Close dialog">×</button></div><div id="modal-body"></div></dialog>

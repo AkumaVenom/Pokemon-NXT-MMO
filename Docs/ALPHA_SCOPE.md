@@ -1,5 +1,7 @@
 # Alpha scope and acceptance boundaries
 
+Gameplay **0.2.0-alpha**, including ROM audio integration. Build tools **1.2.0** preserve world startup fix **1.1.2** and the automatic Go prerequisite correction.
+
 ## Implemented slice
 
 There is a real server-dependent client login and registration flow, authoritative tile movement with collision/elevation checks and native connection/warp records, map-local interest replication, username nameplates, lead-party follower replication, global General/Trade chat, static NPC interaction and practice battles, wild encounters/capture, experience and learned moves, party/collection management, items/currency, friendly PvP challenges and transactional two-owner trades. The client is not displaying a predetermined offline multiplayer video.
@@ -7,6 +9,8 @@ There is a real server-dependent client login and registration flow, authoritati
 The collection limit defaults to 240 Pokemon and the active party to six. Captures fill available party slots or enter the collection. Trading can exchange up to six creatures plus supported items/money. Public nearby entity packets contain a name, location, appearance, lead species and activity flags, not the other player's private inventory, password hash or complete party.
 
 The combat engine handles basic singles turn resolution: move PP, ordinary damage, speed/priority ordering, types, STAB, accuracy, selected statuses, switching, items and capture. Friendly duels use cloned battle resources and do not consume persistent HP/items. Practice NPC battles use alpha-selected teams. Some variable-power moves are approximations; unsupported status/advanced effects are disabled. FireRed-compatible species use decoded FireRed level-up learnsets; Sigma-only species have explicitly tagged type-template learnsets.
+
+Music, effects and cries now play through the client sound mixer. All 859 map headers have source music bindings, including explicit silence and inherited music. Each source has move sound-script metadata for IDs 1–354; playback follows a selected native script path with explicit delays, repeated effects and applicable cry callbacks. Visual-task completion timings are approximated because the MMO does not run the original GBA battle-animation renderer. Server-confirmed action cues accompany the implemented battle, capture, healing, shopping, party, save and trade flows. This does not enable unsupported move mechanics or recreate unimplemented story events. See `AUDIO_GUIDE.md` for exact content boundaries.
 
 ## Region extraction versus campaign completion
 
@@ -18,7 +22,7 @@ The encounter scanner recovered 124 distinct FireRed map headers and 35 Sigma ta
 
 ## Explicitly not implemented
 
-Original FireRed/Sigma story execution; a complete gym/badge/league campaign; original dialog and quests; script-controlled doors/bridges/unlocks; original audio/music/cry playback; animated environment tiles; full battle visual effects; full move/ability/item mechanics; evolution, breeding, eggs and EV training; fishing/rock-smash progression; original trainer line-of-sight AI; autonomous account-like trainer bots; guilds, auctions, mail, friend lists, cross-shard travel or account recovery.
+Original FireRed/Sigma story execution; a complete gym/badge/league campaign; original dialog and quests; script-controlled doors/bridges/unlocks; animated environment tiles; full battle visual effects; full move/ability/item mechanics; evolution, breeding, eggs and EV training; fishing/rock-smash progression; original trainer line-of-sight AI; autonomous account-like trainer bots; guilds, auctions, mail, friend lists, cross-shard travel or account recovery.
 
 No complete directional overworld follower set was established. This alpha animates each available lead species using its extracted two-frame party icon, including fallback presentation for tiny/atypical forms. Follower position and species are server-replicated, but this is not four-direction HGSS-style follower animation. Shiny follower colors are not promised; battle front/back shiny art is available.
 
@@ -32,6 +36,10 @@ The server uses one authoritative process, one serialized persistence connection
 
 MySQL/InnoDB is implemented but not runtime-tested in this environment. Shared store/transaction behaviors were exercised against explicit temporary SQLite databases. The shipped dependency versions also require a Windows acceptance pass; the local aiohttp test version differed from the install pin. Read TEST_REPORT.md before declaring any platform accepted.
 
+The historical reports describe their own releases. `AUDIO_TEST_REPORT.md` records the checks performed for 0.2.0-alpha; automated decoding, event and mixer tests do not establish a native Windows listening or live MySQL acceptance pass.
+
 ## Suggested first acceptance session
 
 On two Windows PCs: provision the dedicated MySQL database, create distinct accounts, meet in Pallet Town, verify names/movement/followers, send both chat channels, capture a creature, reorder the party, trade Pokemon/items/currency, duel, cancel a trade, disconnect one side before confirmation, relog both accounts, restart the server, and verify ownership/money persisted. Repeat region travel to New Bark Town and test fullscreen/Windows DPI. Keep the first alpha private until these checks pass.
+
+For audio, listen across an area boundary, a warp, surfing, wild and trainer battles, capture, healing and a low-HP warning. Open Sound during a battle, adjust each volume separately, test background muting, then close and reopen the launcher to confirm the mix persists. Check both source regions and a music loop longer than one full cycle. Refer to `AUDIO_GUIDE.md` if a Sigma species uses a shared cry.

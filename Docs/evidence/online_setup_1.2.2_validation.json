@@ -1,0 +1,24 @@
+{
+  "build_tools": "1.2.2",
+  "gameplay": "0.2.0-alpha",
+  "python": "3.12.14",
+  "python_tests_discovered": 255,
+  "python_tests_passed": 254,
+  "python_tests_skipped": 1,
+  "skipped_reason": "Native Windows PowerShell bootstrap check; requires Windows",
+  "content_pack": "e05cb982d1fd4137629f86b0",
+  "audio_clips_verified": 2366,
+  "music_effect_ogg": 818,
+  "cry_wav": 1548,
+  "go_and_windows_execution": "not available locally; Go launcher source unchanged from 1.2.1",
+  "preserved_source_hashes": {
+    "Server/nxt/store.py": "4fcb182547c926947ad3b2e5835f9d8751995851cf2aa6e49e3f9e6f78ffd839",
+    "Client/launcher/http_rejection.go": "4111224d9ef517f5a3b851a9cea2a2da16b64acb052a8cef386b2a3ebf0df1de",
+    "Client/launcher/http_rejection_test.go": "3ae96dd4bd09f9834aba01827f376a430430a07cae4d5844df153329249ac5f4",
+    "Client/app/audio.js": "1b1b2c9d90cf47cddc4f0998d61cded5156bc2e319598f9dc2f2eb6114b7585f",
+    "Client/app/assets/audio/catalog.json": "4b77b6e089cf42154f4169e41bceef9d0592653748cdad8338c1c368ad0a8384",
+    "Server/data/world.json": "f87f8ed87032ce9cf2629602208408344c619f31d0e7f9e493029c3be3bdfc0e"
+  },
+  "client_tree_byte_identical_to_1.2.1": true,
+  "python_files_syntax_checked": 48
+}

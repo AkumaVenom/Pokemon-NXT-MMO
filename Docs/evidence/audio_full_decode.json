@@ -1,0 +1,17 @@
+{
+  "gate": "Full payload decode of every packaged music and sound-effect OGG",
+  "read_only_assets": true,
+  "expected_files": 818,
+  "files_found": 818,
+  "files_completed": 818,
+  "passed": 818,
+  "failed": 0,
+  "all_passed": true,
+  "workers": 8,
+  "tool_version": "ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+  "decode_command": "ffmpeg -v error -nostdin -threads 1 -i <asset> -map 0:a:0 -f null -",
+  "failure_rule": "Nonzero exit code, nonempty error-level stderr, or timeout. Every stream decoded through EOF.",
+  "elapsed_seconds": 29.953,
+  "verified_at_utc": "2026-09-12T16:34:50.306382+00:00",
+  "failures": []
+}

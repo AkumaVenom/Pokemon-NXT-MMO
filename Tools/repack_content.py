@@ -6,6 +6,10 @@ Stable map/species/item keys are persistence contracts: do not rename live IDs.
 from __future__ import annotations
 import argparse,hashlib,json,os,tempfile
 from pathlib import Path
+try:
+ from .verify_audio import verify as verify_audio
+except ImportError:
+ from verify_audio import verify as verify_audio
 ROOT=Path(__file__).resolve().parents[1]
 def write_json(path:Path,value):
  path.parent.mkdir(parents=True,exist_ok=True)
@@ -45,18 +49,19 @@ def publish(world:dict,root:Path=ROOT):
  digest=hashlib.sha256();count=0
  for path in sorted(assets.rglob('*.png')):
   name=path.relative_to(assets).as_posix().encode();digest.update(len(name).to_bytes(4,'big'));digest.update(name);digest.update(hashlib.sha256(path.read_bytes()).digest());count+=1
- world.pop('pack',None);world['assetDigest']=digest.hexdigest()
+ audio=verify_audio(root)
+ world.pop('pack',None);world['assetDigest']=digest.hexdigest();world['audio']=audio
  world['pack']=hashlib.sha256(json.dumps(world,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()[:24]
  write_json(root/'Server/data/world.json',world)
  for k,m in world['maps'].items():write_json(assets/'world/maps'/f'{k}.json',{a:v for a,v in m.items() if a not in ('encounters','encounterSource','sourceHeader')})
- client={k:world[k] for k in ('version','pack','assetDigest','species','moves','objects','homes','starters','items')}
+ client={k:world[k] for k in ('version','pack','assetDigest','audio','species','moves','objects','homes','starters','items')}
  fields=('id','name','region','width','height','mapType','spawn','bank','map','section','playable')
  client['maps']={k:{a:m[a] for a in fields} for k,m in world['maps'].items()}
  write_json(assets/'world/client.json',client)
  report=root/'Docs/ASSET_REPORT.json'
  if report.exists():
   r=json.loads(report.read_text(encoding='utf-8'));r.update({'pack':world['pack'],'assetDigest':world['assetDigest'],'assetPngFiles':count,'maps':len(world['maps']),'catalogEntries':len(world['species']),'mapsWithWalkableSpawn':sum(m.get('playable',True) for m in world['maps'].values())});write_json(report,r)
- print(f"Published pack {world['pack']}: {len(world['maps'])} maps, {len(world['species'])} catalog entries, {count} PNG assets.")
+ print(f"Published pack {world['pack']}: {len(world['maps'])} maps, {len(world['species'])} catalog entries, {count} PNG assets, {audio['clipCount']} verified audio clips.")
  return world['pack']
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--root',type=Path,default=ROOT);args=p.parse_args();root=args.root.resolve();publish(json.loads((root/'Server/data/world.json').read_text(encoding='utf-8')),root)

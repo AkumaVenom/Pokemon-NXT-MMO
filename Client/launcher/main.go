@@ -14,6 +14,7 @@ import (
 	"io/fs"
 	"log"
 	"math"
+	"mime"
 	"net"
 	"net/http"
 	"net/url"
@@ -138,21 +139,37 @@ func run() error {
 		return e
 	}
 	nonce := hex.EncodeToString(nonceBytes)
+	audioPath, audioPathError := audioSettingsPath()
+	audioStore, audioLoadError := openAudioSettingsStore(audioPath)
+	if audioPathError != nil {
+		log.Printf("Audio preferences will use session settings: %v", audioPathError)
+	} else if audioLoadError != nil {
+		log.Printf("Audio preferences could not be loaded; using defaults: %v", audioLoadError)
+	}
 	stop := make(chan struct{}, 1)
+	// Windows registry associations must not change executable module or audio
+	// MIME types; the app deliberately enables X-Content-Type-Options: nosniff.
+	mime.AddExtensionType(".js", "text/javascript")
+	mime.AddExtensionType(".mjs", "text/javascript")
+	mime.AddExtensionType(".ogg", "audio/ogg")
+	mime.AddExtensionType(".wav", "audio/wav")
+	mime.AddExtensionType(".json", "application/json")
 	fileServer := http.FileServer(http.Dir(app))
 	mux := http.NewServeMux()
 	mux.HandleFunc("/bootstrap", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
-			http.Error(w, "Method not allowed", 405)
+			rejectLauncherRequest(w, r, "Method not allowed", 405)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-store")
-		json.NewEncoder(w).Encode(map[string]any{"endpoint": endpoint, "host": host, "port": int(port), "tls": secure, "pixelScale": int(pixel), "uiScale": ui, "nonce": nonce, "version": "0.1.0-alpha"})
+		audio, audioMessage := audioStore.snapshot()
+		json.NewEncoder(w).Encode(map[string]any{"endpoint": endpoint, "host": host, "port": int(port), "tls": secure, "pixelScale": int(pixel), "uiScale": ui, "nonce": nonce, "version": "0.2.0-alpha", "audio": audio, "audioPersistenceMessage": audioMessage})
 	})
+	mux.HandleFunc("/audio-settings", audioSettingsHandler(audioStore, base, nonce))
 	mux.HandleFunc("/heartbeat", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "POST" || r.URL.Query().Get("token") != nonce || r.Header.Get("Origin") != base {
-			http.Error(w, "Forbidden", 403)
+			rejectLauncherRequest(w, r, "Forbidden", 403)
 			return
 		}
 		heartbeat.Store(time.Now().Unix())
@@ -160,7 +177,7 @@ func run() error {
 	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" && r.Method != "HEAD" {
-			http.Error(w, "Method not allowed", 405)
+			rejectLauncherRequest(w, r, "Method not allowed", 405)
 			return
 		}
 		p, e := url.PathUnescape(r.URL.Path)
@@ -189,14 +206,14 @@ func run() error {
 	})
 	srv := &http.Server{ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 45 * time.Second, Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Host != ln.Addr().String() {
-			http.Error(w, "Forbidden host", 403)
+			rejectLauncherRequest(w, r, "Forbidden host", 403)
 			return
 		}
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "no-referrer")
 		w.Header().Set("Cross-Origin-Resource-Policy", "same-origin")
 		w.Header().Set("X-Frame-Options", "DENY")
-		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' "+scheme+"://"+net.JoinHostPort(host, strconv.Itoa(int(port)))+"; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' "+scheme+"://"+net.JoinHostPort(host, strconv.Itoa(int(port)))+"; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'")
 		mux.ServeHTTP(w, r)
 	})}
 	errc := make(chan error, 1)

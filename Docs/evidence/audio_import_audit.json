@@ -1,0 +1,96 @@
+{
+  "format": 1,
+  "status": "passed",
+  "counts": {
+    "maps": 859,
+    "species": 876,
+    "crySamples": 1548,
+    "normalCrySamples": 774,
+    "reverseCrySamples": 774,
+    "sourceAliases": 491,
+    "unavailableUnusedSamples": 4
+  },
+  "wavFilesVerified": 1548,
+  "wavBytes": 25213016,
+  "sampleRates": {
+    "10512": 1548
+  },
+  "durationSecondsRange": [
+    0.18093607305936074,
+    2.2378234398782344
+  ],
+  "errors": [],
+  "moveCoverage": {
+    "kanto": {
+      "moves": 354,
+      "movesWithNativeAudio": 354,
+      "events": 1141,
+      "normalizedCryPlaybacks": 9
+    },
+    "johto": {
+      "moves": 354,
+      "movesWithNativeAudio": 354,
+      "events": 1141,
+      "normalizedCryPlaybacks": 9
+    }
+  },
+  "sourceAliasCounts": {
+    "200": 5,
+    "0": 486
+  },
+  "unavailableUnusedSamples": [
+    {
+      "source": "johto",
+      "cryId": 251,
+      "reverse": false,
+      "reason": "johto: range -0x8000000+1 exceeds ROM"
+    },
+    {
+      "source": "johto",
+      "cryId": 287,
+      "reverse": false,
+      "reason": "johto: invalid or looping cry sample at 0x63321c"
+    },
+    {
+      "source": "johto",
+      "cryId": 119,
+      "reverse": true,
+      "reason": "johto: invalid or looping cry sample at 0x7519e6"
+    },
+    {
+      "source": "johto",
+      "cryId": 287,
+      "reverse": true,
+      "reason": "johto: invalid or looping cry sample at 0x63321c"
+    }
+  ],
+  "sigmaCryCallChain": {
+    "PlayCryNormal": "0x71df0",
+    "CallPlayCryInternal": "0x71e1a",
+    "PlayCryInternal": "0x71f78",
+    "CallSpeciesToCryId": "0x720c4",
+    "SpeciesToCryId": "0x43304",
+    "ActiveIndexTable": "0xaa3d74",
+    "NormalCryToneTable": "0x48c914"
+  },
+  "binaryUnitTests": {
+    "file": "Tests/test_rom_audio_importer.py",
+    "passed": 12,
+    "covers": [
+      "DPCM nibble order",
+      "predictor reset",
+      "signed wrap",
+      "truncated blocks",
+      "WAV sample identity",
+      "unknown ROM rejection",
+      "bounded animation operand parsing",
+      "SFX delays/repeats/pan",
+      "unconditional branch reachability"
+    ]
+  },
+  "interpretationLimits": [
+    "Native cry samples are decoded losslessly; GBA hardware DAC noise and filter response are not baked in.",
+    "Browser move timing uses explicit ROM delay frames and bounded native callback parameters; asynchronous original visual-task timing is not emulated.",
+    "All 491 custom Sigma-source species currently in the game use native ROM aliases: 486 map to cry 0 and 5 old-Unown-slot forms map to cry 200."
+  ]
+}

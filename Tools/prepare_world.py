@@ -116,7 +116,7 @@ def main():
   m['spawn']=list(min(safe)[1:]) if safe else [0,0]
   if m['id']=='kanto_3_0':m['spawn']=[10,10]
   if m['id']=='johto_3_0':m['spawn']=[17,10]
- world={'format':1,'version':'0.1.0-alpha','maps':raw['maps'],'species':catalog,'moves':moves,'objects':raw['objects'],'homes':{'Kanto':'kanto_3_0','Johto':'johto_3_0'},'starters':['fr_1','fr_4','fr_7','fr_152','fr_155','fr_158'],'items':{'pokeball':{'name':'Poke Ball','price':200,'capture':1},'greatball':{'name':'Great Ball','price':600,'capture':1.5},'ultraball':{'name':'Ultra Ball','price':1200,'capture':2},'potion':{'name':'Potion','price':300,'heal':20},'superpotion':{'name':'Super Potion','price':700,'heal':50}}}
+ world={'format':1,'version':'0.2.0-alpha','maps':raw['maps'],'species':catalog,'moves':moves,'objects':raw['objects'],'homes':{'Kanto':'kanto_3_0','Johto':'johto_3_0'},'starters':['fr_1','fr_4','fr_7','fr_152','fr_155','fr_158'],'items':{'pokeball':{'name':'Poke Ball','price':200,'capture':1},'greatball':{'name':'Great Ball','price':600,'capture':1.5},'ultraball':{'name':'Ultra Ball','price':1200,'capture':2},'potion':{'name':'Potion','price':300,'heal':20},'superpotion':{'name':'Super Potion','price':700,'heal':50}}}
  pack=hashlib.sha256(json.dumps(world,sort_keys=True,separators=(',',':')).encode()).hexdigest()[:24];world['pack']=pack
  D.mkdir(parents=True,exist_ok=True);writejson(D/'world.json',world)
  for k,m in raw['maps'].items():writejson(A/'world/maps'/f'{k}.json',{a:v for a,v in m.items() if a not in ('encounters','encounterSource','sourceHeader')})

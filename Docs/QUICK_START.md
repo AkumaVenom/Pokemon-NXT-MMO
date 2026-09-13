@@ -46,6 +46,12 @@ The workflow creates a separate NXT database and grants the dedicated applicatio
 
 Schema tables are created automatically on the first successful world startup. Tables use InnoDB on MySQL. Database schemas newer than this server are rejected instead of downgraded. This is schema version 1; no old NXT production schema is assumed to exist.
 
+## 3b. Set up internet hosting, if needed
+
+For internet players or the error **Cannot load TLS files**, run **`2b - Configure Online Hosting.cmd`**. Enter the public IP/domain players will use and generate a private-world certificate, or import your existing certificate/key. It saves matching TLS settings and creates a public-only player connection kit. Keep your already configured MySQL settings.
+
+Follow **`ONLINE_HOSTING.md`** for trusting a generated certificate on each player PC, matching client settings and forwarding the game port. The local/LAN plaintext examples below apply only when you have kept TLS off for isolated LAN testing. Once TLS is enabled, use the kit's hostname/port and `tls=true` on every client.
+
 ## 4. Start the administrator console
 
 Run:
@@ -152,6 +158,8 @@ Defaults `pixel_scale=0` and `ui_scale=0` select responsive UI sizing, integer w
 
 **Edge not found:** install Edge or provide its complete `msedge.exe` path in `Client/config.ini` under `[launcher] edge_path`. Do not put a URL there. Closing the app causes the loopback helper to exit after its configurable idle period, normally 90 seconds.
 
+**Missing TLS certificate/key:** run `2b - Configure Online Hosting.cmd` in the built Server folder. Restoring only config.ini without its certificate files cannot start a TLS listener. See `ONLINE_HOSTING.md`.
+
 **World unavailable:** start MySQL and the world console; check host/port/TLS on both sides. The remote PC must not use `127.0.0.1` for a world on another PC. Restart the client after changing its INI.
 
 **Access denied / database not configured:** rerun the MySQL setup with correct existing admin credentials and a dedicated app account. Check `POKEMON_NXT_DB_PASSWORD`. Do not change the other game's root credentials. `Check Configuration.cmd` performs a non-mutating configuration/dependency/connection check.
@@ -163,3 +171,12 @@ Defaults `pixel_scale=0` and `ui_scale=0` select responsive UI sizing, integer w
 **Already online:** log the account out of its other window. Use separate accounts for multiplayer. After connection loss, allow cleanup to complete before reconnecting.
 
 **Missing exit or unusual Sigma area name:** extraction preserves repurposed map layouts and stable IDs; original scripts are not running. Use the atlas/Return home. Report the map ID and coordinates with the issue.
+
+
+## World startup reports another owner or has no log
+
+Startup fix **1.1.2** records startup diagnostics before settings/content/database loading, shows the full log path, and releases its own lease if a later startup stage fails. The original alpha could leave a lease behind after a failed listener/TLS/extension startup while writing no error to world.log.
+
+Use the supplied World Startup Fix hotfix for an already configured Server folder; no rebuilding or MySQL setup rerun is required. Start only one NXT world for the same database. The corrected server automatically waits up to 65 seconds for an abandoned lease to expire; if another world refreshes it, it explains that the running world must be shut down. It never clears a live lease forcibly. A future heartbeat prompts a clock check instead of unsafe takeover.
+
+Read the precise startup cause and log path in the console. For an occupied port, stop the other NXT world or select a free server port and match the client configuration. See `Server/WORLD_STARTUP_FIX.md` and `Docs/WORLD_STARTUP_FIX_TEST_REPORT.md`.

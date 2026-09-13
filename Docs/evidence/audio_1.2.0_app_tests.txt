@@ -1,0 +1,16 @@
+✔ confirmed map context is applied before loading and a later Surf event is not overwritten (3.940956ms)
+✔ late map completion after logout cannot play a stale warp (1.137601ms)
+✔ late failed map load after logout cannot display a stale error (0.936969ms)
+✔ messages from a closing socket cannot rejoin a logged-out session (1.812726ms)
+✔ disconnect closes top-layer dialogs so the reconnect overlay is reachable (0.865181ms)
+✔ battle has its own accessible Sound action while the topbar is inert (1.865195ms)
+✔ audio preferences post full latest settings to the launcher with its token (6.150359ms)
+✔ mixer gesture handlers unlock synchronously and opening remains public for battle UI (1.807828ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 102.526993

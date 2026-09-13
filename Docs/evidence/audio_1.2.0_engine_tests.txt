@@ -1,0 +1,31 @@
+PASS Catalog initialization creates no context or autoplay; unlock is explicit
+PASS Adjacent maps sharing a track do not restart music; battle returns to map
+PASS Latest map wins when earlier music fetch completes later
+PASS Disconnect aborts pending assets and prevents stale music or effects
+PASS Duplicate waiting snapshots do not replay turn sounds
+PASS Muted or locked history is consumed without delayed replay on unlock
+PASS Settings clamp volumes, isolate callback failures, and ramp focus mute
+PASS Asset requests deduplicate; rapid menu selection coalesces
+PASS Stale UI fetch cannot beep several seconds after an interaction
+PASS Unavailable clips fail silently and are not fetched every click
+PASS Inspection chooses latest Pokemon, even with out-of-order cries
+PASS Low HP loop is singular, optional, and stops on healing or leaving battle
+PASS Voice priority limit bounds overlapping clips without evicting music
+PASS Decoded cache respects 256 MiB while protecting active track buffers
+PASS Untrusted catalog paths never fetch outside the asset folder
+PASS Late catalog completion remains usable after a scene transition
+PASS Event history is bounded and source IDs deduplicate world cues
+PASS Map inherit/silence flags preserve the native ambient rules
+PASS Battle source remains authoritative during cross-region rescue relocation
+PASS Movement audio only follows accepted ledges and genuine blocked moves
+PASS Ordered battle sequence waits for the first clip while bounding stalls
+PASS Authoritative Surf toggles replace field music without an overlapping effect
+PASS Native fanfares duck ambient music and restore the chosen music volume
+PASS Native move profile uses ROM timing, repeat counts, and perspective pan
+PASS Pending native move cues are cancelled when leaving the battle
+PASS Reverse cry tasks never substitute the normal cry when reverse data is absent
+PASS Native reverse/forward cry modes honor pitch, note-off, and phase ordering
+PASS Oversized two-track transition fades out before replacing its pinned buffer
+PASS Shipped ROM catalog fits native scheduling bounds without dropping primary effects
+
+29 audio engine checks passed.

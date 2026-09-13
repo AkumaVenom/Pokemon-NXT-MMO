@@ -32,20 +32,23 @@ import traceback
 import zipfile
 from typing import Iterator, Mapping, Sequence, TextIO
 
-BUILD_TOOL_VERSION = "1.1.1"
+BUILD_TOOL_VERSION = "1.2.3"
 ROOT = Path(__file__).resolve().parents[1]
 TOP_FILES = {
     "README.md", "CHANGELOG.md", "THIRD_PARTY_NOTICES.md", ".gitignore",
     "BUILD_ALL.bat", "START_HERE_BUILD.md",
 }
 TREE_EXTENSIONS = {
-    "Client": {".go", ".mod", ".sum", ".js", ".css", ".html", ".json", ".png", ".md", ".txt"},
+    "Client": {".go", ".mod", ".sum", ".js", ".mjs", ".css", ".html", ".json", ".png", ".ogg", ".wav", ".md", ".txt"},
     "Server": {".py", ".go", ".mod", ".sum", ".json", ".md", ".txt", ".cmd", ".bat"},
     "Tools": {".py", ".json", ".md", ".txt"},
-    "Tests": {".py", ".ps1", ".md", ".txt"},
+    "Tests": {".py", ".ps1", ".mjs", ".md", ".txt"},
     "Docs": {".md", ".txt", ".json", ".png"},
     "Build": {".py", ".ps1", ".md", ".txt", ".json", ".ini"},
 }
+NATIVE_AUDIO_SOURCE_EXTENSIONS = {".cpp", ".cc", ".c", ".h", ".hpp", ".hxx", ".inc", ".cmake", ".sh", ".in", ".rst"}
+NATIVE_AUDIO_LICENSE_NAMES = {"license", "copying", "notice", "authors", "copyright", "copying.lesser"}
+NATIVE_AUDIO_IGNORED_DIRS = {"build", "_build", "obj", "cmakefiles", "cmake-build-debug", "cmake-build-release"}
 IGNORED_DIRS = {
     ".git", ".venv", "venv", ".build", "dist", "__pycache__", "node_modules",
     ".idea", ".vscode", "ui_artifacts", "packages", "backups", "backup",
@@ -58,9 +61,17 @@ FORBIDDEN_EXTENSIONS = {
 REQUIRED_SOURCE = (
     "Client/launcher/go.mod", "Client/launcher/main.go", "Client/launcher/platform_windows.go",
     "Client/app/index.html", "Client/app/app.js", "Client/app/renderer.js", "Client/app/styles.css",
+    "Client/app/audio.js", "Client/app/audio_controls.js", "Client/app/assets/audio/catalog.json",
+    "Client/launcher/audio_settings.go",
     "Client/app/assets/world/client.json", "Server/launcher/go.mod", "Server/launcher/main.go",
     "Server/server.py", "Server/nxt/store.py", "Server/data/world.json", "Server/requirements.txt",
-    "Tools/repack_content.py", "Tests/test_core.py", "Tests/test_network.py",
+    "Server/nxt/tls.py", "Server/setup_online.py", "Server/setup_online_gui.py",
+    "Server/2b - Configure Online Hosting.cmd", "Tests/test_online_setup.py", "Tests/test_tls_network.py",
+    "Tools/repack_content.py", "Tools/verify_audio.py", "Tests/test_core.py", "Tests/test_network.py",
+    "Server/nxt/async_tasks.py", "Server/nxt/world.py",
+    "Tests/test_async_tasks.py", "Tests/test_replication_state.py", "Tests/test_replication_network.py",
+    "Tests/test_login_lifecycle.py", "Tests/test_progress_persistence.py",
+    "Tests/check_registration.mjs", "Tests/check_renderer_replication.mjs",
     "Build/smoke_launcher.py", "Build/config_templates/Client/config.ini",
     "Build/config_templates/Server/config.ini", "BUILD_ALL.bat",
     "Build/bootstrap_windows.ps1", "Build/bootstrap_lib.ps1", "Build/toolchains.json",
@@ -109,9 +120,15 @@ def is_source_file(relative: Path | PurePosixPath) -> bool:
     top = parts[0]
     if top not in TREE_EXTENSIONS:
         return False
-    if path.suffix.casefold() not in TREE_EXTENSIONS[top]:
+    native_audio = top == "Tools" and len(parts) > 2 and parts[1] == "native_audio"
+    if native_audio and any(part.casefold() in NATIVE_AUDIO_IGNORED_DIRS for part in parts[2:-1]):
+        return False
+    native_source = native_audio and (path.suffix.casefold() in NATIVE_AUDIO_SOURCE_EXTENSIONS or name in NATIVE_AUDIO_LICENSE_NAMES)
+    if path.suffix.casefold() not in TREE_EXTENSIONS[top] and not native_source:
         return False
     if top == "Server":
+        if len(parts) > 2 and parts[1].casefold().startswith(("online-client-kit-", "online-setup-")):
+            return False
         if len(parts) > 2 and parts[1] in {"logs", "certificates"}:
             return path.name in {"README.md", "README.txt"} and len(parts) == 3
         if len(parts) > 2 and parts[1] == "data":
@@ -449,7 +466,8 @@ def build(args: argparse.Namespace, root: Path, cache: Path, log: Log, build_id:
         log.say("\n[1/7] Snapshot editable source with clean release configs")
         count = snapshot_source(root, stage)
         log.say(f"Staged {count:,} source/content files. Live configs, saves, TLS files and logs excluded.")
-        log.say("\n[2/7] Publish a matching native content pack in the isolated snapshot")
+        log.say("\n[2/7] Verify extracted audio and publish a matching native content pack")
+        log.say("Audio is supplied ready to play; this build needs no ROM, native audio compiler or FFmpeg.")
         run([python, stage / "Tools/repack_content.py", "--root", stage], cwd=stage, log=log, env=env)
         world = json.loads((stage / "Server/data/world.json").read_text(encoding="utf-8"))
         version = str(world["version"])
@@ -494,11 +512,28 @@ def build(args: argparse.Namespace, root: Path, cache: Path, log: Log, build_id:
         smoke = json.loads(smoke_path.read_text(encoding="utf-8"))
         node = shutil.which("node")
         if node:
-            for js in sorted((stage / "Client/app").rglob("*.js")):
+            for js in sorted(path for path in (stage / "Client/app").rglob("*") if path.suffix in {".js", ".mjs"}):
                 run([node, "--check", "--input-type=module"], cwd=stage, log=log, stdin=js.read_text(encoding="utf-8"))
+            audio_test = stage / "Tests/check_audio_engine.mjs"
+            if audio_test.is_file():
+                run([node, audio_test], cwd=stage, log=log)
+                audio_engine = "passed with installed Node.js"
+            else:
+                audio_engine = "not run: optional audio engine test is absent"
+            audio_app_test = stage / "Tests/check_audio_app_integration.mjs"
+            if audio_app_test.is_file():
+                run([node, "--test", audio_app_test], cwd=stage, log=log)
+                audio_app_integration = "passed with installed Node.js"
+            else:
+                audio_app_integration = "not run: optional audio app integration test is absent"
+            run([node, "--test", stage / "Tests/check_registration.mjs", stage / "Tests/check_renderer_replication.mjs"], cwd=stage, log=log)
+            replication_client = "passed with installed Node.js"
             javascript = "passed with installed Node.js"
         else:
+            replication_client = "not run: optional Node.js is not installed"
             javascript = "not run: optional Node.js is not installed"
+            audio_engine = "not run: optional Node.js is not installed"
+            audio_app_integration = "not run: optional Node.js is not installed"
             log.say("Node.js is optional and was not found. JavaScript syntax check explicitly skipped; UI files are copied unchanged.")
         remove_test_outputs(stage)
         info = {
@@ -508,8 +543,10 @@ def build(args: argparse.Namespace, root: Path, cache: Path, log: Log, build_id:
             "go": go_version, "python_environment": package_info,
             "production_dependency_pins_enforced": not args.existing_environment,
             "content_pack": world["pack"], "asset_digest": world["assetDigest"],
+            "audio": world["audio"], "world_startup_fix": "1.1.2",
             "checks": {"python_tests_run": test_count, "python_tests_passed": passed_count, "python_tests_skipped": skipped_count, "go_tests": "passed", "windows_go_vet": "passed",
-                       "launcher_platform": launcher_platform, "http_smoke": smoke, "javascript_syntax": javascript},
+                       "launcher_platform": launcher_platform, "http_smoke": smoke, "javascript_syntax": javascript,
+                       "extracted_audio": "verified before content publication", "audio_engine": audio_engine, "audio_app_integration": audio_app_integration, "registration_and_replication_client": replication_client},
             "executables": binaries,
             "not_verified_by_this_build": ["Native Edge app UI", "MySQL/MariaDB runtime and persistence", "TLS deployment", "1,000 concurrent network sessions"],
             "configuration_policy": "Release templates only. Deployed Client/config.ini and Server/config.ini are not copied.",

@@ -1,0 +1,28 @@
+{
+  "baseline": "audio source build 1.2.0",
+  "changedFiles": [
+    "START_HERE_BUILD.md",
+    "BUILD_ALL.bat",
+    "README.md",
+    "CHANGELOG.md",
+    "Docs/AUDIO_GUIDE.md",
+    "Build/bootstrap_lib.ps1",
+    "Build/smoke_launcher.py",
+    "Build/toolchains.json",
+    "Build/build.py",
+    "Client/launcher/audio_settings.go",
+    "Client/launcher/main.go"
+  ],
+  "missingFiles": [],
+  "clientAssetFilesUnchanged": 14129,
+  "serverCodeAndWorldUnchanged": true,
+  "audioClipsUnchanged": 2366,
+  "contentPack": "e05cb982d1fd4137629f86b0",
+  "pythonTests": {
+    "run": 229,
+    "passed": 228,
+    "skipped": 1
+  },
+  "nativeWindowsFixExecution": false,
+  "newGoTestsExecutedHere": false
+}

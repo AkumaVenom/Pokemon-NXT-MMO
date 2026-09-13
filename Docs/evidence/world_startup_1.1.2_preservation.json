@@ -1,0 +1,27 @@
+{
+  "baseline_build_tools": "1.1.1",
+  "updated_build_tools": "1.1.2",
+  "baseline_zip_sha256": "d99182b8647033e2fdf4fb1b1cfed775050fda782ca50a5cd43bb04c167b9cbb",
+  "original_files_compared": 11877,
+  "unchanged_original_files": 11862,
+  "changed_original_files": [
+    "BUILD_ALL.bat",
+    "Build/bootstrap_lib.ps1",
+    "Build/build.py",
+    "Build/toolchains.json",
+    "CHANGELOG.md",
+    "Docs/AUTOMATIC_BUILD.md",
+    "Docs/BUILD_FROM_SOURCE.md",
+    "Docs/QUICK_START.md",
+    "README.md",
+    "START_HERE_BUILD.md",
+    "Server/3 - Start World Server.cmd",
+    "Server/logs/README.txt",
+    "Server/nxt/store.py",
+    "Server/server.py",
+    "Tests/README.md"
+  ],
+  "client_files_all_byte_identical": true,
+  "server_configs_requirements_content_gameplay_mysql_setup_byte_identical": true,
+  "note": "Compared before regenerating SOURCE_SHA256SUMS.txt. New startup docs/test/evidence files are additional. Only three server scripts are in the standalone hotfix."
+}

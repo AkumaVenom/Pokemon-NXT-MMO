@@ -19,3 +19,9 @@ No automated MySQL deployment, 1,000-socket benchmark or original-ROM story pari
 `test_auto_bootstrap.py` checks official download declarations, hash/signature guards, bootstrap retention, Windows line endings and automatic build-venv recovery. It invokes the actual `check_bootstrap_windows.ps1` helper suite on Windows; other hosts explicitly skip it. The native helper suite checks PowerShell parsing, native argument quoting, versions, URLs, hashes and ZIP traversal without downloading/installing tools. These helper tests are not an end-to-end installation test. See `Docs/AUTO_BUILD_TEST_REPORT.md`.
 
 Build tools 1.1.1 also check reserved PowerShell variable assignments on every host, build-version consistency, and native Go SDK acceptance/discovery, explicit overrides, offline handling and staged/cache paths using disposable SDK fixtures. The native cases stub external processes and downloads; they do not install a real compiler. See `Docs/AUTO_BUILD_1.1.1_TEST_REPORT.md`.
+
+## World startup fix 1.1.2
+
+`test_world_lease.py` checks ownership, expiry boundaries, future clocks, old-owner fencing and idempotent shutdown with real temporary SQLite stores. `test_server_startup.py` checks the startup lifecycle, lease recovery and persistent failure logs. `test_world_startup_patch.py` checks the small scripts-only patch installer. See `Docs/WORLD_STARTUP_FIX_TEST_REPORT.md`; SQLite/mocked checks do not imply a live Windows/MySQL acceptance run.
+
+`test_online_setup.py` verifies certificate generation/import, preservation of database settings and public-only export. `test_tls_network.py` verifies real HTTPS/WSS with certificate and hostname validation, plus TLS configuration failures. `Docs/ONLINE_HOSTING_TEST_REPORT.md` records the current execution results.

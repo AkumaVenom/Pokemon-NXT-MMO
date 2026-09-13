@@ -1,13 +1,21 @@
 # POKEMON NXT MMO
-## 0.1.0-alpha · First networked exploration build
+## 0.2.0-alpha · ROM audio integration
+
+**Starter, replication and saving fix 1.2.3:** preserves the selected starter in either region, strengthens player ownership and reconnect handling, and includes regression coverage for distinct accounts. Download both complete 1.2.3 source ZIPs, extract them into the same fresh destination, and run `BUILD_ALL.bat`. All extracted audio, online TLS setup 1.2.2, Windows build fix 1.2.1 and world startup fix 1.1.2 are retained. See `Docs/REPLICATION_FIX_1.2.3.md` and `Docs/REPLICATION_TEST_REPORT.md`.
+
+This release adds music, sound effects and Pokemon cries from the supplied FireRed and Ultra Shiny Gold Sigma ROMs to the playable MMO alpha. Area music follows the original map headers; battles, captures, healing, shopping, trading and interface actions have sound cues. Use **Sound settings** on the login screen or **Sound** in the game, including during battles. See **`Docs/AUDIO_GUIDE.md`** for controls, coverage and source limitations.
 
 > **MySQL setup hotfix 1.1.0:** `Server/2 - Configure MySQL.cmd` now opens editable password fields with masking and a Show passwords option. It asks for the **existing MySQL administrator password**, not a new root password. Leave both NXT application password fields blank for automatic generation/reuse. See `Server/MYSQL_SETUP_FIX.md`. The fix does not change gameplay, protocol, database schema, root credentials or other games.
 
-> **Automatic source build 1.1.1:** extract the full ZIP and double-click **`BUILD_ALL.bat`**. It downloads/installs missing **Go and full Python x64**, then installs isolated Python dependencies, tests, compiles and packages the game. No manual Go/Python installation is required on a normal Windows 10/11 x64 build PC. Internet is needed for missing downloads. Build tools 1.1.1 correct the PowerShell reserved-variable error during Go discovery and validation. Read **`START_HERE_BUILD.md`**. This source ZIP contains no prebuilt game EXEs; successful outputs appear under `dist/build-<timestamp>`. Gameplay remains v0.1.0-alpha; the MySQL setup 1.1.0 fix is preserved.
+> **Automatic source build 1.2.3:** extract the full ZIP and double-click **`BUILD_ALL.bat`**. It downloads/installs missing **Go and full Python x64**, then installs isolated Python dependencies, tests, compiles and packages the game. The extracted audio is included: normal builds need no ROM, FFmpeg or separate audio renderer. No manual Go/Python installation is required on a normal Windows 10/11 x64 build PC. Internet is needed for missing downloads. The PowerShell `$HOME` correction, MySQL setup 1.1.0 and world startup fix 1.1.2 are preserved. Read **`START_HERE_BUILD.md`**. This source ZIP contains no prebuilt game EXEs; successful outputs appear under `dist/build-<timestamp>`.
+
+> **World startup fix 1.1.2:** failed startup now releases its own database lease and writes diagnostics to the absolute log path shown in the console. A recent abandoned lease receives a bounded automatic retry; a world that is still refreshing its lease remains protected. Existing configured deployments can use the small scripts-only hotfix without rebuilding or rerunning MySQL setup. See **`Server/WORLD_STARTUP_FIX.md`** and **`Docs/WORLD_STARTUP_FIX_TEST_REPORT.md`**.
 
 A new, independent client/server game for Akuma. Extracted Kanto and Johto/Sigma maps and sprites run in a native Windows app window backed by an authoritative dedicated world service. **No ROM or emulator is required to play.** This is not the existing Pokemon Vortex browser project and does not use its database.
 
 **Start with `Docs/QUICK_START.md`.** The complete folder must be extracted before launching. The first-time server install needs an internet connection for Python dependencies; client gameplay does not download assets or access a CDN.
+
+**Upgrading a configured 1.1.2 installation:** extract this source into a new folder, build a new output, and deploy its matching Client and Server together. Preserve your existing client/server configuration and world database; do not overwrite them with release templates or rerun MySQL setup just to add audio. The scripts-only 1.1.2 hotfix does not contain this audio release. See `Docs/AUDIO_GUIDE.md` for the upgrade steps.
 
 ### What you can test now
 
@@ -21,22 +29,23 @@ This build includes **859 extracted map layouts** (425 FireRed + 434 Sigma), **8
 
 `Server/Pokemon NXT World Server.exe` is a compiled Windows x64 console launcher. It starts the Python world service from its local virtual environment and retains the administrator's CMD console. It is **not a self-contained bundled Python runtime**. Install server dependencies and configure MySQL first.
 
-Both executables were cross-compiled and inspected as Windows PE x64 files. **They have not been executed on Windows in this build environment.** The service, real WebSocket transport, gameplay contracts and client UI were tested on Linux; see the exact coverage in `Docs/TEST_REPORT.md`.
+The original alpha launchers were cross-compiled and inspected as Windows PE x64 files. Those historical results are in `Docs/TEST_REPORT.md`. **Native Windows/Edge and live MySQL acceptance are not established by this environment.** For the checks actually performed on this audio release, use **`Docs/AUDIO_TEST_REPORT.md`**.
 
 ### Folder separation
 
 ```text
-Pokemon_NXT_MMO_0.1.0-alpha/
+Pokemon_NXT_MMO_0.2.0-alpha/
   Client/                         Player distribution; no database credentials
     Pokemon NXT MMO.exe
     config.ini                    Join IP/hostname, port, TLS and display settings
-    app/                          UI, renderer and extracted PNG/JSON assets
+    app/                          UI, renderer and extracted PNG/JSON/audio assets
     launcher/                     Complete Go launcher source
   Server/                         Private administrator distribution
     Pokemon NXT World Server.exe
     config.ini                    Listen address, DB, security and world settings
     1 - Install Server Dependencies.cmd
     2 - Configure MySQL.cmd
+    2b - Configure Online Hosting.cmd
     3 - Start World Server.cmd
     Start Developer SQLite World.cmd
     server.py, nxt/, data/, extensions/, launcher/
@@ -49,7 +58,7 @@ Pokemon_NXT_MMO_0.1.0-alpha/
 
 ### Essential scope notes
 
-This is a playable **networking/exploration alpha**, not a finished FireRed-equivalent MMORPG. Original story scripts, progression gates, gym/badge campaign, quests, audio/music, tile animations, full move effects, abilities, evolution, breeding and autonomous trainer bots are not implemented. Static NPCs have alpha interactions and eligible trainers have simplified practice battles; original trainer teams and story logic are not recreated.
+This is a playable **networking/exploration alpha**, not a finished FireRed-equivalent MMORPG. Original story scripts, progression gates, gym/badge campaign, quests, tile animations, full move effects, abilities, evolution, breeding and autonomous trainer bots are not implemented. Static NPCs have alpha interactions and eligible trainers have simplified practice battles; original trainer teams and story logic are not recreated. The new sound system covers the implemented gameplay, but does not add those missing systems or emulate the original battle-animation engine. Sigma's actual species-to-cry aliases are preserved; its catalog does not provide a distinct original cry for every expanded species.
 
 The current followers use **two-frame extracted party icons**, not a verified complete set of directional overworld Pokemon animations. The hard account admission cap is **1,000**, but **1,000 real concurrent connections have not been load-tested**. Do not advertise this alpha as a proven 1,000-player production service.
 
@@ -58,7 +67,10 @@ MySQL is the default persistence backend and has implemented InnoDB transactions
 ### Documentation
 
 `Docs/QUICK_START.md` — local MySQL, two-PC LAN, controls, troubleshooting and admin commands.  
+`Docs/ONLINE_HOSTING.md` — TLS setup, player certificates, router forwarding and online troubleshooting.  
 `Docs/ALPHA_SCOPE.md` — what is playable and what is still missing.  
+`Docs/AUDIO_GUIDE.md` — sound controls, upgrade steps, extracted coverage and limitations.  
+`Docs/AUDIO_TEST_REPORT.md` — current audio release validation and platform boundaries.  
 `Docs/ARCHITECTURE.md` — protocol, authority, ownership, database and scaling boundaries.  
 `Docs/MODDING.md` — add or edit native assets/content without any ROM.  
 `Docs/NETWORK_AND_SECURITY.md` — LAN/TLS separation, accounts, backups and deployment checklist.  

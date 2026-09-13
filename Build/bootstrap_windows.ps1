@@ -14,7 +14,7 @@ try {
         throw 'Use Windows 10/11 x64 and Windows PowerShell 5.1. The BAT selects the 64-bit Windows host automatically.'
     }
     if (-not $env:LOCALAPPDATA) { throw 'The Windows user LOCALAPPDATA folder is unavailable.' }
-    foreach ($required in @('Build\build.py','Build\bootstrap_lib.ps1','Build\toolchains.json','Server\requirements.txt','Client\launcher\go.mod')) {
+    foreach ($required in @('Build\build.py','Build\bootstrap_lib.ps1','Build\toolchains.json','Server\requirements.txt','Client\launcher\go.mod','Client\launcher\audio_settings.go','Client\app\audio.js','Client\app\audio_controls.js','Client\app\assets\audio\catalog.json','Tools\verify_audio.py')) {
         if (-not (Test-Path -LiteralPath (Join-Path $root $required) -PathType Leaf)) { throw "Missing $required. Extract the entire source ZIP first." }
     }
     [void][IO.Directory]::CreateDirectory($logDirectory)

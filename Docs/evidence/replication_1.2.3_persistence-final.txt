@@ -1,0 +1,16 @@
+test_battle_save_failure_spends_no_ball_and_grants_no_capture (test_progress_persistence.ProgressPersistenceTests.test_battle_save_failure_spends_no_ball_and_grants_no_capture) ... ok
+test_capture_xp_level_money_and_pp_survive_without_logout_save (test_progress_persistence.ProgressPersistenceTests.test_capture_xp_level_money_and_pp_survive_without_logout_save) ... ok
+test_failed_travel_and_surf_leave_live_and_saved_progress_unchanged (test_progress_persistence.ProgressPersistenceTests.test_failed_travel_and_surf_leave_live_and_saved_progress_unchanged) ... ok
+test_failed_warp_rejects_movement_and_restores_position_and_follower (test_progress_persistence.ProgressPersistenceTests.test_failed_warp_rejects_movement_and_restores_position_and_follower) ... ok
+test_heal_items_and_party_order_are_durable_on_server (test_progress_persistence.ProgressPersistenceTests.test_heal_items_and_party_order_are_durable_on_server) ... ok
+test_newer_commit_wins_over_older_inflight_autosave_snapshot (test_progress_persistence.ProgressPersistenceTests.test_newer_commit_wins_over_older_inflight_autosave_snapshot) ... ok
+test_periodic_snapshot_persists_movement_without_manual_save (test_progress_persistence.ProgressPersistenceTests.test_periodic_snapshot_persists_movement_without_manual_save) ... ok
+test_registration_rejects_invalid_home_starter_and_boolean_appearance (test_progress_persistence.ProgressPersistenceTests.test_registration_rejects_invalid_home_starter_and_boolean_appearance) ... ok
+test_service_automatically_saves_later_movement_at_configured_interval (test_progress_persistence.ProgressPersistenceTests.test_service_automatically_saves_later_movement_at_configured_interval) ... ok
+test_travel_home_and_surf_are_durable_before_success_packets (test_progress_persistence.ProgressPersistenceTests.test_travel_home_and_surf_are_durable_before_success_packets) ... ok
+test_warp_checkpoint_survives_cold_restart (test_progress_persistence.ProgressPersistenceTests.test_warp_checkpoint_survives_cold_restart) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 5.265s
+
+OK

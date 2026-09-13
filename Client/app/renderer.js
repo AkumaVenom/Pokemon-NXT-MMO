@@ -1,7 +1,7 @@
 /** Integer-scaled ROM assets, device-pixel-ratio canvas, interpolated replicated entities. */
 export class WorldRenderer {
  constructor(canvas,content,onPick){
-  this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.content=content;this.onPick=onPick;this.images=new Map();this.players=new Map();this.map=null;this.selfId=null;this.scale=3;this.manualScale=0;this.hits=[];this.generation=0;this.cam={x:0,y:0};this.frames=0;this.lastFps=performance.now();this.fps=0;this.active=false;
+  this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.content=content;this.onPick=onPick;this.images=new Map();this.players=new Map();this.map=null;this.pendingMap=null;this.selfId=null;this.scale=3;this.manualScale=0;this.hits=[];this.generation=0;this.cam={x:0,y:0};this.frames=0;this.lastFps=performance.now();this.fps=0;this.active=false;
   this.resizeObserver=new ResizeObserver(()=>this.resize());this.resizeObserver.observe(canvas);
   canvas.addEventListener('click',e=>{const r=canvas.getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;const candidates=this.hits.filter(h=>x>=h.x&&x<=h.x+h.w&&y>=h.y&&y<=h.y+h.h);const hit=candidates.find(h=>h.kind==='player'&&h.id!==this.selfId)||candidates.find(h=>h.kind==='npc');if(hit)this.onPick(hit,e.clientX,e.clientY);});
   canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;canvas.style.cursor=this.hits.some(h=>x>=h.x&&x<=h.x+h.w&&y>=h.y&&y<=h.y+h.h&&!(h.kind==='player'&&h.id===this.selfId))?'pointer':'default';});
@@ -10,9 +10,24 @@ export class WorldRenderer {
  resize(){const r=this.canvas.getBoundingClientRect();if(!r.width||!r.height)return;this.width=r.width;this.height=r.height;this.dpr=Math.min(window.devicePixelRatio||1,4);this.rootFont=parseFloat(getComputedStyle(document.documentElement).fontSize);this.canvas.width=Math.round(r.width*this.dpr);this.canvas.height=Math.round(r.height*this.dpr);this.scale=this.manualScale||Math.max(2,Math.min(6,Math.floor(r.height/195)));}
  setScale(scale){this.manualScale=Math.max(1,Math.min(8,scale));this.resize();}
  image(path){if(!path)return null;if(!this.images.has(path)){const image=new Image();image.src='assets/'+path;this.images.set(path,image);}const img=this.images.get(path);return img.complete&&img.naturalWidth?img:null;}
- async loadMap(id){const serial=++this.generation;const response=await fetch('assets/world/maps/'+encodeURIComponent(id)+'.json');if(!response.ok)throw Error('Map data is missing: '+id);const map=await response.json();if(serial!==this.generation)return false;if(this.map){for(const path of [this.map.image,this.map.ground,this.map.overlay]){if(path&&![map.image,map.ground,map.overlay].includes(path))this.images.delete(path);}}this.map=map;this.players.clear();this.image(map.ground||map.image);this.image(map.overlay);for(const obj of map.objects)this.image(this.content.objects[id.split('_')[0]]?.[obj.graphics]?.image);return true;}
- entity(e,immediate=false){if(this.map&&e.map!==this.map.id)return;const old=this.players.get(e.id);const now=performance.now();const current=old?this.position(old,now):{x:e.x,y:e.y,fx:e.fx,fy:e.fy};this.players.set(e.id,{...e,fromX:immediate?e.x:current.x,fromY:immediate?e.y:current.y,fromFX:immediate?e.fx:current.fx,fromFY:immediate?e.fy:current.fy,at:now,moving:!immediate&&!!old&&(old.x!==e.x||old.y!==e.y)});this.image(this.content.objects.kanto[e.appearance]?.image);if(e.follower)this.image(this.content.species[e.follower]?.icon);}
- scene(packet){if(!this.map||packet.map!==this.map.id)return;for(const e of packet.players)this.entity(e);for(const id of packet.gone)this.players.delete(id);}
+ resetSession(){++this.generation;this.pendingMap=null;this.players.clear();this.map=null;this.selfId=null;this.hits=[];this.active=false;}
+ async loadMap(id,initialEntity=null){
+  const serial=++this.generation,pending={id,entities:new Map()};this.pendingMap=pending;this.players.clear();this.hits=[];
+  if(initialEntity?.map===id)pending.entities.set(initialEntity.id,{...initialEntity});
+  try{
+   const response=await fetch('assets/world/maps/'+encodeURIComponent(id)+'.json');if(!response.ok)throw Error('Map data is missing: '+id);
+   const map=await response.json();if(serial!==this.generation)return false;if(map.id!==id)throw Error('Map data does not match: '+id);
+   if(this.map){for(const path of [this.map.image,this.map.ground,this.map.overlay]){if(path&&![map.image,map.ground,map.overlay].includes(path))this.images.delete(path);}}
+   this.map=map;this.pendingMap=null;this.players.clear();for(const e of pending.entities.values())this.entity(e,true);
+   this.image(map.ground||map.image);this.image(map.overlay);for(const obj of map.objects)this.image(this.content.objects[id.split('_')[0]]?.[obj.graphics]?.image);return true;
+  }catch(error){if(serial!==this.generation)return false;this.pendingMap=null;this.map=null;this.players.clear();this.hits=[];throw error;}
+ }
+ entity(e,immediate=false){
+  // Scene deltas can arrive before local map assets. Fold them until this generation is ready.
+  if(this.pendingMap){if(e.map===this.pendingMap.id)this.pendingMap.entities.set(e.id,{...e});return;}
+  if(!this.map||e.map!==this.map.id)return;const old=this.players.get(e.id);const now=performance.now();const current=old?this.position(old,now):{x:e.x,y:e.y,fx:e.fx,fy:e.fy};this.players.set(e.id,{...e,fromX:immediate?e.x:current.x,fromY:immediate?e.y:current.y,fromFX:immediate?e.fx:current.fx,fromFY:immediate?e.fy:current.fy,at:now,moving:!immediate&&!!old&&(old.x!==e.x||old.y!==e.y)});this.image(this.content.objects.kanto[e.appearance]?.image);if(e.follower)this.image(this.content.species[e.follower]?.icon);
+ }
+ scene(packet){const target=this.pendingMap?this.pendingMap.id:this.map?.id;if(packet.map!==target)return;for(const e of packet.players)this.entity(e);const players=this.pendingMap?this.pendingMap.entities:this.players;for(const id of packet.gone)players.delete(id);}
  position(e,now){const t=Math.min(1,Math.max(0,(now-e.at)/140));return{x:e.fromX+(e.x-e.fromX)*t,y:e.fromY+(e.y-e.fromY)*t,fx:e.fromFX+(e.fx-e.fromFX)*t,fy:e.fromFY+(e.fy-e.fromFY)*t};}
  frame(now){requestAnimationFrame(t=>this.frame(t));if(!this.active||!this.map||!this.width)return;this.frames++;if(now-this.lastFps>=1000){this.fps=Math.round(this.frames*1000/(now-this.lastFps));this.frames=0;this.lastFps=now;}
   const ctx=this.ctx,w=this.width,h=this.height,s=this.scale,tile=16*s;ctx.setTransform(this.dpr,0,0,this.dpr,0,0);ctx.imageSmoothingEnabled=false;ctx.fillStyle='#22443f';ctx.fillRect(0,0,w,h);

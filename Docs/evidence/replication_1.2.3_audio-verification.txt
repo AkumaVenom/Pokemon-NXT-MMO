@@ -1,0 +1,11 @@
+{
+  "format": 1,
+  "catalogSha256": "4b77b6e089cf42154f4169e41bceef9d0592653748cdad8338c1c368ad0a8384",
+  "clipCount": 2366,
+  "mapCount": 859,
+  "speciesCryCount": 876,
+  "sourceHashes": {
+    "kanto": "729041b940afe031302d630fdbe57c0c145f3f7b6d9b8eca5e98678d0ca4d059",
+    "johto": "62d1a99f5b64a45cd4f6364273743f9d8961e9c439d8201bfeedb27c02f32c64"
+  }
+}

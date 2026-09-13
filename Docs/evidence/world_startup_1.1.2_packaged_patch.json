@@ -1,0 +1,13 @@
+{
+  "hotfix_zip": "Pokemon_NXT_MMO_World_Startup_Fix_1.1.2.zip",
+  "sha256": "ba36d8b49028433efd69ef9588361861c1bcb33a77913cb64c05b9f42056b159",
+  "zip_bytes": 17650,
+  "zip_files": 7,
+  "crc_verified": true,
+  "actual_packaged_python_installer_applied": true,
+  "reapplication_idempotent": true,
+  "all_three_original_scripts_backed_up": true,
+  "config_venv_save_exe_markers_preserved": true,
+  "native_windows_cmd_executed": false,
+  "database_access_performed": false
+}

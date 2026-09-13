@@ -1,0 +1,83 @@
+{
+  "song_slots": 863,
+  "nonempty_songs": 818,
+  "rendered_songs": 818,
+  "failed_songs": 0,
+  "capped_songs": 0,
+  "silent_nonempty_songs": 0,
+  "sequence_track_entrypoints_checked": 3124,
+  "invalid_track_entrypoints": 0,
+  "format": "44.1 kHz stereo Vorbis quality 5",
+  "all_encoded_durations_match_pcm_within_seconds": 0.002,
+  "native_windows_playback_verified": false,
+  "all_818_sha256_match_final_files": true,
+  "rendered_file_bytes": 486392703,
+  "looping_songs": 280,
+  "oneshot_songs": 538,
+  "final_hash_mismatches": [],
+  "sample_recoveries": [
+    {
+      "destination_region": "johto",
+      "damaged_sample_offset": 4865448,
+      "source_region": "kanto",
+      "source_offset": 4865544,
+      "bytes": 1698,
+      "sample_sha256": "ba5005d963318c61c4450e65c75980ff3828ce1923b1a5c0e5b91634a9c57f47",
+      "matching_voice_offsets": [
+        4758776,
+        4762652,
+        4768568,
+        4768868,
+        4769048,
+        4769180,
+        4790780,
+        4793852,
+        4806668,
+        4829024
+      ],
+      "evidence": "All ten descriptors match supplied FireRed at +0x60: identical type/key/ADSR, same relocated source sample. Original missing base instrument appended to temporary extraction copy; input ROMs untouched.",
+      "affected_song_ids": [
+        34,
+        35,
+        110,
+        113,
+        114,
+        130,
+        177,
+        184,
+        191,
+        202,
+        235,
+        290,
+        394,
+        399,
+        418,
+        514
+      ]
+    }
+  ],
+  "sequence_recoveries": [
+    {
+      "source_region": "johto",
+      "affected_song_ids": [
+        408
+      ],
+      "reference_song_id": 320,
+      "damaged_track": 0,
+      "damaged_prefix_offset": 16927152,
+      "reference_prefix_offset": 13172384,
+      "prefix_bytes": 16,
+      "prefix_sha256": "16d2e51754748d1064bd0039ec38b731d699518ffb262c49de216a931e1ee28c",
+      "tempo_bpm": 132,
+      "classification": "structurally validated same-ROM reconstruction",
+      "evidence": "Previous song 407 header overwrote exactly 16 setup bytes of song 408 track 0. All five accompanying track prefixes match native song 320; its 16-byte setup fits the gap and both loop targets return to prefix offset 11. Restore that existing setup, relocate track 0 and its 13 internal pointers, preserving all 408 note data and song 407. Input ROM untouched.",
+      "loop_validation": {
+        "all_six_tracks": "identical loop tick/sample boundaries",
+        "start_tick": 48,
+        "first_loop_end_tick": 3120,
+        "second_loop_end_tick": 6192,
+        "tempo_bpm": 132
+      }
+    }
+  ]
+}

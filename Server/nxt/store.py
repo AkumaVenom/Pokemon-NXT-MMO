@@ -6,12 +6,28 @@ State schema is versioned JSON; revisions prevent delayed autosaves replacing ne
 """
 from __future__ import annotations
 import json,sqlite3,threading,time,uuid
-from contextlib import contextmanager
+from contextlib import contextmanager,suppress
 from .security import RequestError
 SCHEMA=1
+LEASE_SECONDS=60
+
+class WorldLeaseBusy(RuntimeError):
+ """A recent lease is present; it may be active or left by an interrupted world."""
+ def __init__(self,heartbeat,observed_at):
+  self.heartbeat=int(heartbeat);self.observed_at=int(observed_at)
+  self.remaining_seconds=max(1,LEASE_SECONDS-(self.observed_at-self.heartbeat))
+  super().__init__(f'Another NXT world has a recent database lease. It expires in {self.remaining_seconds} seconds unless that world refreshes it. Stop the other NXT world before starting this copy.')
+
 class Store:
  def __init__(self,settings):
-  self.s=settings;self.mysql=settings.get('database','backend')=='mysql';self.lock=threading.RLock();self.db=None;self.connect();self.migrate()
+  self.s=settings;self.mysql=settings.get('database','backend')=='mysql';self.lock=threading.RLock();self.db=None;self.closed=False
+  self.lease_id=str(uuid.uuid4());self.lease_active=False
+  try:self.connect();self.migrate()
+  except BaseException:
+   self.closed=True
+   if self.db is not None:
+    with suppress(Exception):self.db.close()
+   raise
  def connect(self):
   if self.mysql:
    try:import pymysql
@@ -26,6 +42,7 @@ class Store:
  @contextmanager
  def transaction(self):
   with self.lock:
+   if self.closed:raise RuntimeError('World database connection is closed.')
    if self.mysql:self.db.ping(reconnect=True);self.db.begin()
    else:self.db.execute('BEGIN IMMEDIATE')
    cur=self.db.cursor()
@@ -45,15 +62,17 @@ class Store:
    c.execute(f'CREATE TABLE IF NOT EXISTS trade_audit (trade_id VARCHAR(36) PRIMARY KEY, account_a BIGINT NOT NULL, account_b BIGINT NOT NULL, payload {large} NOT NULL, created_at BIGINT NOT NULL)'+suffix)
    c.execute(f'CREATE TABLE IF NOT EXISTS world_leases (id INTEGER PRIMARY KEY, owner VARCHAR(36) NOT NULL, heartbeat BIGINT NOT NULL)'+suffix)
    if not row:c.execute('INSERT INTO nxt_schema(id,version) VALUES(1,1)')
-  self.lease_id=str(uuid.uuid4());self.lease_active=False
  def acquire_lease(self):
   """One world process per database: prevent dual-server ownership races."""
-  with self.transaction() as c:
-   c.execute('SELECT owner,heartbeat FROM world_leases WHERE id=1'+(' FOR UPDATE' if self.mysql else ''));row=c.fetchone();now=int(time.time())
-   if row and row[0]!=self.lease_id and now-row[1]<60:raise RuntimeError('Another world server owns this database. Stop it first; stale leases expire after 60 seconds.')
-   if row:c.execute(self.sql('UPDATE world_leases SET owner=%s,heartbeat=%s WHERE id=1'),(self.lease_id,now))
-   else:c.execute(self.sql('INSERT INTO world_leases(id,owner,heartbeat) VALUES(1,%s,%s)'),(self.lease_id,now))
-  self.lease_active=True
+  # Keep ownership publication and close serialized even if a to_thread waiter
+  # is cancelled while the underlying database operation is still completing.
+  with self.lock:
+   with self.transaction() as c:
+    c.execute('SELECT owner,heartbeat FROM world_leases WHERE id=1'+(' FOR UPDATE' if self.mysql else ''));row=c.fetchone();now=int(time.time())
+    if row and row[0]!=self.lease_id and now-row[1]<LEASE_SECONDS:raise WorldLeaseBusy(row[1],now)
+    if row:c.execute(self.sql('UPDATE world_leases SET owner=%s,heartbeat=%s WHERE id=1'),(self.lease_id,now))
+    else:c.execute(self.sql('INSERT INTO world_leases(id,owner,heartbeat) VALUES(1,%s,%s)'),(self.lease_id,now))
+   self.lease_active=True
  def fence(self,c):
   if not self.lease_active:return
   c.execute('SELECT owner FROM world_leases WHERE id=1'+(' FOR UPDATE' if self.mysql else ''));row=c.fetchone()
@@ -101,6 +120,13 @@ class Store:
  def ban(self,username,banned):
   with self.transaction() as c:c.execute(self.sql('UPDATE accounts SET banned=%s WHERE login_key=%s'),(int(banned),username.lower()));return c.rowcount
  def close(self):
-  try:
-   with self.transaction() as c:c.execute(self.sql('DELETE FROM world_leases WHERE owner=%s'),(self.lease_id,))
-  finally:self.db.close()
+  # Startup failures and normal shutdown share cleanup. A rejected contender
+  # must not remove the other world's lease, and a second close must be harmless.
+  with self.lock:
+   if self.closed:return
+   try:
+    if self.lease_active:
+     with self.transaction() as c:c.execute(self.sql('DELETE FROM world_leases WHERE id=1 AND owner=%s'),(self.lease_id,))
+   finally:
+    self.lease_active=False;self.closed=True
+    if self.db is not None:self.db.close()

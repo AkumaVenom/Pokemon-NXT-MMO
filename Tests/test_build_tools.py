@@ -26,6 +26,8 @@ class SourceSelectionTests(unittest.TestCase):
             "Client/app/app.js", "Client/app/assets/maps/kanto/3_0.png",
             "Server/data/world.json", "Tools/extract_assets.py", "Tests/test_core.py",
             "Docs/TEST_REPORT.md", "Build/build.py", "BUILD_ALL.bat", "START_HERE_BUILD.md",
+            "Server/setup_online.py", "Server/setup_online_gui.py", "Server/nxt/tls.py",
+            "Server/2b - Configure Online Hosting.cmd", "Tests/test_online_setup.py", "Tests/test_tls_network.py",
         ):
             with self.subTest(name=name):
                 self.assertTrue(builder.is_source_file(PurePosixPath(name)))
@@ -41,6 +43,10 @@ class SourceSelectionTests(unittest.TestCase):
             "Server/logs/passwords.txt", "Server/logs/world.log.1", "Server/certificates/server.key",
             "Server/certificates/server.crt", "Server/certificates/secret.txt", "Server/.env",
             "Client/app/original.gba", "Client/app/game.gbc", "Client/app/private.pfx",
+            "Server/certificates/online-123/server.key", "Server/certificates/online-123/server.crt",
+            "Server/online-client-kit-123/connection.json", "Server/online-client-kit-123/README.md",
+            "Server/online-client-kit-123/Trust Server Certificate.cmd",
+            "Server/online-setup-123/kit/connection.json",
         ):
             with self.subTest(name=name):
                 self.assertFalse(builder.is_source_file(PurePosixPath(name)))

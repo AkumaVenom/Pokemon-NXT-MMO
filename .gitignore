@@ -20,6 +20,8 @@ Server/config.ini
 Server/certificates/*.pem
 Server/certificates/*.pfx
 Server/certificates/*.crt
+Server/certificates/online-*/
+Server/online-client-kit-*/
 Server/data/*.db*
 Server/data/*.sql
 .env

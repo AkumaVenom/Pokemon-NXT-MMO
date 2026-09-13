@@ -1,0 +1,9 @@
+{
+  "baseline_build_tools": "1.1.1",
+  "fixture": "Disposable SQLite world with a real occupied TCP listening port",
+  "original_startup_failure": "OSError",
+  "failed_start_left_active_lease": true,
+  "immediate_restart_rejected_by_leftover_lease": true,
+  "world_log_exists": true,
+  "world_log_bytes": 0
+}

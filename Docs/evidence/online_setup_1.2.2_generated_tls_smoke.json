@@ -1,0 +1,13 @@
+{
+  "certificate_generation_cli": "passed",
+  "strict_openssl_certificate_verification": "passed",
+  "content_pack": "e05cb982d1fd4137629f86b0",
+  "generated_certificate_https_and_wss_registration": "passed",
+  "server_exit_code": 0,
+  "clean_shutdown": "passed",
+  "database_fixture": "temporary explicit SQLite; no production credentials used",
+  "limitations": [
+    "Windows GUI and certificate-store command not executed",
+    "public routing and live MySQL not tested"
+  ]
+}

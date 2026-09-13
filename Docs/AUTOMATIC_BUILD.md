@@ -1,4 +1,4 @@
-# Automatic build prerequisites — build tools 1.1.1
+# Automatic build prerequisites — build tools 1.1.2
 
 Date: 2026-09-13. Version 1.1.0 added automatic tool installation; 1.1.1 fixes the reserved-variable error in Go setup. Gameplay remains 0.1.0-alpha and MySQL setup remains 1.1.0.
 
@@ -6,7 +6,9 @@ Date: 2026-09-13. Version 1.1.0 added automatic tool installation; 1.1.1 fixes t
 
 The `Get-NxtGo` cache-directory variable and `Test-NxtGo` SDK-directory variable now have distinct project-specific names. Neither assigns PowerShell's read-only `$HOME` (variable names are case-insensitive). This fixes the immediate prerequisite failure and the hidden rejection of complete installed/extracted Go SDKs. Download versions, checksums and verification rules remain the same.
 
-After a 1.1.0 failure, extract the corrected complete source ZIP into a new folder and double-click its `BUILD_ALL.bat`; check the **1.1.1** banner. Compatible Python and verified shared downloads remain reusable. Native Go-discovery regressions are included in the Windows helper suite; actual validation and platform limits are recorded in `AUTO_BUILD_1.1.1_TEST_REPORT.md`.
+After a 1.1.0 failure, extract the corrected complete source ZIP into a new folder and double-click its `BUILD_ALL.bat`; check the **1.1.2** banner. Compatible Python and verified shared downloads remain reusable. Native Go-discovery regressions are included in the Windows helper suite; actual validation and platform limits are recorded in `AUTO_BUILD_1.1.1_TEST_REPORT.md`.
+
+Build tools **1.1.2** retain the Go correction and include the server startup recovery/logging fix. The runtime change is documented in `WORLD_STARTUP_FIX_TEST_REPORT.md`; configured servers may use the small hotfix instead of rebuilding.
 
 ## Normal operation
 

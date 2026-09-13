@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal EnableExtensions DisableDelayedExpansion
 cd /d "%~dp0"
 title Pokemon NXT MMO - World Server
 if not exist ".venv\Scripts\python.exe" (
@@ -7,12 +7,19 @@ if not exist ".venv\Scripts\python.exe" (
  pause
  exit /b 1
 )
+echo Starting Pokemon NXT MMO world server...
+echo Startup diagnostics will show the full log path below.
+echo.
 ".venv\Scripts\python.exe" -u server.py --config "%~dp0config.ini"
-if errorlevel 1 (
+set "NXT_WORLD_RESULT=%ERRORLEVEL%"
+if not "%NXT_WORLD_RESULT%"=="0" (
  echo.
- echo World server exited with an error. Read logs\world.log.
+ echo World server exited with an error. Read the cause and log path above.
+ echo Run Check Configuration.cmd to diagnose the current settings.
+ echo For missing TLS files, run 2b - Configure Online Hosting.cmd.
  pause
- exit /b 1
+ exit /b %NXT_WORLD_RESULT%
 )
 echo World stopped cleanly.
 pause
+exit /b 0

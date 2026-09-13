@@ -1,6 +1,6 @@
 # Building Pokemon NXT MMO from source
 
-Gameplay baseline **0.1.0-alpha** · Build tooling **1.1.1** · MySQL setup **1.1.0** · 2026-09-13
+Gameplay baseline **0.1.0-alpha** · Build tooling **1.1.2** · MySQL setup **1.1.0** · 2026-09-13
 
 ## Required tools and responsibilities
 
@@ -49,7 +49,7 @@ Finally the driver writes build metadata, hashes, separate client/server ZIPs an
 
 Under a completed `dist/build-...`, the runnable `Client` and `Server` folders remain separate. The `Packages` folder contains separate client/server ZIPs plus a complete developer package. The complete ZIP contains source and rebuilt binaries. `BUILD_INFO.json` describes the actual compiler, dependencies, content pack, tests and platform boundary. Root `SHA256SUMS.txt` covers unpacked release files at publication time; `Packages/SHA256SUMS.txt` separately covers the ZIPs. Editing output configs changes their hashes, as expected.
 
-Build tools 1.1.1 correct both reserved `$HOME` assignments in Go discovery/validation; see `AUTO_BUILD_1.1.1_TEST_REPORT.md`. The source ZIP you received deliberately excludes prebuilt binaries. It contains its own `SOURCE_SHA256SUMS.txt` for the unmodified source delivery. Local build caches and `dist` output are excluded from that source package.
+Build tools 1.1.2 also include the world startup cleanup/logging correction in `WORLD_STARTUP_FIX_TEST_REPORT.md`. Build tools 1.1.1 correct both reserved `$HOME` assignments in Go discovery/validation; see `AUTO_BUILD_1.1.1_TEST_REPORT.md`. The source ZIP you received deliberately excludes prebuilt binaries. It contains its own `SOURCE_SHA256SUMS.txt` for the unmodified source delivery. Local build caches and `dist` output are excluded from that source package.
 
 ## Private configuration and future rebuilds
 

@@ -1,0 +1,47 @@
+{
+  "release": "1.2.3",
+  "python": {
+    "unique_tests": 304,
+    "passed": 303,
+    "skipped": 1,
+    "full_suite": {
+      "run": 303,
+      "passed": 302,
+      "skipped": 1
+    },
+    "final_persistence_suite": {
+      "run": 11,
+      "passed": 11,
+      "additional_unique_case": 1
+    },
+    "syntax_files": 54
+  },
+  "javascript": {
+    "test_runner": 34,
+    "audio_engine": 29,
+    "total": 63
+  },
+  "audio": {
+    "format": 1,
+    "catalogSha256": "4b77b6e089cf42154f4169e41bceef9d0592653748cdad8338c1c368ad0a8384",
+    "clipCount": 2366,
+    "mapCount": 859,
+    "speciesCryCount": 876,
+    "sourceHashes": {
+      "kanto": "729041b940afe031302d630fdbe57c0c145f3f7b6d9b8eca5e98678d0ca4d059",
+      "johto": "62d1a99f5b64a45cd4f6364273743f9d8961e9c439d8201bfeedb27c02f32c64"
+    }
+  },
+  "host": {
+    "system": "Linux",
+    "python": "3.12.14"
+  },
+  "unverified": [
+    "Native Windows BUILD_ALL.bat and PowerShell execution",
+    "Go compilation/tests in this environment",
+    "Native Edge UI",
+    "Live MySQL/MariaDB runtime",
+    "Public internet/router deployment",
+    "1000 concurrent sessions"
+  ]
+}

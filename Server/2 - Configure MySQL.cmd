@@ -22,6 +22,8 @@ if errorlevel 1 (
  exit /b 1
 )
 echo.
-echo NXT MySQL setup completed. Start 3 - Start World Server.cmd next.
+echo NXT MySQL setup completed.
+echo For internet players, run 2b - Configure Online Hosting.cmd next.
+echo Then start 3 - Start World Server.cmd.
 pause
 exit /b 0

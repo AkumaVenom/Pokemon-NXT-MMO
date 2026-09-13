@@ -1,0 +1,191 @@
+{
+  "upstream": "https://github.com/ipatix/agbplay",
+  "source_snapshot": "CDN snapshot fetched 2026-09-12, all bundled files pinned by SHA-256 below",
+  "mirror": "https://cdn.jsdelivr.net/gh/ipatix/agbplay@master/",
+  "license": "LGPL-3.0 (upstream LICENSE)",
+  "vendored_fmt": {
+    "version": "10.2.1",
+    "upstream": "https://github.com/fmtlib/fmt",
+    "license": "MIT"
+  },
+  "changes": [
+    "Plain ROM-only file adapter in core/Rom.cpp; ZIP and GSF loading excluded.",
+    "Boost sinc helper replaced with equivalent std::sin(x)/x including near-zero Taylor expansion.",
+    "NXT sample/tick loop diagnostics and bounded command budget added to sequence/core track context.",
+    "Unsupported sequence opcode and reported instrument errors fail export instead of silently dropping a track.",
+    "Standalone WAV renderer and OGG export orchestration outside engine.",
+    "Uninitialized running status fails visibly; release extraction validates all 3124 track entrypoints.",
+    "Encoded files and manifests are fsynced and atomically published; full final size/SHA-256 verification is required."
+  ],
+  "files": {
+    "core/AgbTypes.hpp": {
+      "sha256": "a74ed10e001d426146a7ea074a8d3e7da2b9910110416e465a8ccefccddb0ba9",
+      "upstream_sha256": "a74ed10e001d426146a7ea074a8d3e7da2b9910110416e465a8ccefccddb0ba9"
+    },
+    "core/CGBPatterns.cpp": {
+      "sha256": "9ecbcaf7ea0a37df6b0aaf2d521a5c314d968cd1bfdd40a0079bec645626d155",
+      "upstream_sha256": "9ecbcaf7ea0a37df6b0aaf2d521a5c314d968cd1bfdd40a0079bec645626d155"
+    },
+    "core/CGBPatterns.hpp": {
+      "sha256": "fdbc978168b142fa875cf635446ee938443de196126e5d50be10739f9c838296",
+      "upstream_sha256": "fdbc978168b142fa875cf635446ee938443de196126e5d50be10739f9c838296"
+    },
+    "core/Constants.hpp": {
+      "sha256": "e49845b1b46d5075719e8ec3ffd51fa925c8a79ec6511184783e3f3dbdab6d92",
+      "upstream_sha256": "e49845b1b46d5075719e8ec3ffd51fa925c8a79ec6511184783e3f3dbdab6d92"
+    },
+    "core/Debug.cpp": {
+      "sha256": "28ae7e60be2cee23c944adf3eb22b0d62f1240fdb307785e2a16a18257e11354",
+      "upstream_sha256": "28ae7e60be2cee23c944adf3eb22b0d62f1240fdb307785e2a16a18257e11354"
+    },
+    "core/Debug.hpp": {
+      "sha256": "af310110835d4c0750d068196e9df918353d3e9f46087759b1ee2a9d419435ad",
+      "upstream_sha256": "af310110835d4c0750d068196e9df918353d3e9f46087759b1ee2a9d419435ad"
+    },
+    "core/LoudnessCalculator.cpp": {
+      "sha256": "c1f3cbdc5cbe3fe00f44e4c1948de3a9ab63debb6d8b68011033bc6487336225",
+      "upstream_sha256": "c1f3cbdc5cbe3fe00f44e4c1948de3a9ab63debb6d8b68011033bc6487336225"
+    },
+    "core/LoudnessCalculator.hpp": {
+      "sha256": "a058a02ca1002cc20824e7331d206d0a5f881fb6881e10a268f72bdb9727a9ac",
+      "upstream_sha256": "a058a02ca1002cc20824e7331d206d0a5f881fb6881e10a268f72bdb9727a9ac"
+    },
+    "core/MP2KChn.cpp": {
+      "sha256": "5b9c2ae861b667408703e991a705640e44991bbb65ee2fe4ad01e8670b186cdf",
+      "upstream_sha256": "5b9c2ae861b667408703e991a705640e44991bbb65ee2fe4ad01e8670b186cdf"
+    },
+    "core/MP2KChn.hpp": {
+      "sha256": "bd94c508be481256ff226b9b8f848e7bd3c1c2abd0c5659f059b925887061676",
+      "upstream_sha256": "bd94c508be481256ff226b9b8f848e7bd3c1c2abd0c5659f059b925887061676"
+    },
+    "core/MP2KChnPCM.cpp": {
+      "sha256": "95e37857ab94f72d5dc540360eec39893ab611b6c7efd8e3ceb28858b38a6f07",
+      "upstream_sha256": "95e37857ab94f72d5dc540360eec39893ab611b6c7efd8e3ceb28858b38a6f07"
+    },
+    "core/MP2KChnPCM.hpp": {
+      "sha256": "a8cda3c037cc13974d02dcffca989846f6611527f42c4422022b9e7c4f5ac21d",
+      "upstream_sha256": "a8cda3c037cc13974d02dcffca989846f6611527f42c4422022b9e7c4f5ac21d"
+    },
+    "core/MP2KChnPSG.cpp": {
+      "sha256": "fa70c6c31723896d5d3e4b2e8786c17861a9f99562c6b670c9090463f86730f9",
+      "upstream_sha256": "fa70c6c31723896d5d3e4b2e8786c17861a9f99562c6b670c9090463f86730f9"
+    },
+    "core/MP2KChnPSG.hpp": {
+      "sha256": "b1ebc7cd1075f3156b299fba1a6e8337a219c7a3abfb953d719080847e4d51b8",
+      "upstream_sha256": "b1ebc7cd1075f3156b299fba1a6e8337a219c7a3abfb953d719080847e4d51b8"
+    },
+    "core/MP2KContext.cpp": {
+      "sha256": "337593bde68c7d9e7e0cf5512ef7ffb224168bb2fc8cb0eafc3a0a46c6ae767d",
+      "upstream_sha256": "337593bde68c7d9e7e0cf5512ef7ffb224168bb2fc8cb0eafc3a0a46c6ae767d"
+    },
+    "core/MP2KContext.hpp": {
+      "sha256": "a6df8d8e7536d0b1b235845aab5f372471562c793f3495cb2cdb3e9e52f93dec",
+      "upstream_sha256": "84c96cd6c62dd04cbbbea517289a050698d29e9248ca05915d397f60f2aed1a3"
+    },
+    "core/MP2KPlayer.cpp": {
+      "sha256": "12ce37a062be13f389e80094e63ab06da60a463c83247d7c69600c2d7ffc34b8",
+      "upstream_sha256": "12ce37a062be13f389e80094e63ab06da60a463c83247d7c69600c2d7ffc34b8"
+    },
+    "core/MP2KPlayer.hpp": {
+      "sha256": "fdba99bf10830fee88014552b9ba7e778fe18a95a05320157ed67ab66bc0ef5e",
+      "upstream_sha256": "fdba99bf10830fee88014552b9ba7e778fe18a95a05320157ed67ab66bc0ef5e"
+    },
+    "core/MP2KScanner.cpp": {
+      "sha256": "a9fd9a152cf0349e59f72fff35e15ecb7ab8c9bf5eee643a214e2307b35a9260",
+      "upstream_sha256": "a9fd9a152cf0349e59f72fff35e15ecb7ab8c9bf5eee643a214e2307b35a9260"
+    },
+    "core/MP2KScanner.hpp": {
+      "sha256": "a58cb861b2c9ef2c6904a861671399e5b756d9ed01a23ea1115e4939bc843139",
+      "upstream_sha256": "a58cb861b2c9ef2c6904a861671399e5b756d9ed01a23ea1115e4939bc843139"
+    },
+    "core/MP2KTrack.cpp": {
+      "sha256": "6c68d6feda7965300eed63ba1d5348777d59f8b9e0ed8b918613dc73d9575250",
+      "upstream_sha256": "6c68d6feda7965300eed63ba1d5348777d59f8b9e0ed8b918613dc73d9575250"
+    },
+    "core/MP2KTrack.hpp": {
+      "sha256": "4685ad11e1892916b40c47b661a0bf7decefcaf55862cd268cd839f32e0ee0d4",
+      "upstream_sha256": "5d20124ab14f6eb128e76ae826ce580c61e2204e671e979ec206e29d371e6c7e"
+    },
+    "core/Profile.hpp": {
+      "sha256": "ed5317ae114ea844f66a2d96be4a8574941238a1af24167fefecf53d8dbae6fa",
+      "upstream_sha256": "ed5317ae114ea844f66a2d96be4a8574941238a1af24167fefecf53d8dbae6fa"
+    },
+    "core/Resampler.cpp": {
+      "sha256": "b447680baa55a7d5da878d94820dae5a4a428be676b604f71844412cf0f067c5",
+      "upstream_sha256": "062365ca037d9d9115cf9a95e23662786f4b6bf0d6acda1a2e15f5dfcd9fbc2d"
+    },
+    "core/Resampler.hpp": {
+      "sha256": "1ba1e3120e4b2766fe2928df2a25ece880479567d7e9a4f3d192050925e3c4c5",
+      "upstream_sha256": "1ba1e3120e4b2766fe2928df2a25ece880479567d7e9a4f3d192050925e3c4c5"
+    },
+    "core/ResamplerAVX2.cpp": {
+      "sha256": "fb51f2a23d00a232d76e1445f50142c7660e07f63ea99b198300a6ce34829562",
+      "upstream_sha256": "fb51f2a23d00a232d76e1445f50142c7660e07f63ea99b198300a6ce34829562"
+    },
+    "core/ResamplerAVX2.hpp": {
+      "sha256": "d72faa8e31ec320ef3d0b5a9cce031dacc525f4e31d38147c647e34251d9a342",
+      "upstream_sha256": "d72faa8e31ec320ef3d0b5a9cce031dacc525f4e31d38147c647e34251d9a342"
+    },
+    "core/ReverbEffect.cpp": {
+      "sha256": "e5da00540a05c825fbf9bfb0f2d09f36c8556481313b68366c1f79fc4c85e634",
+      "upstream_sha256": "e5da00540a05c825fbf9bfb0f2d09f36c8556481313b68366c1f79fc4c85e634"
+    },
+    "core/ReverbEffect.hpp": {
+      "sha256": "9352a8a929b7d9c94f470f7deb4cbbb3f0343f918a00cf458650558641dfd7e8",
+      "upstream_sha256": "9352a8a929b7d9c94f470f7deb4cbbb3f0343f918a00cf458650558641dfd7e8"
+    },
+    "core/Rom.cpp": {
+      "sha256": "01016021b578727acef6e9f926ad800474a10cce3b360f7bb5d105ad44eabf76",
+      "upstream_sha256": "416c7a146c2c78962a4e454a63d702655a06acf576564fee0c8c624f98dfacca"
+    },
+    "core/Rom.hpp": {
+      "sha256": "56466fa506228e5b91f344d0e666b5faccd9609d83795cfd7a44841b950b2950",
+      "upstream_sha256": "56466fa506228e5b91f344d0e666b5faccd9609d83795cfd7a44841b950b2950"
+    },
+    "core/SequenceReader.cpp": {
+      "sha256": "dc1176c2d00b335a09182e344e0b813ea9dd9bdf004d593208f9882eed5e2d1a",
+      "upstream_sha256": "283dcfac66f3191ef57d25c2b6f0d75d133bc5ab391a6538f8bc4d4799599b87"
+    },
+    "core/SequenceReader.hpp": {
+      "sha256": "84b5f4cc0591e6553eed273f2346932456862d5fec723a5525da65d6a61aea23",
+      "upstream_sha256": "84b5f4cc0591e6553eed273f2346932456862d5fec723a5525da65d6a61aea23"
+    },
+    "core/SoundData.hpp": {
+      "sha256": "d0d4750bc15d0e946ea64abf7ec2014c31495daecac347b052eeb4fa4596ba01",
+      "upstream_sha256": "d0d4750bc15d0e946ea64abf7ec2014c31495daecac347b052eeb4fa4596ba01"
+    },
+    "core/SoundMixer.cpp": {
+      "sha256": "ccbb90b92c2942da0b405a2708a22488aac1133051fea985dfcd44dd1c31ca87",
+      "upstream_sha256": "ccbb90b92c2942da0b405a2708a22488aac1133051fea985dfcd44dd1c31ca87"
+    },
+    "core/SoundMixer.hpp": {
+      "sha256": "63be9a53998feff3622bab61693faff96aec8348920d7f90999ed26a3a8d0525",
+      "upstream_sha256": "63be9a53998feff3622bab61693faff96aec8348920d7f90999ed26a3a8d0525"
+    },
+    "core/Types.cpp": {
+      "sha256": "afd8a776cf59fd073df266cb683d553d5db6a5d87c09284971fe86e61d19e86e",
+      "upstream_sha256": "afd8a776cf59fd073df266cb683d553d5db6a5d87c09284971fe86e61d19e86e"
+    },
+    "core/Types.hpp": {
+      "sha256": "4c11dfbdcd9d6a51ef6c19bce33c7bfb679c8f380db6ce75dc59ef2d56ac436d",
+      "upstream_sha256": "4c11dfbdcd9d6a51ef6c19bce33c7bfb679c8f380db6ce75dc59ef2d56ac436d"
+    },
+    "core/Util.hpp": {
+      "sha256": "d18b6ba1cb52f82dcce227e3cf606ed74a6e020b045dd9c84ace7a3eebf06648",
+      "upstream_sha256": "d18b6ba1cb52f82dcce227e3cf606ed74a6e020b045dd9c84ace7a3eebf06648"
+    },
+    "core/Xcept.cpp": {
+      "sha256": "0e24f823c04335cf7bec6d9ae9264b44d28a73ce263e194f399163fa0806b4b2",
+      "upstream_sha256": "0e24f823c04335cf7bec6d9ae9264b44d28a73ce263e194f399163fa0806b4b2"
+    },
+    "core/Xcept.hpp": {
+      "sha256": "86ba6cc800b1c746ec369f348ebe82bae7fd673703807769ff2de6a9a244afed",
+      "upstream_sha256": "86ba6cc800b1c746ec369f348ebe82bae7fd673703807769ff2de6a9a244afed"
+    }
+  },
+  "adapter_files": {
+    "render.cpp": "6cee166532be53c148c509d94bd81805935cc8b0c21e1973088bd84327a13171",
+    "build_renderer.py": "4fbe97e571ca1d18c982db61ec08ac2b5bc9692239603f46ba777260d669d7ae",
+    "extract_music.py": "b43afa9ba18035bfff46f6b5a1a207faad6669f42dc6e76fb4cf0fed62c0cfd1"
+  }
+}
