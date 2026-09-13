@@ -1,5 +1,7 @@
 /* ROM-derived audio playback. This module never controls gameplay or trusts audio
  * events as game state. Audio failures remain isolated from the world client. */
+import {battleBeat} from './battle_timing.js';
+
 export const AUDIO_DEFAULTS = Object.freeze({
   master: 0.8, music: 0.65, effects: 0.8, cries: 0.85,
   muted: false, muteUnfocused: true, lowHp: true, chat: true,
@@ -52,6 +54,8 @@ export class GameAudio {
     this._surf = false;
     this._battle = null;
     this._battleID = null;
+    this._battleRevision = null;
+    this._moveSerial = 0;
     this._music = null;
     this._musicRequest = null;
     this._musicSerial = 0;
@@ -67,6 +71,8 @@ export class GameAudio {
     this._battleSeen = new Set();
     this._listeners = new Set();
     this._timers = new Set();
+    this._queueTimers = new Set();
+    this._moveTimers = new Set();
     this._eventQueue = [];
     this._draining = false;
     this._drainSerial = 0;
@@ -242,12 +248,26 @@ export class GameAudio {
       this._battleSeen.clear();
       for (const voice of [...this._voices]) if (voice.scope === 'battle') this._stopVoice(voice, 0.045);
       this._battleID = battleID;
+      this._battleRevision = null;
       this._lowHP = null;
       this._lowHPRequest = false;
     }
+    const revision = snapshot?.audio?.revision;
+    let enqueueAudio = true;
+    if (Number.isSafeInteger(revision) && revision >= 0) {
+      // Waiting packets repeat the same revision. Older packets may never
+      // revive old effects or rewind the current low-HP/music state.
+      if (this._battleRevision !== null && revision < this._battleRevision) return;
+      enqueueAudio = revision !== this._battleRevision;
+      if (enqueueAudio) {
+        this._cancelQueue(true);
+        this._retireBattleEffects();
+        this._battleRevision = revision;
+      }
+    }
     this._battle = snapshot || null;
     this._syncMusic();
-    if (snapshot?.audio) this._enqueue(snapshot.audio, this._battleSeen, 'battle', String(battleID));
+    if (snapshot?.audio && enqueueAudio) this._enqueue(snapshot.audio, this._battleSeen, 'battle', String(battleID));
     this._syncLowHP();
   }
 
@@ -383,7 +403,10 @@ export class GameAudio {
   }
 
   _enqueue(packet, seen, scope, source) {
-    const events = Array.isArray(packet.events) ? packet.events.slice(0, MAX_QUEUE) : [];
+    // Keep reward/learning cues across battle revisions, behind that revision's
+    // timed battle beats instead of letting world notifications delay impact.
+    const deferredWorld = scope === 'battle' && !this._draining ? this._eventQueue.splice(0) : [];
+    const events = Array.isArray(packet.events) ? packet.events.slice(0, scope === 'battle' ? 24 : MAX_QUEUE) : [];
     for (let index = 0; index < events.length; index++) {
       const event = events[index];
       if (!event || typeof event.cue !== 'string') continue;
@@ -399,9 +422,10 @@ export class GameAudio {
       if (!this._readyForEffect() || this._eventQueue.length >= MAX_QUEUE) continue;
       if (event.cue === 'chat' && !this._settings.chat) continue;
       if (!['battle_start', 'battle_end'].includes(event.cue)) this._eventQueue.push({event, scope, epoch: this._epoch, battleID: this._battleID});
-      if (event.cue === 'sendout' && event.species && this._eventQueue.length < MAX_QUEUE) this._eventQueue.push({event: {...event, cue: 'cry'}, scope, epoch: this._epoch, battleID: this._battleID});
+      if (scope !== 'battle' && event.cue === 'sendout' && event.species && this._eventQueue.length < MAX_QUEUE) this._eventQueue.push({event: {...event, cue: 'cry'}, scope, epoch: this._epoch, battleID: this._battleID});
       if (event.cue === 'party_changed' && event.leadChanged && event.species && this._eventQueue.length < MAX_QUEUE) this._eventQueue.push({event: {...event, cue: 'cry'}, scope, epoch: this._epoch, battleID: this._battleID});
     }
+    this._eventQueue.push(...deferredWorld.slice(0, Math.max(0, MAX_QUEUE - this._eventQueue.length)));
     this._drainQueue();
   }
 
@@ -414,15 +438,28 @@ export class GameAudio {
       const item = this._eventQueue.shift();
       if (!item || !this._readyForEffect()) { this._draining = false; this._eventQueue.length = 0; return; }
       if (item.epoch !== this._epoch || (item.scope === 'battle' && item.battleID !== this._battleID)) { next(); return; }
+      if (item.event.cue === 'move' && item.scope === 'battle') this._beginMove();
       const source = ['kanto', 'johto'].includes(item.event.source) ? item.event.source : this._region;
       const move = item.event.cue === 'move' ? this._catalog.moveSounds?.[source]?.[item.event.move] : null;
       if (move && typeof move === 'object') {
         const duration = this._scheduleMove(move, item, serial);
-        this._later(next, Math.max(100, duration));
+        this._queueLater(next, item.scope === 'battle' ? battleBeat(item.event) : Math.max(100, duration));
         return;
       }
       const id = this._cue(item.event.cue, item.event);
       const channel = this._catalog.clips[id]?.kind === 'cry' ? 'cries' : 'effects';
+      if (item.scope === 'battle') {
+        // Presentation follows the same compact authoritative beat timeline as
+        // the sprites. A late decode is skipped, never played over a later beat.
+        const beat = battleBeat(item.event);
+        const expiresAt = this._now() + beat;
+        void this._effect(id, {channel, scope: 'battle', priority: channel === 'cries' ? 70 : 50, ttl: beat, expiresAt});
+        if (item.event.cue === 'sendout' && item.event.species) {
+          void this._effect(this._cue('cry', item.event), {channel: 'cries', scope: 'battle', priority: 70, ttl: beat, expiresAt});
+        }
+        this._queueLater(next, beat);
+        return;
+      }
       const duration = Number(this._catalog.clips[id]?.duration) || 0.2;
       // Preserve event order without making combat wait for sound loading. Bound
       // backlog latency; a long cry cannot stall an entire turn's audio queue.
@@ -433,9 +470,10 @@ export class GameAudio {
         advanced = true;
         this._clearTimeout(deadline);
         this._timers.delete(deadline);
-        this._later(next, played ? interval : 0);
+        this._queueTimers.delete(deadline);
+        this._queueLater(next, played ? interval : 0);
       };
-      const deadline = this._later(() => advance(false), 850);
+      const deadline = this._queueLater(() => advance(false), 850);
       this._effect(id, {channel, scope: item.scope, priority: channel === 'cries' ? 70 : 50, ttl: 800}).then(voice => advance(!!voice)).catch(() => advance(false));
     };
     next();
@@ -478,16 +516,23 @@ export class GameAudio {
         scheduled.push({id, at, duration: cryDuration, channel: 'cries', pan: (cry.side === 'defender' ? 0.6 : -0.6) * direction, rate, noteOff, release: releaseSeconds(cry.releaseCoefficient ?? 200), volume: Math.max(0, Math.min(1.5, Number.isFinite(rawGain) ? rawGain : 1))});
       }
     }
+    // Preserve native sample identity, order, pan and pitch. Compress only
+    // long script delays into a short move beat, leaving space for the impact.
+    const beat = battleBeat({cue: 'move'});
+    const latest = Math.max(0, ...scheduled.map(sound => sound.at * 1000));
+    const scale = latest > beat - 200 ? (beat - 200) / latest : 1;
+    const moveSerial = this._moveSerial;
+    const expiresAt = this._now() + beat;
     let duration = 0;
     for (const sound of scheduled) {
       const tail = Math.min(sound.channel === 'cries' ? 1.5 : 0.36, sound.duration || Number(this._catalog.clips[sound.id]?.duration) || 0.1);
       duration = Math.max(duration, (sound.at + tail) * 1000);
-      this._later(() => {
-        if (serial !== this._drainSerial || item.epoch !== this._epoch || item.battleID !== this._battleID) return;
-        void this._effect(sound.id, {channel: sound.channel, scope: item.scope, priority: sound.channel === 'cries' ? 70 : 50, ttl: 350, pan: sound.pan, rate: sound.rate, volume: sound.volume, noteOff: sound.noteOff, release: sound.release});
-      }, sound.at * 1000);
+      this._queueLater(() => {
+        if (serial !== this._drainSerial || moveSerial !== this._moveSerial || item.epoch !== this._epoch || item.battleID !== this._battleID) return;
+        void this._effect(sound.id, {channel: sound.channel, scope: item.scope, priority: sound.channel === 'cries' ? 70 : 50, ttl: 350, pan: sound.pan, rate: sound.rate, volume: sound.volume, noteOff: sound.noteOff, release: sound.release, expiresAt});
+      }, sound.at * 1000 * scale, true);
     }
-    return duration;
+    return Math.min(beat, duration);
   }
 
   async _effect(id, options = {}) {
@@ -502,9 +547,11 @@ export class GameAudio {
     }
     const epoch = this._epoch;
     const battleID = this._battleID;
+    const queueSerial = this._drainSerial, moveSerial = this._moveSerial;
     const buffer = await this._load(id);
     if (!buffer || epoch !== this._epoch || !this._readyForEffect() || this._now() - now > (options.ttl || 1000)) return null;
-    if (options.scope === 'battle' && battleID !== this._battleID) return null;
+    if (options.scope === 'battle' && (battleID !== this._battleID || queueSerial !== this._drainSerial || moveSerial !== this._moveSerial)) return null;
+    if (options.expiresAt != null && this._now() >= options.expiresAt) return null;
     if (options.inspection && options.inspection !== this._inspectionSerial) return null;
     const clip = this._catalog.clips[id];
     try { return this._startVoice(id, buffer, {...options, channel, loop: false, fanfare: clip.fanfare === true}); } catch { return null; }
@@ -658,9 +705,46 @@ export class GameAudio {
     return timer;
   }
 
-  _cancelQueue() {
+  _queueLater(callback, ms, move = false) {
+    const timer = this._later(() => {
+      this._queueTimers.delete(timer);
+      this._moveTimers.delete(timer);
+      callback();
+    }, ms);
+    this._queueTimers.add(timer);
+    if (move) this._moveTimers.add(timer);
+    return timer;
+  }
+
+  _retireBattleEffects() {
+    for (const voice of [...this._voices]) {
+      if (voice.scope === 'battle' && !voice.source.loop) this._stopVoice(voice, 0.035);
+    }
+  }
+
+  _beginMove() {
+    this._moveSerial++;
+    for (const timer of this._moveTimers) {
+      this._clearTimeout(timer);
+      this._timers.delete(timer);
+      this._queueTimers.delete(timer);
+    }
+    this._moveTimers.clear();
+    this._retireBattleEffects();
+  }
+
+  _cancelQueue(preserveWorld = false) {
+    const retained = preserveWorld ? this._eventQueue.filter(item => item.scope !== 'battle') : [];
     this._drainSerial++;
+    this._moveSerial++;
+    for (const timer of this._queueTimers) {
+      this._clearTimeout(timer);
+      this._timers.delete(timer);
+    }
+    this._queueTimers.clear();
+    this._moveTimers.clear();
     this._eventQueue.length = 0;
+    this._eventQueue.push(...retained);
     this._draining = false;
   }
 
@@ -682,6 +766,7 @@ export class GameAudio {
     this._lowHPWanted = false;
     this._battle = null;
     this._battleID = null;
+    this._battleRevision = null;
     this._map = null;
     this._ambient = null;
     this._ambientKnown = false;

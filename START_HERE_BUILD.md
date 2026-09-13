@@ -1,11 +1,23 @@
 # Pokemon NXT MMO — automatic all-in-one source build
 
 
-**Download both source parts.** This corrected release is delivered as `Pokemon_NXT_MMO_v0.2.0-alpha_Replication_1.2.3_Part1_Source.zip` and `Pokemon_NXT_MMO_v0.2.0-alpha_Replication_1.2.3_Part2_Audio.zip`. Extract both ZIPs into the same destination so their identically named project folders merge. Part 1 contains the source, configuration templates, cry WAVs and catalog; Part 2 contains all 818 music/effect OGGs. Run `BUILD_ALL.bat` only after both parts are extracted. No audio conversion or ROM is needed.
+**Download both ZIPs:** `Pokemon_NXT_v0.3.3_Full_Source_Part1.zip` and `Pokemon_NXT_v0.3.3_Full_Source_Part2.zip`. Extract both into the same destination so their project folders merge. Together they contain the complete source and all assets. Run `BUILD_ALL.bat` after both parts are extracted. No earlier pack, audio conversion or ROM is needed.
 
-Gameplay **0.2.0-alpha** · Build tools **1.2.3** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
+Gameplay **0.3.3-alpha** · Build tools **1.3.3** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
 
 The full source includes the extracted FireRed and Sigma music, sound effects and cries. `BUILD_ALL.bat` verifies and packages these files; it does not extract them again. **No ROM, FFmpeg or C++ audio-renderer build is needed for a normal build.**
+
+## Battle screen correction
+
+Version 0.3.3 corrects browser timer context and opens the battle dialog before animations start. An animation failure returns control to the normal battle UI. Attack motion, damage/effectiveness text and cancellation of stale sounds are retained. See `Docs/BATTLE_SCREEN_FIX.md` and `Docs/BATTLE_FEEDBACK.md`. Build and deploy matching Client and Server, retaining your existing database, configuration and certificates.
+
+## Native learnsets update
+
+Read `Docs/LEARNSET_GUIDE.md` for native move levels and the Move Reminder. Cyndaquil learns Ember at level 12 in both supplied ROMs. Existing characters keep progress and chosen moves; invalid queued choices are reconciled on login. Deploy matching new Client and Server packs.
+
+## Adventure update
+
+Read `Docs/ADVENTURE_GUIDE.md` for trainer/badge progression, Nurse Joy healing, PC storage, evolution and move learning. Interior destinations and recovered Sigma rooms use audited ROM metadata. Older configured worlds should set `[world] allow_alpha_atlas = false` and `allow_alpha_surf = false` for progression gates; fresh templates already do. Keep your working database, config and TLS files.
 
 ## Starter, login and progress fixes
 
@@ -13,9 +25,9 @@ This release keeps starter choice independent of starting region, fixes account/
 
 ## Correction for the Go prerequisite error
 
-Build tools **1.2.3** retain the correction for `Cannot overwrite variable HOME because it is read-only or constant`. Two Go helper functions used a directory variable named `$home`, which collides with PowerShell's built-in `$HOME`. Both directory variables have been renamed, including the SDK check that previously rejected valid Go installations.
+Build tools **1.3.3** retain the correction for `Cannot overwrite variable HOME because it is read-only or constant`. Two Go helper functions used a directory variable named `$home`, which collides with PowerShell's built-in `$HOME`. Both directory variables have been renamed, including the SDK check that previously rejected valid Go installations.
 
-Extract both complete corrected ZIPs into the same new destination and run its `BUILD_ALL.bat`. The banner should say **1.2.3**. Your existing compatible Python and verified tool downloads can be reused; reinstalling Python, changing Windows HOME, or changing MySQL settings is unnecessary. See `Docs/AUTO_BUILD_1.1.1_TEST_REPORT.md` for the original correction's validation scope and `Docs/AUDIO_TEST_REPORT.md` for the audio validation and `Docs/REPLICATION_TEST_REPORT.md` for this release.
+Extract both complete ZIPs into the same new destination and run its `BUILD_ALL.bat`. The banner should say **1.3.3**. Your existing compatible Python and verified tool downloads can be reused; reinstalling Python, changing Windows HOME, or changing MySQL settings is unnecessary. See `Docs/AUTO_BUILD_1.1.1_TEST_REPORT.md` for the original correction's validation scope and `Docs/AUDIO_TEST_REPORT.md` for the audio validation and `Docs/REPLICATION_TEST_REPORT.md` for this release.
 
 ## Online server fails because TLS files are missing?
 
@@ -25,7 +37,7 @@ In the built Server folder, run **`2b - Configure Online Hosting.cmd`**. Enter t
 
 World startup fix **1.1.2** is already incorporated in this source. It releases this server's lease on failed startup, records early failures at the absolute log path printed in the console, and waits briefly for a recent abandoned lease. It still protects a running world that owns the database. See `Server/WORLD_STARTUP_FIX.md`.
 
-For the audio upgrade, build a fresh output and deploy its **matching Client and Server**. Back up the configured server before replacing program files; carry forward its existing `config.ini`, database and required private deployment files. Preserve the client's connection settings too. Do not copy release config templates over your working settings or run MySQL setup again just to install this release. The old scripts-only startup hotfix is not an audio updater. Detailed steps are in `Docs/AUDIO_GUIDE.md`.
+For the adventure upgrade, build a fresh output and deploy its **matching Client and Server**. Back up the configured server before replacing program files; carry forward its existing `config.ini`, database and required private deployment files. Preserve the client's connection settings too. Do not copy release config templates over your working settings or run MySQL setup again just to install this release. The old scripts-only startup hotfix is not an audio updater. Detailed steps are in `Docs/AUDIO_GUIDE.md`.
 
 ## Build it
 

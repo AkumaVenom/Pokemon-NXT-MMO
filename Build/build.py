@@ -32,7 +32,7 @@ import traceback
 import zipfile
 from typing import Iterator, Mapping, Sequence, TextIO
 
-BUILD_TOOL_VERSION = "1.2.3"
+BUILD_TOOL_VERSION = "1.3.3"
 ROOT = Path(__file__).resolve().parents[1]
 TOP_FILES = {
     "README.md", "CHANGELOG.md", "THIRD_PARTY_NOTICES.md", ".gitignore",
@@ -58,10 +58,15 @@ FORBIDDEN_EXTENSIONS = {
     ".pyc", ".pyo", ".sqlite", ".sqlite3", ".db", ".sql", ".dump",
     ".key", ".pem", ".pfx", ".p12", ".crt", ".cer", ".env", ".log", ".zip",
 }
+SOURCE_DATA_FILES = {
+    "world.json", "adventure.json", "adventure_rom.json", "centers.json",
+    "interior_repairs.json", "interior_maps.json",
+    "interior_navigation.json", "learnsets.json",
+}
 REQUIRED_SOURCE = (
     "Client/launcher/go.mod", "Client/launcher/main.go", "Client/launcher/platform_windows.go",
     "Client/app/index.html", "Client/app/app.js", "Client/app/renderer.js", "Client/app/styles.css",
-    "Client/app/audio.js", "Client/app/audio_controls.js", "Client/app/assets/audio/catalog.json",
+    "Client/app/audio.js", "Client/app/battle_fx.js", "Client/app/battle_timing.js", "Tests/check_battle_fx.mjs", "Client/app/audio_controls.js", "Client/app/assets/audio/catalog.json",
     "Client/launcher/audio_settings.go",
     "Client/app/assets/world/client.json", "Server/launcher/go.mod", "Server/launcher/main.go",
     "Server/server.py", "Server/nxt/store.py", "Server/data/world.json", "Server/requirements.txt",
@@ -69,6 +74,17 @@ REQUIRED_SOURCE = (
     "Server/2b - Configure Online Hosting.cmd", "Tests/test_online_setup.py", "Tests/test_tls_network.py",
     "Tools/repack_content.py", "Tools/verify_audio.py", "Tests/test_core.py", "Tests/test_network.py",
     "Server/nxt/async_tasks.py", "Server/nxt/world.py",
+    "Server/nxt/adventure.py", "Server/nxt/growth.py", "Server/nxt/portals.py",
+    "Server/data/adventure.json", "Server/data/adventure_rom.json", "Server/data/centers.json",
+    "Server/data/interior_repairs.json", "Server/data/interior_maps.json",
+    "Server/data/interior_navigation.json",
+    "Tools/publish_adventure.py", "Tools/prepare_centers.py", "Tools/repair_interiors.py",
+    "Tools/extract_adventure_data.py", "Tools/extract_learnsets.py", "Tools/publish_learnsets.py",
+    "Server/data/learnsets.json", "Tests/test_learnset_rom.py", "Tests/test_learnset_runtime.py",
+    "Tests/test_learnset_network.py", "Tests/test_learnset_publish.py", "Tests/test_sigma_moves.py", "Tests/check_learnsets.mjs",
+    "Tests/test_adventure.py", "Tests/test_growth.py", "Tests/test_adventure_combat.py",
+    "Tests/test_adventure_network.py", "Tests/check_adventure_ui.mjs",
+    "Tests/test_centers.py", "Tests/test_interior_access.py", "Tests/test_adventure_rom.py",
     "Tests/test_async_tasks.py", "Tests/test_replication_state.py", "Tests/test_replication_network.py",
     "Tests/test_login_lifecycle.py", "Tests/test_progress_persistence.py",
     "Tests/check_registration.mjs", "Tests/check_renderer_replication.mjs",
@@ -132,7 +148,7 @@ def is_source_file(relative: Path | PurePosixPath) -> bool:
         if len(parts) > 2 and parts[1] in {"logs", "certificates"}:
             return path.name in {"README.md", "README.txt"} and len(parts) == 3
         if len(parts) > 2 and parts[1] == "data":
-            return parts == ("Server", "data", "world.json")
+            return len(parts) == 3 and parts[2] in SOURCE_DATA_FILES
     if top == "Build" and path.suffix.casefold() == ".ini":
         return path.as_posix() in {
             "Build/config_templates/Client/config.ini", "Build/config_templates/Server/config.ini"
@@ -526,7 +542,7 @@ def build(args: argparse.Namespace, root: Path, cache: Path, log: Log, build_id:
                 audio_app_integration = "passed with installed Node.js"
             else:
                 audio_app_integration = "not run: optional audio app integration test is absent"
-            run([node, "--test", stage / "Tests/check_registration.mjs", stage / "Tests/check_renderer_replication.mjs"], cwd=stage, log=log)
+            run([node, "--test", stage / "Tests/check_registration.mjs", stage / "Tests/check_renderer_replication.mjs", stage / "Tests/check_adventure_ui.mjs", stage / "Tests/check_learnsets.mjs", stage / "Tests/check_battle_fx.mjs"], cwd=stage, log=log)
             replication_client = "passed with installed Node.js"
             javascript = "passed with installed Node.js"
         else:

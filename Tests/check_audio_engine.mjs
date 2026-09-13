@@ -2,7 +2,9 @@
  * Run: node Tests/check_audio_engine.mjs */
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-const code = await readFile(new URL('../Client/app/audio.js', import.meta.url), 'utf8');
+let code = await readFile(new URL('../Client/app/audio.js', import.meta.url), 'utf8');
+const timingCode = await readFile(new URL('../Client/app/battle_timing.js', import.meta.url), 'utf8');
+code = code.replace("'./battle_timing.js'", JSON.stringify('data:text/javascript;base64,' + Buffer.from(timingCode).toString('base64')));
 const {GameAudio, AUDIO_DEFAULTS} = await import('data:text/javascript;base64,' + Buffer.from(code).toString('base64'));
 
 class Clock {
@@ -367,15 +369,15 @@ await test('Movement audio only follows accepted ledges and genuine blocked move
   await audio.shutdown();
 });
 
-await test('Ordered battle sequence waits for the first clip while bounding stalls', async () => {
+await test('Late battle decode cannot delay or play over the following visual beat', async () => {
   const wait = deferred();
   const {audio, clock} = await make({fetch: async url => url.includes('/hit.') ? wait.promise : response(url.includes('/cry.') ? 'cry' : 'battle')});
   await audio.unlock(); await flush(); audio.setScene('world');
   audio.setBattle({id: 'order', kind: 'wild', audio: {revision: 1, events: [{id: '1', cue: 'hit'}, {id: '2', cue: 'cry', species: 'fr_1'}]}});
-  clock.tick(400); await flush(); assert.equal(audio._context.starts.filter(s => s.buffer.id === 'cry').length, 0);
-  wait.resolve(response('hit')); await flush(); clock.tick(300); await flush();
-  const effects = audio._context.starts.filter(s => ['hit', 'cry'].includes(s.buffer.id));
-  assert.deepEqual(effects.map(s => s.buffer.id), ['hit', 'cry']);
+  clock.tick(400); await flush();
+  assert.equal(audio._context.starts.filter(s => s.buffer.id === 'cry').length, 1);
+  wait.resolve(response('hit')); await flush();
+  assert.equal(audio._context.starts.filter(s => s.buffer.id === 'hit').length, 0, 'expired hit skipped rather than played out of order');
   await audio.shutdown();
 });
 
@@ -446,7 +448,7 @@ await test('Native reverse/forward cry modes honor pitch, note-off, and phase or
   assert(first); assert.equal(first.playbackRate.value, rate);
   assert(first.stopped > audio._context.currentTime + 0.25 && first.stopped < audio._context.currentTime + 0.5);
   clock.tick(300); await flush(); assert.equal(audio._context.starts.filter(s => s.buffer.id === 'cry').length, 0);
-  clock.tick(300); await flush(); assert.equal(audio._context.starts.filter(s => s.buffer.id === 'cry').length, 1);
+  clock.tick(200); await flush(); assert.equal(audio._context.starts.filter(s => s.buffer.id === 'cry').length, 1);
   await audio.shutdown();
 });
 
@@ -483,6 +485,62 @@ await test('Shipped ROM catalog fits native scheduling bounds without dropping p
     checked++;
   }
   assert(checked >= 708);
+  await audio.shutdown();
+});
+
+await test('New battle revision retires tails and pending cues while preserving music and low HP', async () => {
+  const custom = {...catalog, moveSounds: {kanto: {52: {events: [{clip:'hit',delaySeconds:0},{clip:'select',delaySeconds:4}],cries:[]}}}};
+  const {audio,clock}=await make({catalog:custom}); await audio.unlock();await flush();audio.setScene('world');
+  const base={id:'fast',kind:'wild',you:{hp:10,maxHp:100}};
+  audio.setBattle({...base,audio:{revision:1,events:[{id:'a',cue:'move',move:52}]}});clock.tick(0);await flush();
+  const old=audio._context.starts.find(s=>s.buffer.id==='hit'), music=audio._music, low=audio._lowHP;
+  assert(old&&music&&low);
+  audio.setBattle({...base,audio:{revision:2,events:[{id:'b',cue:'cry',species:'fr_1'}]}});await flush();
+  assert.notEqual(old.stopped,undefined);assert.equal(audio._music,music);assert.equal(audio._lowHP,low);
+  clock.tick(500);await flush();assert.equal(audio._context.starts.filter(s=>s.buffer.id==='select').length,0);
+  const starts=audio._context.starts.length;
+  audio.setBattle({...base,waiting:true,audio:{revision:2,events:[{id:'unexpected-new-id',cue:'hit'}]}});
+  audio.setBattle({...base,audio:{revision:1,events:[{id:'stale-new-id',cue:'hit'}]}});await flush();
+  assert.equal(audio._context.starts.length,starts);assert.equal(low.stopped,false);
+  await audio.shutdown();
+});
+
+await test('A decode completing after a newer revision cannot resurrect its old attack', async () => {
+  const wait=deferred();
+  class SlowDecode extends Context { async decodeAudioData(encoded) { const buffer=await super.decodeAudioData(encoded);if(buffer.id==='hit')await wait.promise;return buffer; } }
+  const {audio,clock}=await make({AudioContext:SlowDecode});await audio.unlock();await flush();audio.setScene('world');
+  const base={id:'decode',kind:'wild'};
+  audio.setBattle({...base,audio:{revision:1,events:[{id:'a',cue:'hit'}]}});await flush();clock.tick(100);
+  audio.setBattle({...base,audio:{revision:2,events:[{id:'b',cue:'cry',species:'fr_1'}]}});await flush();
+  wait.resolve();await flush();assert.equal(audio._context.starts.filter(s=>s.buffer.id==='hit').length,0);
+  assert.equal(audio._context.starts.filter(s=>s.buffer.id==='cry').length,1);await audio.shutdown();
+});
+
+await test('Opposing move fades the preceding attack and its hit tail within the same revision', async () => {
+  const custom={...catalog,moveSounds:{kanto:{52:{events:[{clip:'select',delaySeconds:0}],cries:[]},33:{events:[{clip:'cry2',delaySeconds:0}],cries:[]}}}};
+  const {audio,clock}=await make({catalog:custom});await audio.unlock();await flush();audio.setScene('world');
+  audio.setBattle({id:'opposing',kind:'wild',audio:{revision:1,events:[{id:1,cue:'move',move:52,side:'you'},{id:2,cue:'hit'},{id:3,cue:'move',move:33,side:'opponent'}]}});
+  clock.tick(0);await flush();const first=audio._context.starts.find(s=>s.buffer.id==='select');assert(first);
+  clock.tick(600);await flush();const hit=audio._context.starts.find(s=>s.buffer.id==='hit');assert(hit);
+  clock.tick(360);await flush();assert.notEqual(first.stopped,undefined);assert.notEqual(hit.stopped,undefined);
+  assert.equal(audio._context.starts.filter(s=>s.buffer.id==='cry2').length,1);await audio.shutdown();
+});
+
+await test('A new battle revision preserves queued world reward cues', async () => {
+  const {audio,clock}=await make();await audio.unlock();await flush();audio.setScene('world');
+  audio.setBattle({id:'reward',kind:'wild',audio:{revision:1,events:[{id:1,cue:'hit'}]}});await flush();
+  audio.handleEvents({events:[{id:'reward-world',cue:'ui_select'}]});
+  audio.setBattle({id:'reward',kind:'wild',audio:{revision:2,events:[]}});await flush();clock.tick(100);await flush();
+  assert.equal(audio._context.starts.filter(s=>s.buffer.id==='select').length,1);await audio.shutdown();
+});
+
+await test('Long native scripts retain their sample order inside the compact move beat', async () => {
+  const custom={...catalog,moveSounds:{kanto:{52:{events:[{clip:'select',delaySeconds:0},{clip:'hit',delaySeconds:4}],cries:[]}}}};
+  const {audio,clock}=await make({catalog:custom});await audio.unlock();await flush();audio.setScene('world');
+  audio.setBattle({id:'compact',kind:'wild',audio:{revision:1,events:[{id:1,cue:'move',move:52}]}});
+  clock.tick(0);await flush();clock.tick(399);await flush();assert.equal(audio._context.starts.filter(s=>s.buffer.id==='hit').length,0);
+  clock.tick(1);await flush();assert.equal(audio._context.starts.filter(s=>s.buffer.id==='hit').length,1);
+  assert.deepEqual(audio._context.starts.filter(s=>['select','hit'].includes(s.buffer.id)).map(s=>s.buffer.id),['select','hit']);
   await audio.shutdown();
 });
 

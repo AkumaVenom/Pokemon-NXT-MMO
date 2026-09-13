@@ -25,3 +25,40 @@ Build tools 1.1.1 also check reserved PowerShell variable assignments on every h
 `test_world_lease.py` checks ownership, expiry boundaries, future clocks, old-owner fencing and idempotent shutdown with real temporary SQLite stores. `test_server_startup.py` checks the startup lifecycle, lease recovery and persistent failure logs. `test_world_startup_patch.py` checks the small scripts-only patch installer. See `Docs/WORLD_STARTUP_FIX_TEST_REPORT.md`; SQLite/mocked checks do not imply a live Windows/MySQL acceptance run.
 
 `test_online_setup.py` verifies certificate generation/import, preservation of database settings and public-only export. `test_tls_network.py` verifies real HTTPS/WSS with certificate and hostname validation, plus TLS configuration failures. `Docs/ONLINE_HOSTING_TEST_REPORT.md` records the current execution results.
+
+
+## Optional native-browser battle regression (0.3.3)
+
+`check_battle_browser.mjs` serves the real client HTML, CSS, images and JavaScript
+with a test-only boot replacement. It supplies disposable battle snapshots and a
+mock transport/audio boundary, and exercises native browser timers, dialogs and
+animations. It checks initial sendout, both attacks and damage labels, duplicate
+clicks, subsequent turns, recovery from injected timer/animation failures, and
+return-to-world cleanup. It does not test the live server or audible playback.
+
+**Release status: syntax-checked only; browser QA was not run.** The build
+environment had no Chromium binary and browser downloads were unavailable. This
+optional test is not counted among the release's passing automated checks.
+
+From the source root, install Playwright in a test environment and run:
+
+```sh
+npm install --no-save --package-lock=false playwright
+npx playwright install chromium
+node Tests/check_battle_browser.mjs
+```
+
+To use installed Chromium or Edge, set `NXT_BROWSER_PATH` to its executable and
+skip the browser download. If Playwright is installed elsewhere, set
+`NXT_PLAYWRIGHT_MODULE` to its absolute module path or file URL. The test uses
+headless Chromium and container-only `--no-sandbox` launch arguments; these do not
+change the game launcher. Screenshots are written to a temporary directory, which
+the successful result reports. No account, database or game configuration changes
+are made.
+
+An optional source-root argument selects another checkout. To reproduce the
+original 0.3.2 timer failure rather than expect a passing corrected client:
+
+```sh
+node Tests/check_battle_browser.mjs /path/to/0.3.2-source --expect-broken
+```

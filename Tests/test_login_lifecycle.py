@@ -120,6 +120,15 @@ class LoginLifecycleTests(unittest.IsolatedAsyncioTestCase):
         socket, joined, state = await self.register()
         uid = joined['id']
         self.assertEqual(state['creatures'][0]['species'], 'fr_4')
+        # Place this persistence fixture at a legitimate merchant; the normal
+        # fresh-server proximity rule still applies to the real WebSocket buy.
+        world = self.service.world
+        market, x, y = next((m['id'], x, y) for m in self.content.maps.values()
+                            for npc in m['objects'] if npc['graphics'] == 68
+                            for x, y in [(npc['x'], npc['y'] + 1), (npc['x'] + 1, npc['y'])]
+                            if m.get('playable', True) and world.walkable(m, x, y))
+        await world.relocate_saved(world.players[uid], market, x, y)
+        await self.until(socket, 'map')
         await socket.send_json({'op': 'buy', 'item': 'pokeball', 'quantity': 2})
         purchased = await self.until(socket, 'state')
         self.assertEqual(purchased['money'], state['money'] - 400)

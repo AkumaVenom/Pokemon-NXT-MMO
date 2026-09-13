@@ -21,7 +21,7 @@ class AudioEventTests(unittest.IsolatedAsyncioTestCase):
  @classmethod
  def setUpClass(cls):cls.c=Content(ROOT/'Server/data/world.json')
  async def asyncSetUp(self):
-  self.tmp=tempfile.TemporaryDirectory();path=Path(self.tmp.name)/'config.ini';path.write_text((ROOT/'Server/config.ini').read_text())
+  self.tmp=tempfile.TemporaryDirectory();path=Path(self.tmp.name)/'config.ini';path.write_text((ROOT/'Build/config_templates/Server/config.ini').read_text())
   self.s=Settings.load(path);self.s.config.set('database','backend','sqlite');self.s=dataclasses.replace(self.s,encounter_chance=0)
   self.db=Store(self.s);self.db.acquire_lease();self.w=World(self.c,self.db,self.s);self.old_rng=self.c.rng;self.c.rng=random.Random(720)
   self.a=await self.player('AudioAlice');self.b=await self.player('AudioBobby')
@@ -49,6 +49,19 @@ class AudioEventTests(unittest.IsolatedAsyncioTestCase):
  async def finish_trade(self,t):
   for p in (self.a,self.b):await self.w.dispatch(p,{'op':'trade','id':t['id'],'action':'lock','revision':t['revision']})
   for p in (self.a,self.b):await self.w.dispatch(p,{'op':'trade','id':t['id'],'action':'confirm','revision':t['revision'],'digest':self.w.trade_digest(t)})
+ async def at_nurse(self):
+  # Audio timing tests exercise the real registered counter service; remote
+  # healing is deliberately unavailable in adventure mode.
+  key,center=next((key,value) for key,value in self.c.data['centers'].items() if key.startswith('kanto_') and value['kind']=='pokemon-center' and value['nurseNpcIds'] and value.get('nursePcAccess'))
+  npc=center['nurseNpcIds'][0];m=self.c.maps[key];obj=next(o for o in m['objects'] if o['id']==npc)
+  tiles=[(abs(x-obj['x'])+abs(y-obj['y']),x,y) for y in range(max(0,obj['y']-2),min(m['height'],obj['y']+3)) for x in range(max(0,obj['x']-2),min(m['width'],obj['x']+3)) if self.w.walkable(m,x,y) and (x,y)!=(obj['x'],obj['y'])]
+  self.assertTrue(tiles,'Registered nurse must have an accessible counter tile.');_,x,y=min(tiles)
+  async with self.w.lock:await self.w.relocate_saved(self.a,key,x,y)
+  self.drain(self.a);return npc
+ def alpha_shop(self):
+  # These tests isolate transaction/audio ordering from shop proximity. The
+  # production configuration keeps the explicit developer override disabled.
+  self.s.config.set('world','allow_alpha_atlas','true')
  def deterministic_attacks(self,b,move=52,enemy_move=150):
   b.mon(0)['moves']=[{'id':move,'pp':20}];b.mon(1)['moves']=[{'id':enemy_move,'pp':20}]
   self.c.rng.randrange=lambda n:1
@@ -56,6 +69,7 @@ class AudioEventTests(unittest.IsolatedAsyncioTestCase):
   self.c.rng.randint=lambda a,z:z
 
  async def test_purchase_audio_follows_successful_transaction_and_is_private(self):
+  self.alpha_shop()
   actual=self.db.save_many
   def save(records):
    self.assertFalse(any(p['type']=='audio' for p in self.a.queue._queue));return actual(records)
@@ -66,6 +80,7 @@ class AudioEventTests(unittest.IsolatedAsyncioTestCase):
   self.assertEqual(self.db.load(self.a.id),self.a.state);self.assertFalse(self.field_events(self.drain(self.b)))
 
  async def test_rejected_and_failed_purchases_emit_no_success(self):
+  self.alpha_shop()
   before=copy.deepcopy(self.a.state)
   with self.assertRaises(RequestError):await self.w.dispatch(self.a,{'op':'buy','item':'ultraball','quantity':99})
   self.assertFalse(self.field_events(self.drain(self.a)))
@@ -81,8 +96,9 @@ class AudioEventTests(unittest.IsolatedAsyncioTestCase):
   self.assertNotIn('audio_session',self.db.load(self.a.id));self.assertNotIn('audio_sequence',self.db.load(self.a.id))
 
  async def test_failed_save_heal_and_item_do_not_emit_confirmation(self):
+  nurse=await self.at_nurse()
   self.a.state['creatures'][0]['hp']=1
-  for op in ({'op':'save'},{'op':'heal'},{'op':'use','item':'potion','uid':self.a.state['party'][0]}):
+  for op in ({'op':'save'},{'op':'npc','npc':nurse,'action':'heal'},{'op':'use','item':'potion','uid':self.a.state['party'][0]}):
    with patch.object(self.db,'save_many',side_effect=RuntimeError('injected save failure')):
     if op['op']=='save':
      with self.assertRaises(RuntimeError):await self.w.dispatch(self.a,op)
@@ -93,7 +109,7 @@ class AudioEventTests(unittest.IsolatedAsyncioTestCase):
  async def test_field_heal_item_and_follower_change_have_semantic_cues(self):
   self.a.state['creatures'][0]['hp']=1;await self.w.dispatch(self.a,{'op':'use','item':'potion','uid':self.a.state['party'][0]})
   self.assertEqual(self.cues(self.field_events(self.drain(self.a))),['item'])
-  await self.w.heal(self.a,at_nurse=True);events=self.field_events(self.drain(self.a));self.assertEqual(self.cues(events),['heal']);self.assertTrue(events[0]['atNurse'])
+  nurse=await self.at_nurse();await self.w.dispatch(self.a,{'op':'npc','npc':nurse,'action':'heal'});events=self.field_events(self.drain(self.a));self.assertEqual(self.cues(events),['heal']);self.assertTrue(events[0]['atNurse'])
   mon=self.c.new_mon('fr_7',5,self.a.username);self.a.state['creatures'].append(mon)
   await self.w.dispatch(self.a,{'op':'party','party':[mon['uid'],self.a.state['party'][0]]})
   events=self.field_events(self.drain(self.a));self.assertEqual(self.cues(events),['party_changed']);self.assertTrue(events[0]['leadChanged']);self.assertEqual(events[0]['species'],'fr_7')
@@ -124,7 +140,7 @@ class AudioEventTests(unittest.IsolatedAsyncioTestCase):
   self.assertEqual(len(self.db.load(self.a.id)['creatures']),2);self.assertEqual(events,b.view(0)['audio']['events'])
 
  async def test_capture_rollback_discards_throw_success_and_reward_events(self):
-  before=copy.deepcopy(self.a.state);b=await self.wild('fr_129',2);self.drain(self.a);self.c.rng.random=lambda:0.0
+  b=await self.wild('fr_129',2);before=copy.deepcopy(self.a.state);self.drain(self.a);self.c.rng.random=lambda:0.0
   with patch.object(self.db,'save_many',side_effect=RuntimeError('injected capture rollback')):
    with self.assertLogs('nxt.world',level='ERROR'):await self.w.dispatch(self.a,{'op':'battle','id':b.id,'action':'capture','item':'pokeball'})
   events=self.battle_events(self.drain(self.a));self.assertEqual(self.cues(events),['abort']);self.assertEqual(events[0]['reason'],'save_failed');self.assertEqual(self.a.state,before);self.assertEqual(self.db.load(self.a.id),before)
@@ -206,6 +222,7 @@ class AudioEventTests(unittest.IsolatedAsyncioTestCase):
   await self.w.dispatch(self.a,{'op':'move','seq':3,'direction':'left'});blocked=next(p for p in self.drain(self.a) if p['type']=='move');self.assertFalse(blocked['accepted']);self.assertEqual(blocked['reason'],'blocked')
 
  async def test_map_transition_and_surf_metadata_are_authoritative(self):
+  self.s.config.set('world','allow_alpha_atlas','true');self.s.config.set('world','allow_alpha_surf','true')
   await self.w.dispatch(self.a,{'op':'travel','map':'johto_3_0'});m=next(p for p in self.drain(self.a) if p['type']=='map');self.assertEqual(m['transition'],'travel')
   await self.w.dispatch(self.a,{'op':'surf'});events=self.field_events(self.drain(self.a));self.assertEqual(self.cues(events),['surf']);self.assertEqual(events[0]['source'],'johto');self.assertTrue(events[0]['enabled'])
   await self.w.dispatch(self.a,{'op':'unstuck'});m=next(p for p in self.drain(self.a) if p['type']=='map');self.assertEqual(m['transition'],'home');self.assertFalse(m['entity']['surf']);self.assertFalse(self.a.state['surf'])

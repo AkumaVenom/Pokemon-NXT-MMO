@@ -1,0 +1,194 @@
+{
+  "format": 1,
+  "description": "Authored MMO objectives, one-time rewards and travel licenses; trainer teams and regional art are ROM-derived.",
+  "badgeNames": {
+    "kanto_1": "Boulder Badge",
+    "kanto_2": "Cascade Badge",
+    "kanto_3": "Thunder Badge",
+    "kanto_4": "Rainbow Badge",
+    "kanto_5": "Soul Badge",
+    "kanto_6": "Marsh Badge",
+    "kanto_7": "Volcano Badge",
+    "kanto_8": "Earth Badge",
+    "johto_1": "Zephyr Badge",
+    "johto_2": "Hive Badge",
+    "johto_3": "Plain Badge",
+    "johto_4": "Fog Badge",
+    "johto_5": "Storm Badge",
+    "johto_6": "Mineral Badge",
+    "johto_7": "Glacier Badge",
+    "johto_8": "Rising Badge"
+  },
+  "goals": [
+    {
+      "id": "first_capture",
+      "title": "A new companion",
+      "description": "Register two distinct caught species, including your first partner.",
+      "metric": "caught",
+      "target": 2,
+      "reward": {
+        "money": 400,
+        "items": {
+          "pokeball": 5
+        }
+      }
+    },
+    {
+      "id": "field_research",
+      "title": "Field researcher",
+      "description": "Record ten distinct species in your Pokedex.",
+      "metric": "seen",
+      "target": 10,
+      "reward": {
+        "money": 600,
+        "items": {
+          "greatball": 5
+        }
+      }
+    },
+    {
+      "id": "first_trainer",
+      "title": "First trainer victory",
+      "description": "Defeat a local trainer or Gym Leader.",
+      "metric": "trainers",
+      "target": 1,
+      "reward": {
+        "money": 500,
+        "items": {
+          "potion": 3
+        }
+      }
+    },
+    {
+      "id": "explorer",
+      "title": "Beyond your hometown",
+      "description": "Visit five different maps.",
+      "metric": "visited",
+      "target": 5,
+      "reward": {
+        "money": 500,
+        "items": {
+          "pokeball": 5
+        }
+      }
+    },
+    {
+      "id": "collector",
+      "title": "Growing collection",
+      "description": "Register twenty distinct caught species.",
+      "metric": "caught",
+      "target": 20,
+      "reward": {
+        "money": 1500,
+        "items": {
+          "greatball": 10
+        }
+      }
+    },
+    {
+      "id": "kanto_badges_1",
+      "title": "Kanto badge journey: 1",
+      "description": "Earn 1 badge in Kanto.",
+      "metric": "badges",
+      "region": "kanto",
+      "target": 1,
+      "reward": {
+        "money": 500,
+        "items": {
+          "superpotion": 1
+        }
+      }
+    },
+    {
+      "id": "kanto_badges_4",
+      "title": "Kanto badge journey: 4",
+      "description": "Earn 4 badges in Kanto.",
+      "metric": "badges",
+      "region": "kanto",
+      "target": 4,
+      "reward": {
+        "money": 2000,
+        "items": {
+          "superpotion": 4
+        }
+      }
+    },
+    {
+      "id": "kanto_badges_8",
+      "title": "Kanto badge journey: 8",
+      "description": "Earn 8 badges in Kanto.",
+      "metric": "badges",
+      "region": "kanto",
+      "target": 8,
+      "reward": {
+        "money": 4000,
+        "items": {
+          "superpotion": 8
+        }
+      }
+    },
+    {
+      "id": "johto_badges_1",
+      "title": "Johto badge journey: 1",
+      "description": "Earn 1 badge in Johto.",
+      "metric": "badges",
+      "region": "johto",
+      "target": 1,
+      "reward": {
+        "money": 500,
+        "items": {
+          "superpotion": 1
+        }
+      }
+    },
+    {
+      "id": "johto_badges_4",
+      "title": "Johto badge journey: 4",
+      "description": "Earn 4 badges in Johto.",
+      "metric": "badges",
+      "region": "johto",
+      "target": 4,
+      "reward": {
+        "money": 2000,
+        "items": {
+          "superpotion": 4
+        }
+      }
+    },
+    {
+      "id": "johto_badges_8",
+      "title": "Johto badge journey: 8",
+      "description": "Earn 8 badges in Johto.",
+      "metric": "badges",
+      "region": "johto",
+      "target": 8,
+      "reward": {
+        "money": 4000,
+        "items": {
+          "superpotion": 8
+        }
+      }
+    }
+  ],
+  "unlocks": [
+    {
+      "id": "travel_pass",
+      "badgeCount": 2,
+      "description": "Travel to visited outdoor maps and the two region home hubs."
+    },
+    {
+      "id": "surf_kanto",
+      "badges": [
+        "kanto_5"
+      ],
+      "description": "Surf in Kanto after earning the Soul Badge."
+    },
+    {
+      "id": "surf_johto",
+      "badges": [
+        "johto_4"
+      ],
+      "description": "Surf in Johto after earning the Fog Badge."
+    }
+  ]
+}

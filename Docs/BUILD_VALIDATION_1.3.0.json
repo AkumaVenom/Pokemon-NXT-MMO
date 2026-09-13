@@ -1,0 +1,100 @@
+{
+  "game": "Pokemon NXT MMO",
+  "version": "0.3.0-alpha",
+  "build_tools": "1.3.0",
+  "build_id": "build-20260913-051254-803329Z",
+  "created_utc": "2026-09-13T05:16:21.901064+00:00",
+  "target": "windows/amd64",
+  "build_host": {
+    "system": "Linux",
+    "machine": "x86_64"
+  },
+  "go": "go version go1.27.1 linux/amd64",
+  "python_environment": {
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+    "packages": {
+      "aiohttp": "3.14.3",
+      "PyMySQL": "1.2.0",
+      "cryptography": "50.0.1"
+    }
+  },
+  "production_dependency_pins_enforced": true,
+  "content_pack": "524386fe232fb0ef9dd3e749",
+  "asset_digest": "05f17b9d70901f48065b05e4933ff88ed4bdf665f7722f8ccf3080726945a65e",
+  "audio": {
+    "format": 1,
+    "catalogSha256": "999978ed3f98f5e929e8617dc86d8a144b81d6e2da3fbebe0ada51b4d447adb9",
+    "clipCount": 2366,
+    "mapCount": 959,
+    "speciesCryCount": 876,
+    "sourceHashes": {
+      "kanto": "729041b940afe031302d630fdbe57c0c145f3f7b6d9b8eca5e98678d0ca4d059",
+      "johto": "62d1a99f5b64a45cd4f6364273743f9d8961e9c439d8201bfeedb27c02f32c64"
+    }
+  },
+  "world_startup_fix": "1.1.2",
+  "checks": {
+    "python_tests_run": 406,
+    "python_tests_passed": 405,
+    "python_tests_skipped": 1,
+    "go_tests": "passed",
+    "windows_go_vet": "passed",
+    "launcher_platform": "Linux headless shell; Windows outputs cross-compiled, not executed",
+    "http_smoke": {
+      "index_served": true,
+      "content_policy": true,
+      "no_sniff": true,
+      "frame_denial": true,
+      "bootstrap_no_secrets": true,
+      "unexpected_host_blocked": true,
+      "server_config_inaccessible": true,
+      "directory_listing_disabled": true,
+      "traversal_blocked": true,
+      "heartbeat_requires_origin_and_token": true,
+      "heartbeat_accepted": true,
+      "js_served_as_module": true,
+      "extracted_map_served": true,
+      "audio_module_mime": true,
+      "audio_catalog_served": true,
+      "ogg_audio_mime": true,
+      "wav_audio_mime": true,
+      "audio_bootstrap_preferences": true,
+      "audio_wrong_origin_blocked": true,
+      "audio_missing_origin_blocked": true,
+      "audio_wrong_nonce_blocked": true,
+      "audio_partial_settings_rejected": true,
+      "audio_rejected_requests_leave_settings_unchanged": true,
+      "audio_preferences_saved": true,
+      "audio_bootstrap_readback": true,
+      "audio_preferences_isolated_on_disk": true
+    },
+    "javascript_syntax": "passed with installed Node.js",
+    "extracted_audio": "verified before content publication",
+    "audio_engine": "passed with installed Node.js",
+    "audio_app_integration": "passed with installed Node.js",
+    "registration_and_replication_client": "passed with installed Node.js"
+  },
+  "executables": [
+    {
+      "file": "Pokemon NXT MMO.exe",
+      "architecture": "Windows x64",
+      "subsystem": 2,
+      "bytes": 7396352,
+      "sha256": "8c49b66e16cbf7774c2c3992374b3a2c881bd57157141a73426fc64c03e5ef4d"
+    },
+    {
+      "file": "Pokemon NXT World Server.exe",
+      "architecture": "Windows x64",
+      "subsystem": 3,
+      "bytes": 1999360,
+      "sha256": "122e49527547150b00fe2edfc466bb626fcd6b858cb579ca6ac909fe9d74bf95"
+    }
+  ],
+  "not_verified_by_this_build": [
+    "Native Edge app UI",
+    "MySQL/MariaDB runtime and persistence",
+    "TLS deployment",
+    "1,000 concurrent network sessions"
+  ],
+  "configuration_policy": "Release templates only. Deployed Client/config.ini and Server/config.ini are not copied."
+}

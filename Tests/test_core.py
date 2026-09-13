@@ -6,6 +6,7 @@ from __future__ import annotations
 import asyncio,copy,dataclasses,hashlib,json,random,sys,tempfile,time,unittest,uuid
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'Server'))
+TEMPLATE=ROOT/'Build/config_templates/Server/config.ini'
 from nxt.config import Settings
 from nxt.content import Content
 from nxt.store import Store
@@ -26,13 +27,14 @@ class SecurityTests(unittest.TestCase):
   b=Bucket(2,60);self.assertTrue(b.take());self.assertTrue(b.take());self.assertFalse(b.take())
  def test_hard_cap_config_validation(self):
   with tempfile.TemporaryDirectory()as tmp:
-   p=Path(tmp)/'config.ini';p.write_text((ROOT/'Server/config.ini').read_text().replace('max_players = 1000','max_players = 1001'))
+   p=Path(tmp)/'config.ini';p.write_text(TEMPLATE.read_text().replace('max_players = 1000','max_players = 1001'))
    with self.assertRaises(ValueError):Settings.load(p)
 class ContentTests(unittest.TestCase):
  @classmethod
  def setUpClass(cls):cls.c=Content(ROOT/'Server/data/world.json')
  def test_map_dimensions_and_safe_spawns(self):
-  self.assertEqual(len(self.c.maps),859)
+  # Adventure retains the 859 baseline maps and restores 100 native Sigma maps.
+  self.assertEqual(len(self.c.maps),959)
   for m in self.c.maps.values():
    self.assertEqual(len(m['collision']),m['width']*m['height']);self.assertEqual(len(m['behavior']),len(m['collision']))
    if m.get('playable',True):x,y=m['spawn'];self.assertTrue(0<=x<m['width'] and 0<=y<m['height']);self.assertEqual(m['collision'][y*m['width']+x],0)
@@ -58,7 +60,12 @@ class WorldTests(unittest.IsolatedAsyncioTestCase):
  @classmethod
  def setUpClass(cls):cls.c=Content(ROOT/'Server/data/world.json')
  async def asyncSetUp(self):
-  self.tmp=tempfile.TemporaryDirectory();path=Path(self.tmp.name)/'config.ini';path.write_text((ROOT/'Server/config.ini').read_text());self.s=Settings.load(path);self.s.config.set('database','backend','sqlite');self.s=dataclasses.replace(self.s,encounter_chance=0);self.db=Store(self.s);self.db.acquire_lease();self.w=World(self.c,self.db,self.s);self.old_rng=self.c.rng;self.c.rng=random.Random(5678)
+  self.tmp=tempfile.TemporaryDirectory();path=Path(self.tmp.name)/'config.ini';path.write_text(TEMPLATE.read_text());self.s=Settings.load(path);self.s.config.set('database','backend','sqlite')
+  # These legacy fixtures test replication, chat and atomic transactions. Enable
+  # the explicit administrator exploration mode only here; the adventure suite
+  # independently exercises badge travel and nearby-Mart rules with it disabled.
+  self.s.config.set('world','allow_alpha_atlas','true')
+  self.s=dataclasses.replace(self.s,encounter_chance=0);self.db=Store(self.s);self.db.acquire_lease();self.w=World(self.c,self.db,self.s);self.old_rng=self.c.rng;self.c.rng=random.Random(5678)
   self.a=await self.make_player('Alice');self.b=await self.make_player('Bobby')
  async def asyncTearDown(self):
   self.w.players.clear();self.c.rng=self.old_rng;self.db.close();self.tmp.cleanup()

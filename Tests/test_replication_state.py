@@ -35,6 +35,9 @@ class ReplicationStateTests(unittest.IsolatedAsyncioTestCase):
         path.write_text((ROOT / 'Build/config_templates/Server/config.ini').read_text())
         settings = Settings.load(path)
         settings.config.set('database', 'backend', 'sqlite')
+        # Replication fixtures explicitly enable the administrator exploration tools.
+        settings.config.set('world', 'allow_alpha_atlas', 'true')
+        settings.config.set('world', 'allow_alpha_surf', 'true')
         self.settings = dataclasses.replace(settings, encounter_chance=0)
         self.db = Store(self.settings)
         self.db.acquire_lease()
@@ -172,9 +175,10 @@ class ReplicationStateTests(unittest.IsolatedAsyncioTestCase):
         extra = self.content.new_mon('fr_7', 5, self.a.username)
         extra['shiny'] = True
         state['creatures'].append(extra)
+        state['party'].append(extra['uid'])
         await self.world.commit(self.a, state)
         await self.establish_visibility()
-        await self.world.dispatch(self.a, {'op': 'party', 'party': [extra['uid']]})
+        await self.world.dispatch(self.a, {'op': 'party', 'party': list(reversed(state['party']))})
         await self.world.tick()
         for observer in (self.a, self.b):
             scenes = self.packets(observer, 'scene')

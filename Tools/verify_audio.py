@@ -47,7 +47,7 @@ def _ogg_duration(path):
     return granule / sample_rate
 
 
-def verify(root: Path = ROOT) -> dict:
+def verify(root: Path = ROOT, *, world: dict | None = None) -> dict:
     root = Path(root).resolve()
     assets = root / 'Client/app/assets'
     catalog_path = assets / 'audio/catalog.json'
@@ -90,7 +90,8 @@ def verify(root: Path = ROOT) -> dict:
     def reference(key, where, nullable=False):
         _require((nullable and key is None) or (isinstance(key, str) and key in clips), f'missing clip reference in {where}: {key}')
 
-    world = json.loads((root / 'Server/data/world.json').read_text(encoding='utf-8'))
+    if world is None:
+        world = json.loads((root / 'Server/data/world.json').read_text(encoding='utf-8'))
     _require(set(catalog.get('mapMusic', {})) == set(world['maps']), 'map music coverage differs from world maps')
     _require(set(catalog.get('mapModes', {})) == set(world['maps']), 'map music modes differ from world maps')
     for key, clip_id in catalog['mapMusic'].items():

@@ -37,6 +37,9 @@ class ProgressPersistenceTests(unittest.IsolatedAsyncioTestCase):
         path.write_bytes((ROOT / 'Build/config_templates/Server/config.ini').read_bytes())
         settings = Settings.load(path)
         settings.config.set('database', 'backend', 'sqlite')
+        # These cases exercise the explicit administrator exploration overrides.
+        settings.config.set('world', 'allow_alpha_atlas', 'true')
+        settings.config.set('world', 'allow_alpha_surf', 'true')
         self.settings = dataclasses.replace(settings, encounter_chance=0)
         self.db = Store(self.settings)
         self.db.acquire_lease()
@@ -266,8 +269,12 @@ class ProgressPersistenceTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_battle_save_failure_spends_no_ball_and_grants_no_capture(self):
         self.content.rng.random = lambda: 0.0
-        before = copy.deepcopy(self.player.state)
+        inventory_before = copy.deepcopy(self.player.state['items'])
         await self.world.start_wild(self.player, ('fr_129', 2))
+        # Seeing a species is its own valid checkpoint, preceding this failed turn.
+        before = copy.deepcopy(self.player.state)
+        self.assertIn('fr_129', before['adventure']['seen'])
+        self.assertEqual(before['items'], inventory_before)
         battle = self.world.battles[self.player.battle]
         with patch.object(self.db, 'save_many', side_effect=RuntimeError('injected battle failure')):
             with self.assertLogs('nxt.world', level='ERROR'):
@@ -296,7 +303,11 @@ class ProgressPersistenceTests(unittest.IsolatedAsyncioTestCase):
         state['creatures'][0]['hp'] = 1
         state['creatures'][0]['moves'][0]['pp'] = 0
         await self.world.commit(self.player, state)
-        await self.world.dispatch(self.player, {'op': 'heal'})
+        center_map, service = next((key, value) for key, value in self.content.data['centers'].items() if value['nurseNpcIds'])
+        npc = service['nurseNpcIds'][0]
+        x, y = service.get('respawnByNpc', {}).get(str(npc), service['respawn'])
+        await self.world.relocate_saved(self.player, center_map, x, y)
+        await self.world.dispatch(self.player, {'op': 'npc', 'npc': npc, 'action': 'heal'})
         expected = copy.deepcopy(self.player.state)
         await self.cold_restart()
         self.assertEqual(self.player.state, expected)

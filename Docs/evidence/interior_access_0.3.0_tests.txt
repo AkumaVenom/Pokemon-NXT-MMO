@@ -1,0 +1,41 @@
+test_all_active_portals_have_safe_native_arrivals (test_interior_access.InteriorMetadataTests.test_all_active_portals_have_safe_native_arrivals) ... ok
+test_all_ordinary_floor_events_remain_inert (test_interior_access.InteriorMetadataTests.test_all_ordinary_floor_events_remain_inert) ... ok
+test_gym_navigation_changes_only_declared_cells_and_boulders (test_interior_access.InteriorMetadataTests.test_gym_navigation_changes_only_declared_cells_and_boulders) ... ok
+test_leaf_frontstep_does_not_enter_battle_frontier (test_interior_access.InteriorMetadataTests.test_leaf_frontstep_does_not_enter_battle_frontier) ... ok
+test_new_bark_four_buildings_are_correct_native_interiors (test_interior_access.InteriorMetadataTests.test_new_bark_four_buildings_are_correct_native_interiors) ... ok
+test_open_gate_graphics_change_only_audited_tiles_keep_original_images (test_interior_access.InteriorMetadataTests.test_open_gate_graphics_change_only_audited_tiles_keep_original_images) ... ok
+test_recovered_leaf_upstairs_and_chuck_gym_keep_native_assets (test_interior_access.InteriorMetadataTests.test_recovered_leaf_upstairs_and_chuck_gym_keep_native_assets) ... ok
+test_saved_return_validation_drops_corrupt_records (test_interior_access.InteriorMetadataTests.test_saved_return_validation_drops_corrupt_records) ... ok
+test_source_collision_arrays_are_not_globally_opened (test_interior_access.InteriorMetadataTests.test_source_collision_arrays_are_not_globally_opened) ... ok
+test_adjacent_wall_and_incorrect_door_approach_do_not_bypass_collision (test_interior_access.InteriorMovementTests.test_adjacent_wall_and_incorrect_door_approach_do_not_bypass_collision) ... ok
+test_all_sixteen_native_gym_doors_reach_the_correct_leader_by_walking (test_interior_access.InteriorMovementTests.test_all_sixteen_native_gym_doors_reach_the_correct_leader_by_walking) ... ok
+test_both_regions_center_enter_and_exit_from_real_front_step (test_interior_access.InteriorMovementTests.test_both_regions_center_enter_and_exit_from_real_front_step) ... ok
+test_every_registered_center_building_door_round_trips_by_walking (test_interior_access.InteriorMovementTests.test_every_registered_center_building_door_round_trips_by_walking) ... ok
+test_failed_portal_save_does_not_move_or_publish_destination (test_interior_access.InteriorMovementTests.test_failed_portal_save_does_not_move_or_publish_destination) ... State commit failed for DoorTester
+Traceback (most recent call last):
+  File "/workspace/scratch/17aebd1b1835/major_0_3_0/Pokemon_NXT_MMO_v0.3.0-alpha_Source_Adventure/Server/nxt/world.py", line 100, in commit
+    try:await asyncio.to_thread(self.db.save_many,[(p.id,state)])
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+OSError: disk unavailable
+ok
+test_outside_walk_leaf_home_upstairs_and_back (test_interior_access.InteriorMovementTests.test_outside_walk_leaf_home_upstairs_and_back) ... ok
+test_two_accounts_shared_center_returns_stay_independent_after_relogin (test_interior_access.InteriorMovementTests.test_two_accounts_shared_center_returns_stay_independent_after_relogin) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 5.408s
+
+OK

@@ -37,6 +37,12 @@ class AsyncTransactionTests(unittest.IsolatedAsyncioTestCase):
         self.world = World(self.content, self.db, self.settings)
         self.player = await self.create_player('CancelAlice', 'fr_4')
         self.other = await self.create_player('CancelBobby', 'fr_152')
+        # The transaction starts at a real merchant with fresh adventure defaults.
+        market, x, y = next((m['id'], x, y) for m in self.content.maps.values()
+                            for npc in m['objects'] if npc['graphics'] == 68
+                            for x, y in [(npc['x'], npc['y'] + 1), (npc['x'] + 1, npc['y'])]
+                            if m.get('playable', True) and self.world.walkable(m, x, y))
+        await self.world.relocate_saved(self.player, market, x, y)
         self.before = copy.deepcopy(self.player.state)
         self.other_before = copy.deepcopy(self.other.state)
 

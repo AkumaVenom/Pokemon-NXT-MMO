@@ -76,6 +76,11 @@ class ReplicationNetworkTests(unittest.IsolatedAsyncioTestCase):
         settings = Settings.load(path)
         settings.config.set('database', 'backend', 'sqlite')
         settings.config.set('security', 'auth_attempts_per_minute', '100')
+        # These replication fixtures isolate ownership/transport with the
+        # explicit administrator exploration controls; progression gates have
+        # separate real-network coverage in test_adventure_network.py.
+        settings.config.set('world', 'allow_alpha_atlas', 'true')
+        settings.config.set('world', 'allow_alpha_surf', 'true')
         self.settings = dataclasses.replace(settings, encounter_chance=0)
         self.db = Store(self.settings)
         self.db.acquire_lease()

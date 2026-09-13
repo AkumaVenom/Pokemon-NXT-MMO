@@ -2,11 +2,14 @@
 from __future__ import annotations
 import json,math,secrets,uuid
 from pathlib import Path
+from .growth import Growth
 TYPES=['Normal','Fighting','Flying','Poison','Ground','Rock','Bug','Ghost','Steel','Mystery','Fire','Water','Grass','Electric','Psychic','Ice','Dragon','Dark','Fairy']
 NATURES=['Hardy','Lonely','Brave','Adamant','Naughty','Bold','Docile','Relaxed','Impish','Lax','Timid','Hasty','Serious','Jolly','Naive','Modest','Mild','Quiet','Bashful','Rash','Calm','Gentle','Sassy','Careful','Quirky']
 class Content:
  def __init__(self,path:Path):
+  self.source_path=path
   d=json.loads(path.read_text(encoding='utf-8'));self.data=d;self.maps=d['maps'];self.species=d['species'];self.moves=d['moves'];self.pack=d['pack'];self.items=d['items'];self.rng=secrets.SystemRandom()
+  self.growth=Growth(self)
   if d['format']!=1:raise RuntimeError('Unsupported world content format')
   for k,m in self.maps.items():
    n=m['width']*m['height']
@@ -45,23 +48,25 @@ class Content:
   if key not in self.species or not 1<=level<=100:raise ValueError('Invalid creature')
   s=self.species[key];ids=[]
   for lv,mid in s['learnset']:
-   if lv<=level and str(mid) in self.moves:
-    if mid in ids:ids.remove(mid)
+   # Native initial assignment stops at the first over-level ROM row. Do not
+   # sort a profile or fabricate Tackle when no native move has been earned.
+   if lv>level:break
+   if str(mid) in self.moves and mid not in ids:
+    if len(ids)==4:ids.pop(0)
     ids.append(mid)
-  if not ids:ids=[33]
   mon={'uid':str(uuid.uuid4()),'species':key,'level':level,'exp':self.xp(level,s['growth']),'ivs':[self.rng.randrange(32) for _ in range(6)],'nature':self.rng.randrange(25),'originalTrainer':owner,'shiny':self.rng.randrange(8192)==0,'status':'','sleep':0,'moves':[{'id':mid,'pp':self.moves[str(mid)]['pp']} for mid in ids[-4:]]}
-  mon['hp']=self.stats(mon)[0];return mon
+  mon['hp']=self.stats(mon)[0];self.growth.ensure(mon);self.growth.stamp_move_namespace(mon);return mon
  def gain_xp(self,mon,amount):
-  mon['exp']+=max(0,int(amount));s=self.species[mon['species']];old=mon['level'];oldhp=self.stats(mon)[0]
+  self.growth.ensure(mon);s=self.species[mon['species']];old=mon['level'];oldhp=self.stats(mon)[0];hp=mon['hp']
+  mon['exp']=min(self.xp(100,s['growth']),mon['exp']+max(0,int(amount)))
   while mon['level']<100 and mon['exp']>=self.xp(mon['level']+1,s['growth']):mon['level']+=1
   if mon['level']>old:
-   mon['hp']=min(self.stats(mon)[0],mon['hp']+self.stats(mon)[0]-oldhp)
-   for lv,mid in s['learnset']:
-    if old<lv<=mon['level'] and str(mid) in self.moves and mid not in [m['id'] for m in mon['moves']]:mon['moves']=(mon['moves']+[{'id':mid,'pp':self.moves[str(mid)]['pp']}])[-4:]
+   maximum=self.stats(mon)[0];mon['hp']=min(maximum,max(1,hp+maximum-oldhp)) if hp>0 else 0
+   self.growth.queue_moves(mon,old,mon['level'])
   return mon['level']-old
  def public_mon(self,mon,private=True):
   s=self.species[mon['species']];v={k:mon[k] for k in ('uid','species','level','hp','shiny','status')};v.update({'name':s['name'],'maxHp':self.stats(mon)[0]})
-  if private:v.update({'moves':mon['moves'],'exp':mon['exp'],'nextExp':self.xp(min(100,mon['level']+1),s['growth']),'levelExp':self.xp(mon['level'],s['growth']),'stats':self.stats(mon),'nature':NATURES[mon['nature']],'originalTrainer':mon['originalTrainer']})
+  if private:v.update({'moves':mon['moves'],'exp':mon['exp'],'nextExp':self.xp(min(100,mon['level']+1),s['growth']),'levelExp':self.xp(mon['level'],s['growth']),'stats':self.stats(mon),'nature':NATURES[mon['nature']],'originalTrainer':mon['originalTrainer'],'pendingLearn':self.growth.pending_moves(mon),'relearnMoves':self.growth.reminder_options(mon),'levelUpMoves':self.growth.level_up_moves(mon),'evolutions':self.growth.options(mon)})
   return v
  def heal(self,mon):
   mon['hp']=self.stats(mon)[0];mon['status']='';mon['sleep']=0

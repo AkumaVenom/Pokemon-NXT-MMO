@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.3.3-alpha · Battle screen correction · Build tools 1.3.3 · 2026-09-13
+
+- Invoke native browser timers with the proper global context instead of the animation controller receiver.
+- Open the populated battle dialog before starting effects; recover usable battle controls after synchronous or scheduled effect failures. Cancel outstanding effects and suppress replay loops after failure.
+- Add initial-sendout, timer-context and failure-recovery regression coverage. Keep authoritative turn locking, damage, saving and previous sound cancellation.
+- Deliver the complete updated source and every bundled asset in two mergeable full-source ZIPs.
+
+## 0.3.2-alpha · Battle feedback · Build tools 1.3.2 · 2026-09-13
+
+- Add short attack lunges for both combatants, hit reactions, floating damage, critical-hit and effectiveness feedback from authoritative battle events.
+- Bound presentation timing, deduplicate repeated snapshots and cancel obsolete effects on newer turns, battle changes or disconnect. Respect reduced motion.
+- Retire earlier battle sound queues, delayed decodes and transient voices when a new turn or move supersedes them, preserving background music and the low-HP loop.
+- Preserve native ROM assets, move learning, account progress, combat rules and earlier online/build fixes. Add focused presentation/audio lifecycle regressions to the all-in-one build.
+
+
+## 0.3.1-alpha · Native learnsets · Build tools 1.3.1 · 2026-09-13
+
+- Audit all 876 published profiles against both supplied ROMs; replace the 28 remaining fabricated Sigma lists. Preserve native row order and repeated levels; two missing terminators have bounded, byte-identical native recovery witnesses.
+- Separate seven renamed Sigma move identities and bind them to native Sigma move sounds. Preserve canonical FireRed shared-species profiles.
+- Correct initial move assignment, remove fabricated Tackle, reconcile stale learning queues and expose the next move plus complete native level-up list.
+- Add owner-validated, durably saved Move Reminder choices with explicit replacement confirmation and stale-client guards. Existing accounts and progress remain intact.
+- Separate combat accuracy and Special Defense stages. Retain documented alpha move-effect limits.
+- Keep accepted starter/login/replication/persistence, Nurse Joy/interior, online TLS and automatic build fixes. Deliver complete source in seven smaller mergeable ZIPs.
+
+
+## 0.3.0-alpha · Adventure update · Build tools 1.3.0
+
+- Add server-saved native trainer victories, sixteen ordered Gym badges, journal goals and one-time rewards, regional Surf licenses and discovered-location travel.
+- Replace remote menu healing with nearby Nurse Joy services; persist HP/status/PP restoration and Center return positions. Add owner-checked PC deposit/withdraw at Centers.
+- Add seen/caught Pokédex history, supported evolution choices and explicit queued move learning; preserve UID, individual traits and existing progress.
+- Recover 100 referenced Sigma rooms and 463 native Sigma learnsets. Normalize visible NPC identities before binding trainers and nurses.
+- Repair tile-qualified doorway activation, native destinations and per-account dynamic returns, including Leaf’s Johto home; retain regional ROM art and extend music coverage to all 959 maps.
+- Award trainer EXP once per defeated opponent, preserve it across ongoing turns, and prevent trainer battles from using wild run/capture rules.
+- Add two-account network/restart, service, progression, content and interface regressions. Keep prior build, TLS, startup, starter and progressive-saving fixes.
+- Bundle all content sidecars in clean source/build snapshots; publishing remains ROM-free and rejects incomplete content/audio.
+
 ## Build tools 1.2.3 · Starter selection, replication and persistent sessions
 
 - Preserve the chosen starter independently of home region and snapshot registration choices before connecting.

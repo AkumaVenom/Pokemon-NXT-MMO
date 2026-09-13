@@ -1,5 +1,7 @@
 # Pokemon NXT MMO · Windows quick start
 
+For the complete 0.3.0 gameplay and operator guide, see [ADVENTURE_GUIDE.md](ADVENTURE_GUIDE.md). This page covers setup and the first multiplayer test.
+
 ## Source edition: automatic build prerequisites
 
 The source `BUILD_ALL.bat` now downloads/installs missing Go and Python and produces `dist/build-<timestamp>`. No manual Go installation is needed. Follow this quick-start in that new output. Its server dependency BAT recognizes the bootstrapped Python on the same PC even without PATH/`py.exe`. A different server-only PC still needs its own Python runtime. See `AUTOMATIC_BUILD.md`.
@@ -81,7 +83,7 @@ Launch `Client/Pokemon NXT MMO.exe`. The window starts at login. A stopped world
 
 Usernames are unique case-insensitively and become the visible nameplate. Passwords are not remembered by the game. There is no email verification, account recovery or password-change UI in this alpha; use test credentials that are not reused elsewhere.
 
-The six starters are Bulbasaur, Charmander, Squirtle, Chikorita, Cyndaquil and Totodile. New characters start with one level-5 partner, 3,000 currency, 20 Poke Balls and five Potions by default. These amounts are configurable on the server for newly created characters.
+The six starters are Bulbasaur, Charmander, Squirtle, Chikorita, Cyndaquil and Totodile. New characters start with one level-5 partner, 3,000 currency, 20 Poke Balls and five Potions by default. These amounts are configurable on the server for newly created characters. Starter and home region are independent: any of the six partners can start in either region. On later visits, choose **Log in** and use the same account credentials to continue the saved character.
 
 ## 6. Two-PC LAN acceptance test
 
@@ -100,24 +102,54 @@ Create two different accounts and choose the same region. Pallet Town and New Ba
 
 Plaintext LAN mode is only for an isolated trusted test network. Passwords are exposed to a network observer without TLS. Internet connections require the direct TLS setup described in `NETWORK_AND_SECURITY.md`.
 
-## Controls and alpha conveniences
+## Controls and the adventure loop
 
 | Action | Control |
-|---|---|
+| --- | --- |
 | Move | WASD or arrow keys |
-| Interact with an adjacent NPC | E, or click the NPC |
+| Interact with a nearby NPC | E, or click the NPC |
 | Challenge / trade / inspect / local chat mute | Click another trainer or nameplate |
 | Global chat | Enter; select General or Trade |
-| Party and collection | P |
+| Party and Pokémon storage | P |
+| Adventure Journal and badge progress | J |
+| Pokédex discoveries | G; D remains the move-right key |
 | World atlas | M |
 | Bag and supplies | B |
 | Crisp integer world zoom | + / − or viewport buttons |
 | Fullscreen | F11 |
-| Save, restore, surf, return home | Right-side field controls |
+| Extra save, Surf, return home | Right-side field controls |
 
-Walk on tall grass for encounters. “Search for wild” is available on encounter terrain; it is not an unrestricted spawn cheat. The atlas exposes original layout IDs and lets you fast-travel around Kanto and Sigma's Johto/repurposed areas without original story unlocks. “All extracted maps” lists interiors as well; seven placeholders are disabled. Search narrows a maximum of 120 visible result cards.
+Walk on tall grass for encounters. **Search for wild** works on encounter terrain. Approach a supported trainer NPC and select **Challenge trainer** to battle its extracted team. Trainer battles cannot be fled or used to catch the opponent's Pokémon. Original trainer sight scripts are not simulated.
 
-The alpha permits restoration, supplies and surf as field conveniences. It is not a balanced progression economy. Return home rescues a trainer from a missing scripted exit. NPC practice teams are authored by the alpha, not the original ROM campaign teams.
+There are eight ordered Gym challenges in Kanto and eight in Johto / Sigma. Earn earlier badges in the same region before its later Gym Leaders. Open **J** to review each region's next challenge, saved badges and goals. Completed goal rewards are claimed once from the Journal. **G** opens the searchable seen/caught record; unseen species are not exposed in that view.
+
+### Pokémon Centers, storage and growth
+
+Enter a Pokémon Center, approach Nurse Joy and press **E**. Choose **Yes, please heal my party** to restore party HP, PP and status. There is no remote Restore party button. Nurse and PC services require being within two tiles of the recognized service NPC and free of a battle or trade.
+
+Press **P** to inspect and reorder the party or view PC storage. Deposit and withdraw near a Pokémon Center PC service or through Nurse Joy's **Open Pokémon storage** option. Keep at least one healthy partner in the party; withdrawing requires an empty party slot. Moving away or changing maps invalidates service access.
+
+Inspect a Pokémon when **Growth choices ready** appears. Full move sets receive an explicit forget/decline choice instead of an automatic replacement. Available evolutions can be accepted, paused with **Not now**, and resumed later. Compatible evolution items—including Sigma's Link Cable and Fairy Dust—show their actual names and are used from the Pokémon's inspection panel. Buy supplies near a Poké Mart; owned healing items remain usable in the field.
+
+### Travel, Surf and administrator exploration settings
+
+The atlas can always be viewed and searched, including its interior-map list. Earn two badges in total to receive the **Travel Pass**, which permits travel to visited outdoor waypoints and the two starting towns. Visit other outdoor locations on foot before selecting them as waypoints. Interior maps remain browsable but are not ordinary travel destinations; enter buildings, caves and other interiors through their doors. Unavailable layouts cannot be selected; the search shows up to 120 result cards at a time.
+
+Earn Koga's **Soul Badge** for Kanto Surf, and Morty's **Fog Badge** for Johto Surf. The controls follow the current region's permission. Step onto land before disabling Surf. **Return home** remains available outside battles/trades when an unimplemented original scripted exit leaves you stuck.
+
+Fresh adventure configurations set these `[world]` options:
+
+```ini
+allow_alpha_atlas = false
+allow_alpha_surf = false
+save_interval_seconds = 5
+```
+
+Existing server configurations keep their own values. An administrator can explicitly retain `allow_alpha_atlas=true` for unrestricted exploration travel and field purchasing, or `allow_alpha_surf=true` for unrestricted Surf. Restart after changing configuration. These exploration overrides do not re-enable remote party healing or bypass PC proximity.
+
+Important actions save before their success is reported. Movement saves periodically, with five seconds as the fresh default, and the established logout/shutdown saving remains active. **Save now** requests an extra save. Reconnect with **Log in** to continue the same account.
+
+These are authored MMO progression rules using extracted teams and regional assets. They do not execute every original FireRed/Sigma story script, puzzle, ability, move effect or evolution condition. The full supported scope and sixteen Gym Leaders are documented in [ADVENTURE_GUIDE.md](ADVENTURE_GUIDE.md).
 
 ## Trading safely
 
@@ -170,7 +202,7 @@ Defaults `pixel_scale=0` and `ui_scale=0` select responsive UI sizing, integer w
 
 **Already online:** log the account out of its other window. Use separate accounts for multiplayer. After connection loss, allow cleanup to complete before reconnecting.
 
-**Missing exit or unusual Sigma area name:** extraction preserves repurposed map layouts and stable IDs; original scripts are not running. Use the atlas/Return home. Report the map ID and coordinates with the issue.
+**Missing exit or unusual Sigma area name:** extraction preserves repurposed map layouts and stable IDs; original scripts are not running. Use Return home, or the atlas when the destination is available under your Travel Pass or administrator exploration settings. Report the map ID and coordinates with the issue.
 
 
 ## World startup reports another owner or has no log

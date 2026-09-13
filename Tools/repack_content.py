@@ -8,8 +8,10 @@ import argparse,hashlib,json,os,tempfile
 from pathlib import Path
 try:
  from .verify_audio import verify as verify_audio
+ from .publish_adventure import assemble as assemble_adventure
 except ImportError:
  from verify_audio import verify as verify_audio
+ from publish_adventure import assemble as assemble_adventure
 ROOT=Path(__file__).resolve().parents[1]
 def write_json(path:Path,value):
  path.parent.mkdir(parents=True,exist_ok=True)
@@ -18,6 +20,7 @@ def write_json(path:Path,value):
  try:os.replace(tmp,path)
  finally:tmp.unlink(missing_ok=True)
 def publish(world:dict,root:Path=ROOT):
+ assemble_adventure(world,root)
  assets=root/'Client/app/assets'
  if world.get('format')!=1:raise ValueError('Unsupported world format')
  def asset(path):
@@ -49,7 +52,7 @@ def publish(world:dict,root:Path=ROOT):
  digest=hashlib.sha256();count=0
  for path in sorted(assets.rglob('*.png')):
   name=path.relative_to(assets).as_posix().encode();digest.update(len(name).to_bytes(4,'big'));digest.update(name);digest.update(hashlib.sha256(path.read_bytes()).digest());count+=1
- audio=verify_audio(root)
+ audio=verify_audio(root,world=world)
  world.pop('pack',None);world['assetDigest']=digest.hexdigest();world['audio']=audio
  world['pack']=hashlib.sha256(json.dumps(world,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()[:24]
  write_json(root/'Server/data/world.json',world)

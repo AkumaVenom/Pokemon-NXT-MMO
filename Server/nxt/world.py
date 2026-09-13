@@ -7,6 +7,9 @@ import asyncio,collections,copy,hashlib,json,logging,math,time,uuid
 from dataclasses import dataclass,field
 from .security import Bucket,RequestError,require,integer
 from .combat import Battle
+from .adventure import Adventure
+from .portals import plan_warp,return_stack
+from .async_tasks import complete_before_cancelling
 log=logging.getLogger('nxt.world')
 DIRECTIONS={'down':(0,1,1),'up':(0,-1,2),'left':(-1,0,3),'right':(1,0,4)}
 WATER={16,17,18,19,21,26,27}
@@ -48,7 +51,7 @@ class Player:
   return {'id':self.id,'username':self.username,'map':s['map'],'x':s['x'],'y':s['y'],'direction':s.get('direction','down'),'appearance':s['appearance'],'follower':lead['species'] if lead else None,'shiny':bool(lead and lead['shiny']),'fx':self.fx,'fy':self.fy,'busy':bool(self.battle or self.trade),'surf':s.get('surf',False)}
 class World:
  def __init__(self,content,store,settings):
-  self.c=content;self.db=store;self.s=settings;self.players={};self.invites={};self.trades={};self.battles={};self.lock=asyncio.Lock();self.chat={'general':collections.deque(maxlen=30),'trade':collections.deque(maxlen=30)};self.started=time.monotonic();self.ticks=0;self.last_tick_ms=0;self.max_tick_ms=0;self.extension_hooks=collections.defaultdict(list);self.stopping=False
+  self.c=content;self.adventure=Adventure(content);self.db=store;self.s=settings;self.players={};self.invites={};self.trades={};self.battles={};self.lock=asyncio.Lock();self.chat={'general':collections.deque(maxlen=30),'trade':collections.deque(maxlen=30)};self.started=time.monotonic();self.ticks=0;self.last_tick_ms=0;self.max_tick_ms=0;self.extension_hooks=collections.defaultdict(list);self.stopping=False
  def hook(self,event,callback):self.extension_hooks[event].append(callback)
  def emit(self,event,**context):
   for cb in self.extension_hooks.get(event,[]):
@@ -57,7 +60,8 @@ class World:
  def initial(self,name,home,starter,appearance):
   require(isinstance(home,str) and home in self.c.data['homes'],'Select Kanto or Johto.');require(isinstance(starter,str) and starter in self.c.data['starters'],'Select a valid starter.');require(type(appearance) is int and appearance in (0,7),'Invalid trainer appearance.')
   key=self.c.data['homes'][home];m=self.c.maps[key];mon=self.c.new_mon(starter,5,name)
-  return {'format':1,'revision':1,'map':key,'x':m['spawn'][0],'y':m['spawn'][1],'direction':'down','home':home,'appearance':appearance,'money':self.s.int('gameplay','starting_money'),'items':{'pokeball':self.s.int('gameplay','starting_pokeballs'),'potion':self.s.int('gameplay','starting_potions')},'creatures':[mon],'party':[mon['uid']],'surf':False}
+  state={'format':1,'revision':1,'map':key,'x':m['spawn'][0],'y':m['spawn'][1],'direction':'down','home':home,'appearance':appearance,'money':self.s.int('gameplay','starting_money'),'items':{'pokeball':self.s.int('gameplay','starting_pokeballs'),'potion':self.s.int('gameplay','starting_potions')},'creatures':[mon],'party':[mon['uid']],'surf':False}
+  return self.adventure.migrate(state)
  def validate_state(self,state):
   require(state.get('format')==1,'This character requires a state migration.')
   mons=state.get('creatures',[]);ids={m['uid'] for m in mons};party=state.get('party',[])
@@ -66,13 +70,21 @@ class World:
   if state['map'] not in self.c.maps or not self.c.maps[state['map']].get('playable',True):state['map']=self.c.data['homes'][state['home']];state['x'],state['y']=self.c.maps[state['map']]['spawn']
   m=self.c.maps[state['map']]
   if not (0<=state['x']<m['width'] and 0<=state['y']<m['height']):state['x'],state['y']=m['spawn']
+  migrated=self.adventure.migrate(state)
+  if hasattr(self.c,'growth'):migrated=self.c.growth.migrate(migrated)
+  state.clear();state.update(migrated)
  async def join(self,uid,name,state,queue):
   async with self.lock:
    require(not self.stopping,'World is shutting down.');require(uid not in self.players,'This account is already online.');require(len(self.players)<self.s.max_players,'This world is full. Please try again later.')
    # Login must load after a previous session's final save and removal, under
    # the same lock. A preloaded snapshot can otherwise resurrect old progress.
    if state is None:state=await asyncio.to_thread(self.db.load,uid)
-   state=copy.deepcopy(state);self.validate_state(state);p=Player(uid,name,state,queue);self.follower_anchor(p);p.saved_revision=state['revision'];p.chat_bucket=Bucket(self.s.int('security','chat_messages_per_10_seconds'),10);self.players[uid]=p
+   original=copy.deepcopy(state);state=copy.deepcopy(state);self.validate_state(state)
+   if state!=original:
+    state['revision']=original['revision']+1
+    try:await complete_before_cancelling(asyncio.to_thread(self.db.save_many,[(uid,state)]))
+    except Exception as e:raise RequestError('The database could not save your adventure migration. Your account was not changed; try again after the database is available.') from e
+   p=Player(uid,name,state,queue);self.follower_anchor(p);p.saved_revision=state['revision'];p.chat_bucket=Bucket(self.s.int('security','chat_messages_per_10_seconds'),10);self.players[uid]=p
    p.send('joined',id=uid,username=name,pack=self.c.pack,version=self.c.data['version'],world=self.s.get('world','name'),cap=self.s.max_players,online=len(self.players),stepMs=self.s.step_ms,alphaAtlas=self.s.flag('world','allow_alpha_atlas'),alphaSurf=self.s.flag('world','allow_alpha_surf'),motd=self.s.get('world','motd'))
    self.send_map(p);self.send_state(p)
    for channel,messages in self.chat.items():p.send('chat_history',channel=channel,messages=list(messages))
@@ -80,9 +92,10 @@ class World:
  def send_map(self,p,transition='arrival'):
   m=self.c.maps[p.state['map']];p.seen.clear();p.send('map',id=m['id'],name=m['name'],region=m['region'],transition=transition,entity=p.entity())
  def send_state(self,p):
-  s=p.state;p.send('state',ownerId=p.id,money=s['money'],items=s['items'],party=s['party'],creatures=[self.c.public_mon(m) for m in s['creatures']],home=s['home'],revision=s['revision'])
+  s=p.state;p.send('state',ownerId=p.id,money=s['money'],items=s['items'],party=s['party'],creatures=[self.c.public_mon(m) for m in s['creatures']],home=s['home'],revision=s['revision'],adventure=self.adventure.public(s))
  def party(self,p):return [next(m for m in p.state['creatures'] if m['uid']==uid) for uid in p.state['party']]
  async def commit(self,p,state):
+  self.adventure.observe(state,[m['species'] for m in state['creatures']],caught=True);self.adventure.refresh_unlocks(state)
   state['revision']=p.state['revision']+1
   try:await asyncio.to_thread(self.db.save_many,[(p.id,state)])
   except Exception as e:log.exception('State commit failed for %s',p.username);raise RequestError('The database could not save this action. Nothing was changed; contact the administrator.') from e
@@ -113,13 +126,15 @@ class World:
    nearby=[(abs(xx-x)+abs(yy-y),xx,yy) for yy in range(max(0,y-4),min(m['height'],y+5)) for xx in range(max(0,x-4),min(m['width'],x+5)) if self.walkable(m,xx,yy)]
    if nearby:_,x,y=min(nearby)
    else:x,y=m['spawn']
-  state.update(map=key,x=x,y=y);return state
+  state.update(map=key,x=x,y=y);self.adventure.visit(state,key);return state
  def relocate(self,p,key,x=None,y=None,transition='travel'):
   """Low-level actor relocation; normal gameplay uses relocate_saved."""
   p.state.update(self.relocation_state(p,key,x,y));p.state['revision']+=1;self.follower_anchor(p);p.last_encounter=time.monotonic();self.send_map(p,transition)
- async def relocate_saved(self,p,key,x=None,y=None,transition='travel',*,surf=None):
+ async def relocate_saved(self,p,key,x=None,y=None,transition='travel',*,surf=None,clear_returns=False):
   """Persist the destination before publishing its map to this client."""
-  await self.commit(p,self.relocation_state(p,key,x,y,surf=surf))
+  candidate=self.relocation_state(p,key,x,y,surf=surf)
+  if clear_returns:candidate['warpReturns']=[]
+  await self.commit(p,candidate)
   self.follower_anchor(p);p.last_encounter=time.monotonic();self.send_map(p,transition)
  async def move(self,p,d):
   seq=integer(d.get('seq'),0,2**31-1,'Movement sequence');direction=d.get('direction');require(direction in DIRECTIONS,'Invalid movement direction.')
@@ -144,32 +159,33 @@ class World:
   else:
    behavior=m['behavior'][y*m['width']+x];ledges={'right':56,'left':57,'up':58,'down':59}
    if behavior==ledges[direction]:x+=dx;y+=dy;movement='jump'
-   source_elev=m['elevation'][oldy*m['width']+oldx]
-   if self.walkable(m,x,y,s.get('surf',False),None if behavior in (56,57,58,59) else source_elev):
-    s['x']=x;s['y']=y;p.fx=oldx;p.fy=oldy;accepted=True
-    for warp in m['warps']:
-     if (warp['x'],warp['y'])!=(x,y):continue
-     target=self.c.maps.get(warp['target'])
-     if not target or not target.get('playable',True):continue
-     index=warp['targetIndex']
-     if index<len(target['warps']):
-      dest=target['warps'][index];await cross_map(target['id'],dest['x'],dest['y'],'warp');changed=True;movement='warp'
-     break
+   portal=plan_warp(self.c,s,m,x,y,direction)
+   if portal and 'blocked' in portal:p.send('notice',message=portal['blocked'])
+   elif portal:
+    candidate=self.relocation_state(p,portal['map'],portal['x'],portal['y']);candidate['warpReturns']=portal['warpReturns']
+    try:await self.commit(p,candidate)
+    except RequestError:
+     p.state.update(previous);p.fx,p.fy=previous_follower;p.send('move',seq=seq,accepted=False,reason='save_failed',entity=p.entity());raise
+    self.follower_anchor(p);p.last_encounter=time.monotonic();self.send_map(p,'warp');changed=True;accepted=True;movement='warp'
+   else:
+    source_elev=m['elevation'][oldy*m['width']+oldx]
+    if self.walkable(m,x,y,s.get('surf',False),None if behavior in (56,57,58,59) else source_elev):s['x']=x;s['y']=y;p.fx=oldx;p.fy=oldy;accepted=True
   s=p.state;current=self.c.maps[s['map']];terrain=current['behavior'][s['y']*current['width']+s['x']]
-  p.send('move',seq=seq,accepted=accepted,reason=None if accepted else 'blocked',movement=movement if accepted else None,terrain=terrain,entity=p.entity())
+  p.send('move',seq=seq,accepted=accepted,reason=None if accepted else 'blocked',movement=movement if accepted else None,terrain=terrain,pcAvailable=self.adventure.pc_available(p.state),entity=p.entity())
   if accepted and not changed:
    self.emit('move',player=p)
    m=self.c.maps[s['map']];j=s['y']*m['width']+s['x'];beh=m['behavior'][j]
-   if now-p.last_encounter>3 and beh in {2,8,11,16,18,21} and self.c.rng.random()<self.s.encounter_chance:await self.start_wild(p)
+   if self.adventure.wild_allowed(s) and now-p.last_encounter>3 and beh in {2,8,11,16,18,21} and self.c.rng.random()<self.s.encounter_chance:await self.start_wild(p)
  async def start_wild(self,p,forced=None):
   self.free(p);require(any(m['hp']>0 for m in self.party(p)),'Your party needs healing.');m=self.c.maps[p.state['map']];j=p.state['y']*m['width']+p.state['x'];beh=m['behavior'][j]
-  if forced is None:require(beh in {2,8,11,16,18,21},'Step into tall grass, a cave encounter tile, or surf on water first.')
+  if forced is None:
+   require(self.adventure.wild_allowed(p.state),'Wild encounters are unavailable inside Pokemon Centers and Gyms.');require(beh in {2,8,11,16,18,21},'Step into tall grass, a cave encounter tile, or surf on water first.')
   terrain='water' if beh in WATER else 'land';slots=m['encounters'].get(terrain)
   if not slots:slots=[{'species':'fr_129','min':5,'max':12}] if terrain=='water' else (m['encounters'].get('land') or [{'species':'fr_19','min':3,'max':7}])
   if forced:key,level=forced
   else:
    weights=[20,20,10,10,10,10,5,5,4,4,1,1] if len(slots)==12 else [1]*len(slots);e=self.c.rng.choices(slots,weights=weights,k=1)[0];key=e['species'];level=self.c.rng.randint(e['min'],e['max'])
-  enemy=self.c.new_mon(key,level);b=Battle(self.c,'wild',[p.id,None],[p.username,'Wild '+self.c.species[key]['name']],[self.party(p),[enemy]],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0]);self.battles[b.id]=b;p.battle=b.id;p.last_encounter=time.monotonic();p.send('battle',battle=b.view(0))
+  enemy=self.c.new_mon(key,level);state=copy.deepcopy(p.state);self.adventure.observe(state,[key]);await self.commit(p,state);b=Battle(self.c,'wild',[p.id,None],[p.username,'Wild '+self.c.species[key]['name']],[self.party(p),[enemy]],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0]);self.battles[b.id]=b;p.battle=b.id;p.last_encounter=time.monotonic();p.send('battle',battle=b.view(0))
  async def battle_action(self,p,d):
   require(p.battle in self.battles,'You are not in a battle.');b=self.battles[p.battle];require(d.get('id')==b.id,'That battle has ended.');side=b.players.index(p.id)
   if d.get('action')=='capture':require(len(p.state['creatures'])<self.s.max_owned,'Your collection is full. Make room before capturing.')
@@ -182,16 +198,34 @@ class World:
    p=self.players.get(b.players[0])
    if p:
     state=copy.deepcopy(p.state);byid={m['uid']:m for m in b.rosters[0]};state['creatures']=[copy.deepcopy(byid.get(m['uid'],m)) for m in state['creatures']];state['items']=copy.deepcopy(b.items[0])
+    trainer=getattr(b,'adventure_trainer',None);rematch=bool(trainer and trainer['id'] in state['adventure']['trainers'])
     if b.caught:
-     require(len(state['creatures'])<self.s.max_owned,'Your collection is full.');state['creatures'].append(b.caught)
+     require(len(state['creatures'])<self.s.max_owned,'Your collection is full.');state['creatures'].append(copy.deepcopy(b.caught))
      if len(state['party'])<6:state['party'].append(b.caught['uid'])
-    elif b.ended and b.winner==0 and not b.rewarded:
-     enemy=b.rosters[1][0];exp=max(1,self.c.species[enemy['species']]['baseExperience']*enemy['level']//7);active=next(m for m in state['creatures'] if m['uid']==b.mon(0)['uid']);gained=self.c.gain_xp(active,exp);state['money']=min(2_000_000_000,state['money']+(120 if b.kind=='trainer' else 25));b.logs.append(f'{self.c.species[active["species"]]["name"]} gained {exp} EXP.'+(f' Level {active["level"]}!' if gained else ''));b.rewarded=True;b.audio('experience',0,species=active['species'],amount=exp)
-     if gained:b.audio('level_up',0,species=active['species'],level=active['level'],gained=gained)
+    if not rematch:
+     for event in getattr(b,'experience_events',[]):
+      participants=[m for m in state['creatures'] if m['uid'] in event['participants'] and m['uid'] in state['party'] and m['hp']>0]
+      if not participants:continue
+      total=max(1,self.c.species[event['species']]['baseExperience']*event['level']*(3 if b.kind=='trainer' else 2)//14);exp=max(1,total//len(participants))
+      for mon in participants:
+       gained=self.c.gain_xp(mon,exp);b.logs.append(f'{self.c.species[mon["species"]]["name"]} gained {exp} EXP.'+(f' Level {mon["level"]}!' if gained else ''));b.audio('experience',0,species=mon['species'],amount=exp)
+       if gained:b.audio('level_up',0,species=mon['species'],level=mon['level'],gained=gained)
+    if b.ended and b.winner==0 and not b.rewarded:
+     if trainer:
+      first=self.adventure.victory(state,trainer);b.logs.append('First victory recorded. Your reward and badge progress were saved.' if first else 'Rematch complete. First-victory rewards and EXP are not awarded again.')
+     elif not b.caught:state['money']=min(2_000_000_000,state['money']+(120 if b.kind=='trainer' else 25))
+     b.rewarded=True
+    self.adventure.observe(state,[m['species'] for m in state['creatures']],caught=True)
     if b.ended and b.winner==1:
      for mon in state['creatures']:
       if mon['uid'] in state['party']:self.c.heal(mon)
-     key=self.c.data['homes'][state['home']];state['map']=key;state['x'],state['y']=self.c.maps[key]['spawn'];state['surf']=False;b.logs.append('Your party was restored at your home hub. No money penalty during alpha.')
+     key=state['adventure'].get('lastCenter');returns=return_stack(self.c,{'warpReturns':state['adventure'].get('lastCenterReturns',[])})
+     if key not in self.c.data.get('centers',{}):key=None
+     if key and any(w.get('access',{}).get('dynamic') for w in self.c.maps[key]['warps']) and not any(e['inside']==key for e in returns):key=None
+     if key is None:key=self.c.data['homes'][state['home']];returns=[];point=self.c.maps[key]['spawn']
+     else:point=state['adventure'].get('lastCenterPosition') or self.c.data['centers'][key]['respawn']
+     if not isinstance(point,(list,tuple)) or len(point)!=2 or not all(type(v) is int for v in point) or not self.walkable(self.c.maps[key],*point):point=self.c.data.get('centers',{}).get(key,{}).get('respawn',self.c.maps[key]['spawn'])
+     state.update(map=key,x=point[0],y=point[1],surf=False,warpReturns=returns);self.adventure.visit(state,key);b.logs.append('Your party was restored at your last Pokemon Center, or your home hub if you have not visited one.')
     state['revision']=p.state['revision']+1;records.append((p.id,state));newstates[p.id]=state
    try:await asyncio.to_thread(self.db.save_many,records)
    except Exception:
@@ -202,7 +236,7 @@ class World:
    p=self.players.get(pid)
    if not p:continue
    if pid in newstates:
-    oldmap=p.state['map'];p.state=newstates[pid];p.saved_revision=p.state['revision'];self.send_state(p)
+    oldmap=p.state['map'];p.state=newstates[pid];p.saved_revision=p.state['revision'];b.rosters[side]=copy.deepcopy(self.party(p));self.send_state(p)
     if p.state['map']!=oldmap:p.fx=p.state['x'];p.fy=p.state['y'];self.send_map(p,transition='rescue')
    p.send('battle',battle=b.view(side))
    if b.ended:p.battle=None;p.last_encounter=time.monotonic()
@@ -265,16 +299,18 @@ class World:
   oa,ob=[self.check_offer(p,t['offers'][p.id]) for p in (a,b)];sa,sb=copy.deepcopy(a.state),copy.deepcopy(b.state)
   # Take both source snapshots BEFORE applying either side, so no object can duplicate.
   outgoing_a=[m for m in sa['creatures'] if m['uid'] in oa['pokemon']];outgoing_b=[m for m in sb['creatures'] if m['uid'] in ob['pokemon']]
+  if hasattr(self.c,'growth'):
+   for mon in outgoing_a+outgoing_b:self.c.growth.mark_trade(mon)
   for p,state,off,gain,incoming in [(a,sa,oa,ob,outgoing_b),(b,sb,ob,oa,outgoing_a)]:
-   state['creatures']=[m for m in state['creatures'] if m['uid'] not in off['pokemon']]+copy.deepcopy(incoming);state['party']=[i for i in state['party'] if i not in off['pokemon']]
+   original_party=list(state['party']);state['creatures']=[m for m in state['creatures'] if m['uid'] not in off['pokemon']]+copy.deepcopy(incoming);state['party']=[i for i in original_party if i not in off['pokemon']]
    require(1<=len(state['creatures'])<=self.s.max_owned,'An exchange cannot leave a trainer with no Pokemon or exceed collection capacity.')
-   for mon in state['creatures']:
-    if len(state['party'])>=6:break
-    if mon['uid'] not in state['party']:state['party'].append(mon['uid'])
+   vacancies=len(original_party)-len(state['party'])
+   for mon in incoming[:vacancies]:state['party'].append(mon['uid'])
+   require(bool(state['party']) and any(m['hp']>0 for m in state['creatures'] if m['uid'] in state['party']),'An exchange must leave each trainer with a healthy party Pokemon.')
    state['money']+=gain['money']-off['money'];require(state['money']<=2_000_000_000,'The recipient money balance would exceed the limit.')
    for item,n in off['items'].items():state['items'][item]=state['items'].get(item,0)-n
    for item,n in gain['items'].items():state['items'][item]=state['items'].get(item,0)+n;require(state['items'][item]<=999,'An item stack would exceed 999.')
-   state['revision']=p.state['revision']+1
+   self.adventure.observe(state,[m['species'] for m in state['creatures']],caught=True);state['revision']=p.state['revision']+1
   allids=[m['uid'] for s in (sa,sb) for m in s['creatures']];require(len(allids)==len(set(allids)),'Duplicate ownership detected; exchange blocked.')
   try:await asyncio.to_thread(self.db.trade,t['id'],a.id,sa,b.id,sb,{'offers':t['offers'],'digest':self.trade_digest(t)})
   except Exception as e:log.exception('Trade rolled back %s',t['id']);self.cancel_trade(t,'The database rejected the exchange. Neither side was changed.');return
@@ -287,20 +323,34 @@ class World:
    if p:p.trade=None;p.send('trade_done',id=t['id'],success=False,message=message)
   self.trades.pop(t['id'],None)
  async def npc(self,p,d):
-  self.free(p);m=self.c.maps[p.state['map']];nid=integer(d.get('npc'),0,255,'NPC ID');o=next((o for o in m['objects'] if o['id']==nid),None);require(o is not None,'That NPC is not available.')
+  self.free(p);m=self.c.maps[p.state['map']];nid=integer(d.get('npc'),0,255,'NPC ID');o=next((o for o in m['objects'] if o['id']==nid),None);require(o is not None,'That NPC is not available.');action=d.get('action')
   require(max(abs(p.state['x']-o['x']),abs(p.state['y']-o['y']))<=2,'Move closer to speak to this character.')
-  if o['trainerType'] and d.get('action')=='battle':
-   key=f'{m["id"]}:{nid}';require(time.monotonic()>p.npc_cooldowns.get(key,0),'This trainer is resting. Try again in a minute.');p.npc_cooldowns[key]=time.monotonic()+60
-   level=max(3,min(50,max(t['level'] for t in self.party(p))));e=self.c.rng.choice(m['encounters'].get('land') or [{'species':'fr_19','min':3,'max':7}]);enemy=self.c.new_mon(e['species'],level,'Trainer');b=Battle(self.c,'trainer',[p.id,None],[p.username,'Local Trainer'],[self.party(p),[enemy]],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0]);self.battles[b.id]=b;p.battle=b.id;p.send('battle',battle=b.view(0));return
-  if o['graphics']==64:await self.heal(p,at_nurse=True);p.send('dialog',title='Pokemon Center',message='Your party is fully restored. Good luck on your journey!',actions=[])
-  elif o['graphics']==68:p.send('dialog',title='Poke Mart',message='Welcome! The Bag panel lets you purchase supplies for your adventure.',actions=['shop'])
-  elif o['trainerType']:p.send('dialog',title='Local Trainer',message='Ready for a practice battle? My alpha team scales to your party; this is not the original story team.',actions=['battle'],npc=nid)
-  else:p.send('dialog',title=m['name'],message='Welcome to Pokemon NXT MMO! Trainers can explore Kanto and Johto together. Click another player to challenge them or arrange a trade. Original story dialogue is not yet implemented.',actions=[])
- async def heal(self,p,at_nurse=False):
-  self.free(p);require(at_nurse or self.s.flag('world','allow_alpha_atlas'),'Visit a Pokemon Center for healing.');s=copy.deepcopy(p.state)
+  center=self.c.data.get('centers',{}).get(m['id'],{});trainer=self.adventure.by_npc.get((m['id'],nid))
+  if nid in center.get('nurseNpcIds',[]):
+   if action=='heal':await self.heal(p,npc=nid);return
+   require(action in (None,'talk','pc'),'Choose a Pokemon Center service.');actions=['heal']
+   if self.adventure.pc_available(p.state):actions.append('pc')
+   p.send('dialog',title='Nurse Joy',message='Welcome to the Pokemon Center! May I restore your Pokemon to full health? You can also manage your party and storage here.',actions=actions,npc=nid);return
+  if nid in center.get('pcNpcIds',[]):
+   require(action in (None,'talk','pc'),'Choose the storage service.');p.send('dialog',title='Pokemon Storage PC',message='Deposit and withdraw your Pokemon. Keep one healthy partner with you.',actions=['pc'],npc=nid);return
+  if trainer:
+   if action=='battle':
+    self.adventure.can_challenge(p.state,trainer);require(any(mon['hp']>0 for mon in self.party(p)),'Your party needs healing.');team=[]
+    for member in trainer['team']:
+     enemy=self.c.new_mon(member['species'],member['level'],trainer['name']);iv=max(0,min(255,int(member.get('iv',0))))*31//255;enemy.update(ivs=[iv]*6,nature=0,shiny=False);self.c.heal(enemy);moves=[mid for mid in member.get('moves',[]) if str(mid) in self.c.moves]
+     if moves:enemy['moves']=[{'id':mid,'pp':self.c.moves[str(mid)]['pp']} for mid in moves[:4]]
+     team.append(enemy)
+    require(bool(team),'This trainer team is unavailable.');state=copy.deepcopy(p.state);self.adventure.observe(state,[mon['species'] for mon in team]);await self.commit(p,state)
+    b=Battle(self.c,'trainer',[p.id,None],[p.username,trainer['name']],[self.party(p),team],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0]);b.adventure_trainer=trainer;self.battles[b.id]=b;p.battle=b.id;p.send('battle',battle=b.view(0));return
+   require(action in (None,'talk'),'Choose a trainer interaction.');defeated=trainer['id'] in p.state['adventure']['trainers'];gym=self.adventure.gym(trainer);summary=', '.join(f'{self.c.species[t["species"]]["name"]} Lv. {t["level"]}' for t in trainer['team']);message=('Gym challenge. ' if gym else 'Trainer challenge. ')+summary+(' Rematch: no repeat EXP, money or badge rewards.' if defeated else 'Your first victory earns a permanent record and a reward.');p.send('dialog',title=trainer['name'],message=message,actions=['battle'],npc=nid);return
+  require(action in (None,'talk'),'This character does not offer that service.')
+  if o['graphics']==68:p.send('dialog',title='Poke Mart',message='Welcome! Purchase supplies for your adventure from the Bag panel.',actions=['shop'],npc=nid)
+  else:p.send('dialog',title=m['name'],message='Explore the region, discover Pokemon, and challenge local trainers. Your Adventure Journal tracks your next goals. Original story scripts are not executed by this MMO.',actions=[],npc=nid)
+ async def heal(self,p,npc=None):
+  self.free(p);self.adventure.require_nurse(p.state,npc);s=copy.deepcopy(p.state)
   for mon in s['creatures']:
    if mon['uid'] in s['party']:self.c.heal(mon)
-  await self.commit(p,s);p.send('notice',message='Your party was healed and its move PP restored.');p.audio('heal',atNurse=at_nurse)
+  s['adventure']['lastCenter']=s['map'];s['adventure']['lastCenterReturns']=return_stack(self.c,s);s['adventure']['lastCenterPosition']=self.c.data['centers'][s['map']].get('respawnByNpc',{}).get(str(npc),self.c.data['centers'][s['map']].get('respawn',self.c.maps[s['map']]['spawn']));await self.commit(p,s);p.send('dialog',title='Nurse Joy',message='Your party is fully restored. We hope to see you again!',actions=['pc'] if self.adventure.pc_available(s) else [],npc=npc);p.audio('heal',atNurse=True)
  async def dispatch(self,p,d):
   async with self.lock:
    require(not p.closed and self.players.get(p.id) is p,'Your session is closed.');require(p.command_bucket.take(),'Too many commands; please slow down.');op=d.get('op')
@@ -315,20 +365,34 @@ class World:
    elif op=='battle':await self.battle_action(p,d)
    elif op=='encounter':await self.start_wild(p)
    elif op=='npc':await self.npc(p,d)
-   elif op=='heal':await self.heal(p)
+   elif op=='heal':raise RequestError('Speak to Nurse Joy at a Pokemon Center to heal your party.')
+   elif op=='journal.claim':
+    self.free(p);await self.commit(p,self.adventure.claim(p.state,d.get('id')));p.send('notice',message='Objective reward received and saved.');p.audio('purchase')
+   elif op=='pc':
+    self.free(p);old=p.state['party'][0];await self.commit(p,self.adventure.pc(p.state,d.get('action'),d.get('uid')));p.audio('party_changed',species=self.party(p)[0]['species'],leadChanged=old!=p.state['party'][0])
+   elif op in ('pokemon.learn','pokemon.remember','pokemon.evolve','pokemon.evolution.defer','pokemon.evolution.resume'):
+    self.free(p);growth=self.c.growth;uid=d.get('uid')
+    if op=='pokemon.learn':state=growth.learn(p.state,uid,d.get('move'),d.get('slot'))
+    elif op=='pokemon.remember':state=growth.remember(p.state,uid,d.get('move'),d.get('slot'))
+    elif op=='pokemon.evolve':state=growth.evolve(p.state,uid,d.get('target'))
+    elif op=='pokemon.evolution.defer':state=growth.defer_evolution(p.state,uid,d.get('target'))
+    else:state=growth.resume_evolution(p.state,uid,d.get('target'))
+    await self.commit(p,state);p.send('notice',message='Pokemon update saved.');p.audio('level_up' if op=='pokemon.evolve' else 'party_changed')
    elif op=='party':
-    self.free(p);ids=d.get('party');require(isinstance(ids,list) and 1<=len(ids)<=6 and all(isinstance(i,str) for i in ids) and len(ids)==len(set(ids)),'A party must contain 1-6 distinct Pokemon.');require(all(i in {m['uid'] for m in p.state['creatures']} for i in ids),'That Pokemon is not yours.');old_party=list(p.state['party']);s=copy.deepcopy(p.state);s['party']=list(ids);await self.commit(p,s)
+    self.free(p);ids=d.get('party');require(isinstance(ids,list) and 1<=len(ids)<=6 and all(isinstance(i,str) for i in ids) and len(ids)==len(set(ids)),'A party must contain 1-6 distinct Pokemon.');require(all(i in {m['uid'] for m in p.state['creatures']} for i in ids),'That Pokemon is not yours.');old_party=list(p.state['party']);require(set(ids)==set(old_party) or self.adventure.pc_available(p.state),'Visit a Pokemon Center PC to deposit or withdraw Pokemon.');require(any(m['hp']>0 for m in p.state['creatures'] if m['uid'] in ids),'Keep at least one healthy Pokemon in your party.');s=copy.deepcopy(p.state);s['party']=list(ids);await self.commit(p,s)
     if ids!=old_party:p.audio('party_changed',species=self.party(p)[0]['species'],leadChanged=ids[0]!=old_party[0])
    elif op=='buy':
     self.free(p);require(self.s.flag('world','allow_alpha_atlas') or any(o['graphics']==68 and max(abs(p.state['x']-o['x']),abs(p.state['y']-o['y']))<=2 for o in self.c.maps[p.state['map']]['objects']),'Visit a Poke Mart.');item=d.get('item');require(item in self.c.items,'Unknown item.');count=integer(d.get('quantity'),1,99,'Quantity');cost=self.c.items[item]['price']*count;require(p.state['money']>=cost,'You do not have enough money.');require(p.state['items'].get(item,0)+count<=999,'This stack would exceed 999.');s=copy.deepcopy(p.state);s['money']-=cost;s['items'][item]=s['items'].get(item,0)+count;await self.commit(p,s);p.audio('purchase',item=item,quantity=count)
    elif op=='use':
     self.free(p);item=d.get('item');uid=d.get('uid');require(item in self.c.items and 'heal' in self.c.items[item],'Select a healing item.');require(p.state['items'].get(item,0)>0,'You have none of that item.');s=copy.deepcopy(p.state);mon=next((m for m in s['creatures'] if m['uid']==uid),None);require(mon is not None and 0<mon['hp']<self.c.stats(mon)[0],'Select an injured, non-fainted Pokemon.');mon['hp']=min(self.c.stats(mon)[0],mon['hp']+self.c.items[item]['heal']);s['items'][item]-=1;await self.commit(p,s);p.audio('item',item=item,species=mon['species'])
    elif op=='travel':
-    self.free(p);dest=d.get('map');require(isinstance(dest,str) and dest in self.c.maps,'Unknown destination.');require(self.s.flag('world','allow_alpha_atlas'),'Free atlas travel is disabled on this world.');await self.relocate_saved(p,dest,surf=False)
+    self.free(p);dest=d.get('map');require(isinstance(dest,str) and dest in self.c.maps,'Unknown destination.');
+    if not self.s.flag('world','allow_alpha_atlas'):self.adventure.can_travel(p.state,dest)
+    await self.relocate_saved(p,dest,surf=False,clear_returns=True)
    elif op=='surf':
-    self.free(p);require(self.s.flag('world','allow_alpha_surf'),'Alpha Surf is disabled.');require(not p.state.get('surf',False) or self.c.maps[p.state['map']]['behavior'][p.state['y']*self.c.maps[p.state['map']]['width']+p.state['x']] not in WATER,'Step onto land before disabling Surf.');s=copy.deepcopy(p.state);s['surf']=not s.get('surf',False);await self.commit(p,s);p.send('notice',message='Alpha Surf '+('enabled. Water tiles are now accessible.' if p.state['surf'] else 'disabled.'));p.audio('surf',enabled=p.state['surf'])
+    self.free(p);require(p.state.get('surf',False) or self.s.flag('world','allow_alpha_surf') or self.adventure.surf_allowed(p.state),'Earn the regional Surf badge before entering water.');require(not p.state.get('surf',False) or self.c.maps[p.state['map']]['behavior'][p.state['y']*self.c.maps[p.state['map']]['width']+p.state['x']] not in WATER,'Step onto land before disabling Surf.');s=copy.deepcopy(p.state);s['surf']=not s.get('surf',False);await self.commit(p,s);p.send('notice',message='Surf '+('enabled. Water tiles are now accessible.' if p.state['surf'] else 'disabled.'));p.audio('surf',enabled=p.state['surf'])
    elif op=='unstuck':
-    self.free(p);await self.relocate_saved(p,self.c.data['homes'][p.state['home']],transition='home',surf=False);p.send('notice',message='Returned safely to your home hub.')
+    self.free(p);await self.relocate_saved(p,self.c.data['homes'][p.state['home']],transition='home',surf=False,clear_returns=True);p.send('notice',message='Returned safely to your home hub.')
    elif op=='ping':p.send('pong',nonce=d.get('nonce') if isinstance(d.get('nonce'),(int,float)) else 0)
    elif op=='save':await asyncio.to_thread(self.db.save_many,[(p.id,copy.deepcopy(p.state))]);p.saved_revision=p.state['revision'];p.send('notice',message='Character saved.');p.audio('save')
    else:raise RequestError('Unknown command.')

@@ -1,0 +1,2223 @@
+{
+  "format": 1,
+  "sources": {
+    "kanto": {
+      "sha256": "729041b940afe031302d630fdbe57c0c145f3f7b6d9b8eca5e98678d0ca4d059",
+      "nurseImage": "objects/kanto/64.png",
+      "nurseImageSha256": "6c947915cb487d219978d51e352124cddab2d50badee5ac13f4bbfbb5667bc40",
+      "centerTileset": "0x2d4c54",
+      "commonHealScript": "0x1a65f0"
+    },
+    "johto": {
+      "sha256": "62d1a99f5b64a45cd4f6364273743f9d8961e9c439d8201bfeedb27c02f32c64",
+      "nurseImage": "objects/johto/64.png",
+      "nurseImageSha256": "f7ef5febb2d7095b4622aab357abe791cb3893eac7a41582468b758f9575e36b",
+      "centerTileset": "0x2d4be4",
+      "commonHealScript": "0x1a6578"
+    }
+  },
+  "centers": {
+    "kanto_2_10": {
+      "name": "Trainer Tower",
+      "kind": "healing-station",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        4,
+        11
+      ],
+      "respawnByNpc": {
+        "1": [
+          4,
+          11
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x350110",
+        "secondaryTileset": "0x2d5104",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              4,
+              9
+            ],
+            "script": "0x1649d5",
+            "event": "0x3b42cc",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_5_4": {
+      "name": "Viridian City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x350ea0",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16a347",
+            "event": "0x3b9d08",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_6_5": {
+      "name": "Pewter City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        3
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "3": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "3": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x350f64",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 3,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16a7e7",
+            "event": "0x3ba1f4",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_7_3": {
+      "name": "Cerulean City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x35100c",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16aab4",
+            "event": "0x3ba4a0",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_8_0": {
+      "name": "Lavender Town",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x3510d0",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16b176",
+            "event": "0x3ba868",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_9_1": {
+      "name": "Vermilion City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x351194",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16b4ab",
+            "event": "0x3babf0",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_10_12": {
+      "name": "Celadon City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x3513a8",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16c673",
+            "event": "0x3bb7f0",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_11_5": {
+      "name": "Fuchsia City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x351514",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16d778",
+            "event": "0x3bc29c",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_12_5": {
+      "name": "Cinnabar Island",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x35162c",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16e95e",
+            "event": "0x3bc850",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_13_0": {
+      "name": "Indigo Plateau",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        2
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        13,
+        12
+      ],
+      "respawnByNpc": {
+        "2": [
+          13,
+          12
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "2": [
+          0,
+          1,
+          2
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x351680",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 2,
+            "position": [
+              13,
+              10
+            ],
+            "script": "0x16eb7e",
+            "event": "0x3bca44",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_14_6": {
+      "name": "Saffron City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x351760",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16f073",
+            "event": "0x3bd0fc",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_16_0": {
+      "name": "Route 4",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x351840",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16f933",
+            "event": "0x3bd53c",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_21_0": {
+      "name": "Route 10",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x351920",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16fcb9",
+            "event": "0x3bd8d4",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_31_3": {
+      "name": "Seven Island",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x351b6c",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x170c10",
+            "event": "0x3be184",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_32_0": {
+      "name": "One Island",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        5,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          5,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x351bdc",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              5,
+              2
+            ],
+            "script": "0x170f0c",
+            "event": "0x3be324",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_33_2": {
+      "name": "Two Island",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x351ca0",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x17183b",
+            "event": "0x3be6a4",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_34_1": {
+      "name": "Three Island",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x351d10",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x1718b9",
+            "event": "0x3be828",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_35_1": {
+      "name": "Four Island",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x351df0",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x171c71",
+            "event": "0x3beae8",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_36_0": {
+      "name": "Five Island",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x351eb4",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x171d78",
+            "event": "0x3beec4",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "kanto_37_0": {
+      "name": "Six Island",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ]
+      },
+      "source": {
+        "region": "kanto",
+        "header": "0x351f40",
+        "secondaryTileset": "0x2d4c54",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x171e7d",
+            "event": "0x3bf0a0",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_2_10": {
+      "name": "Battle Frontier",
+      "kind": "healing-station",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        4,
+        11
+      ],
+      "respawnByNpc": {
+        "1": [
+          4,
+          11
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x3500a0",
+        "secondaryTileset": "0x2d5094",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              4,
+              9
+            ],
+            "script": "0x16495d",
+            "event": "0x7272b8",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_5_4": {
+      "name": "Viridian City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          1,
+          3
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x350e30",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16a2cf",
+            "event": "0x763a94",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_6_5": {
+      "name": "Pewter City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        3
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "3": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "3": [
+          1,
+          3
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x350ef4",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 3,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16a76f",
+            "event": "0x79bebc",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_7_3": {
+      "name": "Cerulean City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          1,
+          3
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x350f9c",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16aa3c",
+            "event": "0x79d6a0",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_8_0": {
+      "name": "Lavender Town",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          1,
+          3
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x351060",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": null,
+            "event": null,
+            "origin": "verified-empty-reception"
+          }
+        ]
+      }
+    },
+    "johto_9_1": {
+      "name": "Vermilion City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          1,
+          3
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x351124",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16b433",
+            "event": "0x7a27cc",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_10_12": {
+      "name": "Celadon City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          1,
+          3
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x351338",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16c5fb",
+            "event": "0x76ad30",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_11_5": {
+      "name": "Fuchsia City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          1,
+          3
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x3514a4",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16d700",
+            "event": "0x72504c",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_12_5": {
+      "name": "Cinnabar Island",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          3
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x3515bc",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16e8e6",
+            "event": "0x7a8a38",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_13_0": {
+      "name": "Indigo Plateau",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1,
+        9,
+        11
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        9,
+        12
+      ],
+      "respawnByNpc": {
+        "1": [
+          9,
+          12
+        ],
+        "9": [
+          14,
+          38
+        ],
+        "11": [
+          2,
+          55
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1,
+          2
+        ],
+        "9": [
+          4,
+          5,
+          8
+        ],
+        "11": [
+          6,
+          9,
+          10
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x351610",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              9,
+              10
+            ],
+            "script": "0x16eb06",
+            "event": "0x7697f0",
+            "origin": "source-event"
+          },
+          {
+            "npcId": 9,
+            "position": [
+              14,
+              36
+            ],
+            "script": "0x16eb06",
+            "event": "0x7698b0",
+            "origin": "source-event"
+          },
+          {
+            "npcId": 11,
+            "position": [
+              2,
+              53
+            ],
+            "script": "0x16eb06",
+            "event": "0x7698e0",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_14_6": {
+      "name": "Saffron City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          1,
+          3
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x3516f0",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16effb",
+            "event": "0x745718",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_16_0": {
+      "name": "Mahogany Town",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x3517d0",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16f8bb",
+            "event": "0x736e1c",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_21_0": {
+      "name": "Blackthorn City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          3
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x3518b0",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x16fc41",
+            "event": "0x795608",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_31_3": {
+      "name": "Cianwood City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x351afc",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x170b98",
+            "event": "0x794730",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_32_0": {
+      "name": "Cherrygrove City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        28,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          28,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x351b6c",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              28,
+              2
+            ],
+            "script": "0x170b98",
+            "event": "0x752a98",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_33_2": {
+      "name": "Violet City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x351c30",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x1717c3",
+            "event": "0x76c220",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_34_1": {
+      "name": "Azalea Town",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x351ca0",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x171841",
+            "event": "0x7562b8",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_34_10": {
+      "name": "Route 32",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        5
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        19
+      ],
+      "respawnByNpc": {
+        "5": [
+          7,
+          19
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "5": [
+          2,
+          3
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x7266b8",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 5,
+            "position": [
+              7,
+              17
+            ],
+            "script": "0x1717c3",
+            "event": "0x72f61c",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_34_11": {
+      "name": "Route 32",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        9
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "9": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "9": [
+          3,
+          5
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x729fdc",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 9,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x1717c3",
+            "event": "0x7359b4",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_34_61": {
+      "name": "Lavender Town",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        5,
+        7
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "5": [
+          7,
+          4
+        ],
+        "7": [
+          7,
+          34
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "5": [
+          0,
+          1
+        ],
+        "7": [
+          3,
+          4
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x7db96c",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 5,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x171841",
+            "event": "0x7691a4",
+            "origin": "source-event"
+          },
+          {
+            "npcId": 7,
+            "position": [
+              7,
+              32
+            ],
+            "script": "0x171841",
+            "event": "0x7691ec",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_35_1": {
+      "name": "Goldenrod City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x351d80",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x171bf9",
+            "event": "0x768f04",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_36_0": {
+      "name": "Ecruteak City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x351e44",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x171d00",
+            "event": "0x76c6b0",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_37_0": {
+      "name": "Olivine City",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x351ed0",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x171e05",
+            "event": "0x721f90",
+            "origin": "source-event"
+          }
+        ]
+      }
+    },
+    "johto_1_58": {
+      "name": "Alola Islands",
+      "kind": "pokemon-center",
+      "nurseNpcIds": [
+        1,
+        7,
+        9,
+        11,
+        18,
+        27,
+        29
+      ],
+      "pcNpcIds": [],
+      "nursePcAccess": true,
+      "respawn": [
+        7,
+        4
+      ],
+      "respawnByNpc": {
+        "1": [
+          7,
+          4
+        ],
+        "7": [
+          29,
+          4
+        ],
+        "9": [
+          7,
+          18
+        ],
+        "11": [
+          72,
+          18
+        ],
+        "18": [
+          7,
+          32
+        ],
+        "27": [
+          72,
+          32
+        ],
+        "29": [
+          76,
+          4
+        ]
+      },
+      "accessibleWarpsByNpc": {
+        "1": [
+          0,
+          1
+        ],
+        "7": [
+          2,
+          3
+        ],
+        "9": [
+          5,
+          6
+        ],
+        "11": [
+          4,
+          18
+        ],
+        "18": [
+          7,
+          8
+        ],
+        "27": [
+          14,
+          20
+        ],
+        "29": [
+          15
+        ]
+      },
+      "source": {
+        "region": "johto",
+        "header": "0x34f86c",
+        "secondaryTileset": "0x2d4be4",
+        "nurses": [
+          {
+            "npcId": 1,
+            "position": [
+              7,
+              2
+            ],
+            "script": "0x1717c3",
+            "event": "0xc6f37c",
+            "origin": "source-event"
+          },
+          {
+            "npcId": 7,
+            "position": [
+              29,
+              2
+            ],
+            "script": "0x1717c3",
+            "event": "0xc6f40c",
+            "origin": "source-event"
+          },
+          {
+            "npcId": 9,
+            "position": [
+              7,
+              16
+            ],
+            "script": "0x1717c3",
+            "event": "0xc6f43c",
+            "origin": "source-event"
+          },
+          {
+            "npcId": 11,
+            "position": [
+              72,
+              16
+            ],
+            "script": "0x1717c3",
+            "event": "0xc6f46c",
+            "origin": "source-event"
+          },
+          {
+            "npcId": 18,
+            "position": [
+              7,
+              30
+            ],
+            "script": "0x1717c3",
+            "event": "0xc6f514",
+            "origin": "source-event"
+          },
+          {
+            "npcId": 27,
+            "position": [
+              72,
+              30
+            ],
+            "script": "0x1717c3",
+            "event": "0xc6f5ec",
+            "origin": "source-event"
+          },
+          {
+            "npcId": 29,
+            "position": [
+              76,
+              2
+            ],
+            "script": null,
+            "event": null,
+            "origin": "verified-empty-reception"
+          }
+        ]
+      }
+    }
+  },
+  "objectPatches": [
+    {
+      "map": "johto_8_0",
+      "operation": "add",
+      "object": {
+        "id": 1,
+        "graphics": 64,
+        "x": 7,
+        "y": 2,
+        "movement": 8,
+        "trainerType": 0,
+        "addedBy": "adventure-center-coverage"
+      },
+      "reason": "Verified empty Sigma Lavender reception: add the region-native Nurse Joy at its existing healing desk."
+    },
+    {
+      "map": "johto_1_58",
+      "operation": "add",
+      "object": {
+        "id": 29,
+        "graphics": 64,
+        "x": 76,
+        "y": 2,
+        "movement": 8,
+        "trainerType": 0,
+        "addedBy": "adventure-center-coverage"
+      },
+      "reason": "Verified seventh healing reception in the recovered Sigma multiroom map has a desk but no nurse."
+    }
+  ],
+  "audit": {
+    "centerTilesetRooms": [
+      "kanto_5_4",
+      "kanto_5_5",
+      "kanto_6_5",
+      "kanto_6_6",
+      "kanto_7_3",
+      "kanto_7_4",
+      "kanto_8_0",
+      "kanto_8_1",
+      "kanto_9_1",
+      "kanto_9_2",
+      "kanto_10_12",
+      "kanto_10_13",
+      "kanto_11_5",
+      "kanto_11_6",
+      "kanto_12_5",
+      "kanto_12_6",
+      "kanto_13_0",
+      "kanto_13_1",
+      "kanto_14_6",
+      "kanto_14_7",
+      "kanto_16_0",
+      "kanto_16_1",
+      "kanto_21_0",
+      "kanto_21_1",
+      "kanto_31_3",
+      "kanto_31_4",
+      "kanto_32_0",
+      "kanto_32_1",
+      "kanto_33_2",
+      "kanto_33_3",
+      "kanto_34_1",
+      "kanto_34_2",
+      "kanto_35_1",
+      "kanto_35_2",
+      "kanto_36_0",
+      "kanto_36_1",
+      "kanto_37_0",
+      "kanto_37_1",
+      "johto_5_4",
+      "johto_5_5",
+      "johto_6_5",
+      "johto_6_6",
+      "johto_7_3",
+      "johto_7_4",
+      "johto_8_0",
+      "johto_8_1",
+      "johto_9_1",
+      "johto_9_2",
+      "johto_10_12",
+      "johto_10_13",
+      "johto_11_5",
+      "johto_11_6",
+      "johto_12_5",
+      "johto_12_6",
+      "johto_13_0",
+      "johto_13_1",
+      "johto_14_6",
+      "johto_14_7",
+      "johto_16_0",
+      "johto_16_1",
+      "johto_21_0",
+      "johto_21_1",
+      "johto_31_3",
+      "johto_31_4",
+      "johto_32_0",
+      "johto_32_1",
+      "johto_33_2",
+      "johto_33_3",
+      "johto_34_1",
+      "johto_34_2",
+      "johto_34_10",
+      "johto_34_11",
+      "johto_34_32",
+      "johto_34_61",
+      "johto_35_1",
+      "johto_35_2",
+      "johto_36_0",
+      "johto_36_1",
+      "johto_37_0",
+      "johto_37_1",
+      "johto_1_58"
+    ],
+    "excludedNonCenterNurses": [
+      {
+        "map": "johto_34_20",
+        "nurseNpcIds": [
+          1
+        ],
+        "reason": "Native hidden placeholder on non-center scenery; no healing desk."
+      },
+      {
+        "map": "johto_34_26",
+        "nurseNpcIds": [
+          1
+        ],
+        "reason": "Native hidden placeholder on non-center scenery; no healing desk."
+      },
+      {
+        "map": "johto_34_36",
+        "nurseNpcIds": [
+          1
+        ],
+        "reason": "Native hidden placeholder on non-center scenery; no healing desk."
+      },
+      {
+        "map": "johto_34_40",
+        "nurseNpcIds": [
+          1
+        ],
+        "reason": "Native hidden placeholder on non-center scenery; no healing desk."
+      }
+    ],
+    "coverage": {
+      "kanto": {
+        "centerMaps": 19,
+        "healingStations": 1,
+        "nurses": 20
+      },
+      "johto": {
+        "centerMaps": 23,
+        "healingStations": 1,
+        "nurses": 33
+      }
+    }
+  }
+}
