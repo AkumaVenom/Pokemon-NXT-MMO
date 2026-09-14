@@ -5,14 +5,15 @@ import argparse,asyncio,configparser,contextlib,copy,importlib.util,ipaddress,js
 from pathlib import Path
 from aiohttp import web,WSMsgType
 from nxt.config import Settings
+from nxt.admin_console import LocalAdmin,RESTART_EXIT_CODE
 from nxt.content import Content
-from nxt.store import Store,WorldLeaseBusy
+from nxt.store import Store,WorldLeaseBusy,WorldSchemaUpgradeBusy
 from nxt.world import World
 from nxt.async_tasks import complete_before_cancelling
 from nxt.security import RequestError,require,credentials,password_hash,password_verify,Bucket
 from nxt.tls import TLSConfigurationError,load_server_tls
 def reject_json_constant(value):raise ValueError('Non-finite JSON number')
-VERSION='0.3.5-alpha'; ROOT=Path(__file__).resolve().parent
+VERSION='0.3.6-alpha'; ROOT=Path(__file__).resolve().parent
 log=logging.getLogger('nxt')
 _UNLOADED_TLS=object()
 class WorldStartupError(RuntimeError):
@@ -38,7 +39,7 @@ def configure_logging(config_path):
 def failure_summary(error,phase):
  """Report useful diagnostics without serializing passwords, SQL or config lines."""
  kind=type(error).__name__;code=error.args[0] if error.args and type(error.args[0]) is int else None
- if isinstance(error,(WorldStartupError,TLSConfigurationError)):return str(error)
+ if isinstance(error,(WorldStartupError,TLSConfigurationError,WorldSchemaUpgradeBusy)):return str(error)
  if type(error) is RuntimeError and str(error) in (
   'PyMySQL is missing. Run 1 - Install Server Dependencies.cmd.',
   'Database is not configured. Run 2 - Configure MySQL.cmd.',
@@ -65,7 +66,8 @@ def record_failure(error,phase):
 class Service:
  def __init__(self,settings,content,store,*,tls_context=_UNLOADED_TLS):
   self.s=settings;self.c=content;self.db=store;self.world=World(content,store,settings);self.stop=asyncio.Event();self.hash_slots=asyncio.Semaphore(2);self.pending=0;self.auth_rates={};self.sockets={};self.tasks=[];self.dummy=None
-  self._tls_context=tls_context
+  self._tls_context=tls_context;self.restart_requested=False;self.admin_disconnect_tasks=set()
+  self.console_commands=LocalAdmin(self)
  async def health(self,request):
   return web.json_response({'game':'Pokemon NXT MMO','version':VERSION,'status':'stopping' if self.world.stopping else 'online','online':len(self.world.players),'capacity':self.s.max_players,'pack':self.c.pack},headers={'Cache-Control':'no-store'})
  async def hash(self,pw,encoded=None):
@@ -110,10 +112,10 @@ class Service:
     require(not account['banned'],'This account has been banned. Contact the server administrator.')
     # Loading under World.join's lock prevents an overlapping old logout from
     # saving newer progress between this read and admission of the new session.
-    uid=account['id'];username=account['username'];state=None
+    uid=account['id'];username=account['username'];state=None;encoded=account['password_hash']
    password=None;d=None
    queue=asyncio.Queue(maxsize=self.s.int('security','max_outbound_messages'))
-   p=await self.world.join(uid,username,state,queue);self.sockets[uid]=ws
+   p=await self.world.join(uid,username,state,queue,auth_hash=encoded);p.connection_peer=peer;self.sockets[uid]=ws;encoded=None
    self.pending-=1;pending=False
    async def pump():
     try:
@@ -172,45 +174,10 @@ class Service:
    try:await asyncio.wait_for(self.stop.wait(),max(.005,seconds-(time.monotonic()-start)))
    except asyncio.TimeoutError:pass
  async def admin(self,line):
-  try:
-   parts=shlex.split(line);cmd=parts[0].lower() if parts else '';args=parts[1:]
-   if not cmd:return
-   if cmd=='help':print('\nCommands: help | status | players | save | announce <message> | kick <username>\n  ban <username> | unban <username> | mute <username> <seconds>\n  teleport <username> <map_id> | spawnwild <username> <species_key> <level>\n  shutdown\n',flush=True)
-   elif cmd=='status':print(f'Online {len(self.world.players)}/{self.s.max_players} | maps {len(self.c.maps)} | battles {len(self.world.battles)} | trades {len(self.world.trades)} | tick {self.world.last_tick_ms:.2f}ms (max {self.world.max_tick_ms:.2f}ms) | uptime {int(time.monotonic()-self.world.started)}s',flush=True)
-   elif cmd=='players':
-    for p in self.world.players.values():print(f'{p.id:6} {p.username:20} {p.state["map"]:18} ({p.state["x"]},{p.state["y"]})',flush=True)
-   elif cmd=='save':print(f'Saved {await self.world.save_all()} changed characters.',flush=True)
-   elif cmd=='announce':
-    text=' '.join(args)[:240];require(bool(text),'Usage: announce <message>')
-    for p in self.world.players.values():p.send('notice',message='ADMIN: '+text)
-   elif cmd in ('ban','unban'):
-    require(len(args)==1,f'Usage: {cmd} <username>');count=await asyncio.to_thread(self.db.ban,args[0],cmd=='ban');print(f'Updated {count} account(s).',flush=True)
-    if cmd=='ban':await self.kick(args[0],'Your account was banned by the administrator.')
-   elif cmd=='kick':require(len(args)==1,'Usage: kick <username>');await self.kick(args[0],'Disconnected by the administrator.')
-   elif cmd in ('mute','teleport','spawnwild'):
-    require(len(args)>=2,f'Usage: {cmd} <username> <argument>');p=next((p for p in self.world.players.values() if p.username.lower()==args[0].lower()),None);require(p is not None,'Trainer is not online.')
-    async with self.world.lock:
-     if cmd=='mute':p.muted_until=time.monotonic()+max(0,min(int(args[1]),86400));p.send('notice',message='Your chat permissions were updated by the administrator.')
-     elif cmd=='teleport':self.world.free(p);await self.world.relocate_saved(p,args[1])
-     else:require(len(args)==3 and args[1] in self.c.species,'Usage: spawnwild <username> <species_key> <level>');level=int(args[2]);require(1<=level<=100,'Level must be 1..100.');await self.world.start_wild(p,(args[1],level))
-   elif cmd in ('shutdown','stop','quit'):self.stop.set()
-   else:print('Unknown command. Type help.',flush=True)
-  except (RequestError,ValueError) as e:print(f'Admin: {e}',flush=True)
-  except Exception:log.exception('Admin command failed')
- async def kick(self,name,message):
-  p=next((p for p in self.world.players.values() if p.username.lower()==name.lower()),None)
-  if p and p.id in self.sockets:
-   await self.sockets[p.id].send_json({'type':'notice','message':message});await self.sockets[p.id].close(code=1008,message=b'Administrator action')
+  """Trusted local console entry. Never called by HTTP, WebSocket or chat."""
+  return await self.console_commands.execute(line,output=lambda text:print(text,flush=True))
  async def console(self):
-  queue=asyncio.Queue();loop=asyncio.get_running_loop()
-  def reader():
-   try:
-    for line in sys.stdin:
-     if loop.is_closed():break
-     loop.call_soon_threadsafe(queue.put_nowait,line.strip())
-   except (OSError,ValueError):pass
-  threading.Thread(target=reader,name='NXT-Admin-Console',daemon=True).start()
-  while not self.stop.is_set():await complete_before_cancelling(self.admin(await queue.get()))
+  return await self.console_commands.console()
  async def acquire_world_lease(self):
   """Wait only for an unrefreshed lease; never evict another running world."""
   deadline=time.monotonic()+65;first_heartbeat=None;waiting=False
@@ -285,6 +252,7 @@ class Service:
    if listening:log.info('World shutdown: stopping new work and saving characters.')
    if site is not None:await cleanup('stopping the network listener',site.stop())
    if console_task is not None:console_task.cancel()
+   await cleanup('closing console schedules',self.console_commands.close())
    # Let in-flight database tasks finish. Cancelling to_thread() does not stop
    # its worker, so it must not race lease release or closing the connection.
    if self.tasks:await asyncio.gather(*self.tasks,return_exceptions=True)
@@ -292,6 +260,7 @@ class Service:
     for p in list(self.world.players.values()):p.send('notice',message='World server is shutting down. Your character is being saved.')
     await cleanup('saving characters at shutdown',self.world.save_all())
     await asyncio.gather(*(ws.close(code=1001,message=b'World shutdown') for ws in list(self.sockets.values())),return_exceptions=True)
+   if self.admin_disconnect_tasks:await asyncio.gather(*self.admin_disconnect_tasks,return_exceptions=True)
    if runner is not None:await cleanup('cleaning up network connections',runner.cleanup())
    await cleanup('closing the database and releasing world ownership',asyncio.to_thread(self.db.close))
    if cleanup_errors and failure is None:
@@ -324,8 +293,9 @@ async def main(argv=None):
    log.info('World startup cancelled; pending database setup completed and cleaned up.')
    raise
   phase='constructing the world service';service=Service(s,c,db,tls_context=tls)
+  service.console_commands.config_path=args.config.resolve();service.console_commands.original_config=service.console_commands._read_config(args.config)
   await service.run(args.no_console)
-  return 0
+  return RESTART_EXIT_CODE if service.restart_requested else 0
  except Exception as e:
   if service is None:
    record_failure(e,phase)

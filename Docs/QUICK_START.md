@@ -157,26 +157,32 @@ Both trainers must be nearby and free of battles/other trades. The invited train
 
 Both participants lock their current offer, inspect both panels, then confirm the **same revision and digest**. Applied changes reset both locks and confirmations. Neither owner can be left without a Pokemon. A completed swap updates both inventories and an audit record in one transaction. A disconnect, timeout, invalid ownership or failed database transaction cancels or rejects the uncommitted exchange. “Secure exchange” in the UI refers to these ownership checks; it does not make plaintext LAN transport encrypted.
 
-## Administrator console
+## Local administrator console
+
+Type commands in the **world-server terminal**, not player chat. The console trusts the OS user controlling this server process; no in-game rank grants access. There is no RCON/HTTP admin endpoint or extra port. Windows elevation is not required. Redirected or piped input is not accepted; EOF disables input without stopping the world.
 
 ```text
 help
-status
-players
-save
-announce Welcome to the private alpha
-kick TrainerName
-ban TrainerName
-unban TrainerName
-mute TrainerName 60
-teleport TrainerName johto_3_0
-spawnwild TrainerName fr_129 2
-shutdown
+who
+playerinfo TrainerName
+team TrainerName
+species Pikachu
+givepokemon TrainerName Pikachu 20 ancient
+giveitem TrainerName pokeball 10
+givemoney TrainerName 1000
+heal TrainerName
+maps "Azalea Town"
+saveall
+help teleport
+help ban
+shutdown 60
 ```
 
-`players` lists account IDs, names, maps and positions. `status` reports population, active battles/trades and observed tick timing. `teleport` requires the trainer to be free of a battle/trade and the target map to have a valid spawn. `spawnwild` starts a test wild encounter with an existing species key and level 1–100; it does not grant a Pokemon directly. For example `fr_129` is Magikarp and `fr_25` is Pikachu. Native catalog keys are in `Server/data/world.json`.
+A destructive command prints **PREVIEW** and a token; nothing changes until you enter `confirm <printed-token>`. Tokens expire after 60 seconds by default and become invalid if the targeted account, session, character or relevant configuration changes. Use `cancel` to discard previews and `cancelshutdown` to cancel a scheduled shutdown/restart. Commands accept exact usernames, `#accountID` or `id:ID`; Pokémon edits require an owned UID or `party:1..6`.
 
-Use `shutdown` or Ctrl+C and wait for **World server stopped cleanly**. Avoid force-closing the console during saves. The world lease prevents two active processes from sharing the same database. After a crash, a stale lease can take 60 seconds to expire; never manually run two authorities against one database.
+Developer commands are disabled by default. With explicit configuration opt-in, `testbattle TrainerName Pikachu 10 shiny` starts a **cloned AI test duel**, not a capturable wild encounter. The legacy `spawnwild` alias now has that same restricted sandbox meaning. No rewards, captures or gym wins are produced. Player chat, announce, broadcast, whisper and mute commands are intentionally absent.
+
+Use `shutdown`, confirm its token, or press Ctrl+C and wait for **World server stopped cleanly**. `restart` also requires confirmation and is supported by the supplied launchers after successful save/lease release; direct Python invocation exits with 75 for an external supervisor. Do not force-close during saves. Read **`Docs/LOCAL_ADMIN_CONSOLE.md`** for all commands, audit paths, config and scope.
 
 ## Explicit developer SQLite mode
 

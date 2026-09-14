@@ -1,5 +1,25 @@
 # Changelog
 
+## Build tools 1.4.1 · Windows console-build database-handle correction · 2026-09-14
+
+- Fix the single reported v0.3.6 Windows build blocker: raw SQLite probe connections in the schema/lease test were committed but not explicitly closed, leaving the temporary database locked during cleanup (`WinError 32`). Close all four unit-fixture connection sites and all three supplementary process-fixture sites with `contextlib.closing`, retaining the inner transaction context.
+- Keep the recent/future old-world lease rejection, unchanged schema/state assertions and expired-lease migration test fully enabled. Do not ignore cleanup failures, depend on garbage collection, require elevation or weaken production migration protection.
+- Add mandatory regressions that retain real connections until inspection, exercise the exact reported fixture, inject read and transaction-exit failures, and enforce explicit closure in both unit and process probes. Include these regressions in clean source publication.
+- Advance only the build revision to 1.4.1 across the BAT, bootstrap metadata, driver and current documentation. Keep gameplay 0.3.6-alpha, pack `6d5c55ab09dc9ab7d17928b7`, schema 2, dependency/toolchain pins and every client/server/content-tool byte unchanged.
+- Provide a small merge repair for the complete original v0.3.6 source and four complete corrected source archives. Preserve private configuration, databases, certificates, existing build environments and outputs. See `Docs/WINDOWS_BUILD_FIX_1.4.1_TEST_REPORT.md` for this repair's executed verification and remaining platform boundaries.
+
+## 0.3.6-alpha · Local administrator console (build tools 1.4.0)
+
+- Adapt the supplied command proposal to NXT: 81 canonical commands, 21 aliases, dynamic help, exact account/owned-Pokémon targeting and searchable native catalogs. Exclude all chat commands and explicitly defer unsupported mechanics.
+- Accept input only from the interactive world-server terminal. No network administration route, player rank, remote-console listener or client command dispatcher is added. Bound both stdin backlog and line/token sizes; EOF leaves the world online.
+- Add serial, world-locked detached command plans; short-lived confirmation tokens; stale-session/state/config guards; fenced atomic character/control writes with successful database audit in the same transaction; private publication after commit.
+- Add persistent timed/permanent bans, independent account locks, gameplay freezes, trading restrictions, warnings and local account password reset. Recheck controls and the verified credential hash immediately before publishing a session, including races with a ban, lock or reset.
+- Administer all six cosmetic varieties without changing wild odds or native stats. Preserve selected moves, ownership IDs, PC/party rules, native growth/evolution conditions and personal Cut collision. Do not invent EV, ability, gender, nickname, weather or event systems.
+- Keep ten developer commands disabled by default. Isolated AI test duels use cloned rosters and cannot generate real captures, items, EXP, currency or badge victories. Do not permit forced wins/losses of ordinary battles.
+- Add confirmed clean shutdown/restart scheduling and cancellation. Supplied launchers restart only after exit 75 from a completed clean shutdown, never after failed saves or crashes. Reload only console policy and registration admission.
+- Add schema-2 account controls and indexed transactional audits without resetting accounts; retain schema downgrade protection and refuse upgrades while an old world retains a recent lease. Preserve build-tools 1.3.4 link-free Windows variety fixtures, asset bytes, bootstrap toolchain pins and private deployment exclusions.
+- Document every proposal row, command syntax, supported scope, trust boundary, audit/password handling, upgrade/rollback and platform-specific acceptance. See Docs/LOCAL_ADMIN_TEST_REPORT.md for executed results rather than assuming Windows or MySQL coverage.
+
 ## Build tools 1.3.4 · Windows variety-build portability correction · 2026-09-14
 
 - Correct the two `test_varieties` publisher fixtures that used directory symlinks and failed with WinError 1314 in an ordinary Windows account. Copy only the supplied variety-front subtree into each disposable fixture; do not require elevation, Developer Mode, hard links, junctions or a permissive filesystem.

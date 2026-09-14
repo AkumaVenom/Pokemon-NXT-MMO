@@ -32,7 +32,7 @@ import traceback
 import zipfile
 from typing import Iterator, Mapping, Sequence, TextIO
 
-BUILD_TOOL_VERSION = "1.3.4"
+BUILD_TOOL_VERSION = "1.4.1"
 ROOT = Path(__file__).resolve().parents[1]
 TOP_FILES = {
     "README.md", "CHANGELOG.md", "THIRD_PARTY_NOTICES.md", ".gitignore",
@@ -80,6 +80,9 @@ REQUIRED_SOURCE = (
     "Server/nxt/tls.py", "Server/setup_online.py", "Server/setup_online_gui.py",
     "Server/2b - Configure Online Hosting.cmd", "Tests/test_online_setup.py", "Tests/test_tls_network.py",
     "Tools/repack_content.py", "Tools/verify_audio.py", "Tests/test_core.py", "Tests/test_network.py",
+    "Server/nxt/admin_console.py", "Server/nxt/admin_registry.py", "Server/nxt/admin_policy.py", "Server/nxt/admin_store.py",
+    "Tests/test_admin_console.py", "Tests/test_admin_network.py", "Tests/test_sqlite_lifecycle.py", "Server/launcher/main_test.go",
+    "Docs/LOCAL_ADMIN_CONSOLE.md", "Docs/LOCAL_ADMIN_PROPOSAL_AUDIT.json",
     "Server/nxt/async_tasks.py", "Server/nxt/world.py",
     "Server/nxt/adventure.py", "Server/nxt/growth.py", "Server/nxt/portals.py",
     "Server/data/adventure.json", "Server/data/adventure_rom.json", "Server/data/centers.json",

@@ -1,31 +1,29 @@
 # Pokemon NXT MMO — automatic all-in-one source build
 
 
-**Download all FOUR source ZIPs:** `Pokemon_NXT_MMO_v0.3.5-alpha_Source_Varieties_Part1.zip`, `Part2.zip`, `Part3.zip` and `Part4.zip` (all share the same prefix). Extract each ordinary ZIP into the same destination, merging the identically named `Pokemon_NXT_MMO_v0.3.5-alpha_Source_PokemonVarieties` folders. Do not concatenate the ZIP files. Run `BUILD_ALL.bat` only after all four parts are extracted. The four parts contain the complete source and assets; no earlier source pack or optional patch is required.
+**Download all FOUR source ZIPs:** `Pokemon_NXT_MMO_v0.3.6-alpha_Source_ConsoleBuildFix_Part1.zip`, `Part2.zip`, `Part3.zip` and `Part4.zip` (all share the same prefix). Extract each ordinary ZIP into the same destination, merging the identically named `Pokemon_NXT_MMO_v0.3.6-alpha_Source_LocalAdminConsole` folders. Do not concatenate the ZIP files. Run `BUILD_ALL.bat` only after all four parts are extracted. The four parts contain the complete source and assets; no earlier source pack or optional patch is required.
 
-Gameplay **0.3.5-alpha** · Build tools **1.3.4** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
+Gameplay **0.3.6-alpha** · Build tools **1.4.1** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
 
 The full source includes the extracted FireRed and Sigma music, sound effects and cries. `BUILD_ALL.bat` verifies and packages these files; it does not extract them again. **No ROM, FFmpeg or C++ audio-renderer build is needed for a normal build.**
 
-## Standard-user Windows build correction · 1.3.4
+## Windows build repair · 1.4.1
 
-This source includes the correction for the two variety publisher tests that failed
-with **`WinError 1314: A required privilege is not held by the client`**. The tests now
-use isolated real copies of the small variety-front directory, not symbolic links
-or hard links. Both checks remain active, including exact sprite checksums and
-rejection of unsafe/cross-species asset paths. No administrator session, Developer
-Mode, permission change, dependency downgrade or test bypass is required.
+**Windows build correction (1.4.1):** Explicitly close temporary SQLite probe connections; this fixes the reported `WinError 32` in the schema/lease regression without disabling it or changing the server. See `Docs/WINDOWS_BUILD_FIX_1.4.1.md` and its test report. Gameplay, schema 2 and the content pack remain unchanged.
 
-The gameplay version stays **0.3.5-alpha**, and the content pack remains
-**`76fad1c40143e106528d0c53`**. Client/server gameplay, sprites, rarity, followers,
-encounters, Cut and saved accounts are unchanged. The build banner is **1.3.4**.
-See **`Docs/WINDOWS_BUILD_FIX_1.3.4.md`** for repair steps and validation limits.
+## New local administrator console · 0.3.6-alpha
+
+Start the built world server as usual, then type `help` in its interactive terminal. All administration stays on the host; player chat and game packets cannot invoke commands. **No new port or administrator password is needed.** Administrative writes and their audits are transactional, destructive previews need confirmation, and developer commands are disabled by default. See `Docs/LOCAL_ADMIN_CONSOLE.md`.
+
+Back up the existing database before this update: startup adds schema-2 audit/control tables. Existing accounts, Pokémon, progression and passwords are preserved. A rollback to schema 1 needs the matching pre-upgrade database backup; never lower the schema-version number manually.
+
+The earlier **build-tools 1.3.4 Windows symlink-privilege correction remains included**. Its isolated sprite-copy tests stay active. Current gameplay is **0.3.6-alpha**, build tools **1.4.1**, with a newly published matching content pack. Historical repair instructions are in `Docs/WINDOWS_BUILD_FIX_1.3.4.md`; do not apply that old repair over this complete release.
 
 ## Varieties and regional encounter/Cut updates
 
 Version 0.3.5 adds five persistent cosmetic varieties, server-controlled rarity, collection/dex presentation and replicated follower sparkles. All player-side battle Pokémon use horizontally flipped front sprites. Read `Docs/POKEMON_VARIETIES.md` and its test report for the full 251-species coverage and additional-form limits. The supplied converted fronts are already included; no images.rar, Pillow, image converter, new art download or back-sprite collection is needed for a normal build.
 
-The accepted 0.3.4 FireRed/Crystal encounter resolver and independent regional Cut licenses remain: Misty/Cascade for Kanto and Bugsy/Hive for Johto. Personal tree clearing remains saved per character. See `Docs/REGIONAL_ENCOUNTERS_AND_CUT.md`. Old release guides describe their historical package counts; this 0.3.5 source is supplied in **four** parts.
+The accepted 0.3.4 FireRed/Crystal encounter resolver and independent regional Cut licenses remain: Misty/Cascade for Kanto and Bugsy/Hive for Johto. Personal tree clearing remains saved per character. See `Docs/REGIONAL_ENCOUNTERS_AND_CUT.md`. Old release guides describe their historical package counts; this 0.3.6 source is supplied in **four** parts.
 
 ## Battle screen correction
 
@@ -45,9 +43,9 @@ This release keeps starter choice independent of starting region, fixes account/
 
 ## Correction for the Go prerequisite error
 
-Build tools **1.3.4** retain the correction for `Cannot overwrite variable HOME because it is read-only or constant`. Two Go helper functions used a directory variable named `$home`, which collides with PowerShell's built-in `$HOME`. Both directory variables have been renamed, including the SDK check that previously rejected valid Go installations.
+Build tools **1.4.1** retain the correction for `Cannot overwrite variable HOME because it is read-only or constant`. Two Go helper functions used a directory variable named `$home`, which collides with PowerShell's built-in `$HOME`. Both directory variables have been renamed, including the SDK check that previously rejected valid Go installations.
 
-Extract all four complete ZIPs into the same new destination and run its `BUILD_ALL.bat`. The banner should say **1.3.4**. Your existing compatible Python and verified tool downloads can be reused; reinstalling Python, changing Windows HOME, or changing MySQL settings is unnecessary. See `Docs/AUTO_BUILD_1.1.1_TEST_REPORT.md` for the original correction's validation scope and `Docs/AUDIO_TEST_REPORT.md` for the audio validation and `Docs/REPLICATION_TEST_REPORT.md` for this release.
+Extract all four complete ZIPs into the same new destination and run its `BUILD_ALL.bat`. The banner should say **1.4.1**. Your existing compatible Python and verified tool downloads can be reused; reinstalling Python, changing Windows HOME, or changing MySQL settings is unnecessary. See `Docs/AUTO_BUILD_1.1.1_TEST_REPORT.md` for the original correction's validation scope and `Docs/AUDIO_TEST_REPORT.md` for the audio validation and `Docs/REPLICATION_TEST_REPORT.md` for this release.
 
 ## Online server fails because TLS files are missing?
 

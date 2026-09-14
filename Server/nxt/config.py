@@ -1,6 +1,7 @@
 """Strict, typed configuration. Missing or unsafe values fail before listening."""
 from __future__ import annotations
 import configparser,os,re
+from .admin_policy import ConsolePolicy
 from dataclasses import dataclass
 from pathlib import Path
 @dataclass(frozen=True)
@@ -24,6 +25,7 @@ class Settings:
    v=c.getint(s,k)
    if not lo<=v<=hi:raise ValueError(f'{s}.{k} must be {lo}..{hi}')
    return v
+  ConsolePolicy.load(c)
   n=integer('world','max_players',1,1000);tick=integer('world','tick_hz',2,30);step=integer('world','step_ms',100,1000);radius=integer('world','interest_radius',8,64);save=integer('world','save_interval_seconds',5,300);owned=integer('world','max_owned_pokemon',6,720);port=integer('network','port',1024,65535)
   chance=c.getfloat('world','encounter_chance')
   if not 0<=chance<=1:raise ValueError('encounter_chance must be 0..1')

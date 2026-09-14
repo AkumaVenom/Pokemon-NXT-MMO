@@ -1,0 +1,1202 @@
+{
+  "source": "Pokemon_MMO_Complete_Server_Command_Proposal(2).docx",
+  "sourceSha256": "6cefbab30768d724b5c7022c2a5cd58c33242f6b3fc630cadbe0809657f54e9b",
+  "gameplay": "0.3.6-alpha",
+  "buildTools": "1.4.1",
+  "proposalRows": 148,
+  "canonicalCommands": 81,
+  "aliases": 21,
+  "developerCommands": 10,
+  "confirmationCommands": 30,
+  "decisionCounts": {
+    "adapted_local_console": 85,
+    "deferred_unsupported": 45,
+    "excluded_communication": 18
+  },
+  "rows": [
+    {
+      "proposal": "/help",
+      "function": "Show the help menu.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "help",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/help [command]",
+      "function": "Show detailed help for a command.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "help",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/commands",
+      "function": "List commands available to the current rank.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "help",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/who",
+      "function": "Show players currently online.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "who",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/online",
+      "function": "Show online player count.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "online",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/serverinfo",
+      "function": "Show server version, uptime and basic information.",
+      "proposedPermission": "PLAYER/ADMIN",
+      "decision": "adapted_local_console",
+      "nxtCommand": "serverinfo",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/version",
+      "function": "Show server version/build.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "version",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/uptime",
+      "function": "Show server uptime.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "uptime",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/time",
+      "function": "Show server time.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "time",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/ping",
+      "function": "Show the player's server latency.",
+      "proposedPermission": "PLAYER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "The console is not a player connection; do not fabricate client round-trip latency. Use serverinfo for actual tick timings."
+    },
+    {
+      "proposal": "/motd",
+      "function": "Show the message of the day.",
+      "proposedPermission": "PLAYER",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/rules",
+      "function": "Show server rules.",
+      "proposedPermission": "PLAYER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "There is no authoritative server rules document/system in this baseline."
+    },
+    {
+      "proposal": "/profile [player]",
+      "function": "View public player profile.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "playerinfo",
+      "note": "Local account/character readout alias; does not add a player-facing profile command."
+    },
+    {
+      "proposal": "/stats [player]",
+      "function": "View player statistics.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "playerinfo",
+      "note": "Local account/character summary alias, not invented lifetime analytics or new game stats."
+    },
+    {
+      "proposal": "/playerinfo [player]",
+      "function": "View detailed player information.",
+      "proposedPermission": "MODERATOR",
+      "decision": "adapted_local_console",
+      "nxtCommand": "playerinfo",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/playtime [player]",
+      "function": "Show total play time.",
+      "proposedPermission": "PLAYER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "Lifetime playtime is not tracked. uptime reports this server process only, not invented account playtime."
+    },
+    {
+      "proposal": "/location",
+      "function": "Show your current location.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "where",
+      "note": "Explicit player target is required; console has no character position."
+    },
+    {
+      "proposal": "/where [player]",
+      "function": "Show a player's location.",
+      "proposedPermission": "MODERATOR",
+      "decision": "adapted_local_console",
+      "nxtCommand": "where",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/afk",
+      "function": "Set AFK status.",
+      "proposedPermission": "PLAYER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No authoritative AFK/avatar status system exists; not added as part of administration."
+    },
+    {
+      "proposal": "/back",
+      "function": "Remove AFK status.",
+      "proposedPermission": "PLAYER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No authoritative AFK/avatar status system exists; not added as part of administration."
+    },
+    {
+      "proposal": "/unstuck",
+      "function": "Move the player to a safe location.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "unstuck",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/save",
+      "function": "Request a save of the current character.",
+      "proposedPermission": "PLAYER/ADMIN",
+      "decision": "adapted_local_console",
+      "nxtCommand": "save",
+      "note": "Checkpoint an explicit player, or all online characters when omitted; no chatbox command."
+    },
+    {
+      "proposal": "/resetplayer [player]",
+      "function": "Reset a character according to configured reset rules.",
+      "proposedPermission": "ADMIN",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No reviewed character-reset policy or recovery workflow exists. Avoid destructive account/progress wiping."
+    },
+    {
+      "proposal": "/say [message]",
+      "function": "Send local chat.",
+      "proposedPermission": "PLAYER",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/shout [message]",
+      "function": "Send wider-area chat.",
+      "proposedPermission": "PLAYER",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/global [message]",
+      "function": "Send a global message if enabled.",
+      "proposedPermission": "PLAYER/VIP",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/whisper [player] [message]",
+      "function": "Send a private message.",
+      "proposedPermission": "PLAYER",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/w [player] [message]",
+      "function": "Alias for whisper.",
+      "proposedPermission": "PLAYER",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/reply [message]",
+      "function": "Reply to the last private message.",
+      "proposedPermission": "PLAYER",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/r [message]",
+      "function": "Alias for reply.",
+      "proposedPermission": "PLAYER",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/ignore [player]",
+      "function": "Ignore a player.",
+      "proposedPermission": "PLAYER",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/unignore [player]",
+      "function": "Remove a player from ignore list.",
+      "proposedPermission": "PLAYER",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/friends",
+      "function": "Show friend list.",
+      "proposedPermission": "PLAYER",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/friend [player]",
+      "function": "Add a player as a friend.",
+      "proposedPermission": "PLAYER",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/mute [player] [time]",
+      "function": "Mute a player.",
+      "proposedPermission": "MODERATOR",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/unmute [player]",
+      "function": "Remove a mute.",
+      "proposedPermission": "MODERATOR",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/announce [message]",
+      "function": "Server announcement.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/broadcast [message]",
+      "function": "Broadcast to all connected players.",
+      "proposedPermission": "ADMIN",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/pokemon",
+      "function": "Show current Pokémon/team information.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "team",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/team",
+      "function": "Show current team.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "team",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/bag",
+      "function": "Show inventory/bag.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "bag",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/givepokemon [player] [pokemon]",
+      "function": "Give a Pokémon to a player.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "givepokemon",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/removepokemon [player] [pokemon]",
+      "function": "Remove a Pokémon.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "removepokemon",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/heal",
+      "function": "Heal the player's Pokémon.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "heal",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/heal [player]",
+      "function": "Heal another player's team.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "heal",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/healall",
+      "function": "Heal all online players.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "healall",
+      "note": "One atomic batch for online idle parties; busy players are explicitly listed and skipped."
+    },
+    {
+      "proposal": "/evolve [pokemon]",
+      "function": "Force an evolution.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "evolve",
+      "note": "Uses the authored eligible evolution rules and required item/trade conditions; deliberately not an arbitrary forced species swap."
+    },
+    {
+      "proposal": "/devolve [pokemon]",
+      "function": "Reverse evolution if supported.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "The authored growth/evolution system has no reverse-evolution contract."
+    },
+    {
+      "proposal": "/setlevel [pokemon] [level]",
+      "function": "Set Pokémon level.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "setlevel",
+      "note": "Exact level 1..100, matching native-curve threshold EXP; chosen moves and identity preserved."
+    },
+    {
+      "proposal": "/setexp [pokemon] [exp]",
+      "function": "Set Pokémon experience.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "setexp",
+      "note": "Species-curve total EXP with bounded level reconciliation; preserves chosen moves and identity."
+    },
+    {
+      "proposal": "/learn [pokemon] [move]",
+      "function": "Teach a move.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "learn",
+      "note": "Explicit owner, Pokémon and slot; only an earned native move. addmove is separately developer-gated."
+    },
+    {
+      "proposal": "/forget [pokemon] [move]",
+      "function": "Remove a move.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "forget",
+      "note": "Explicit owner, Pokémon and chosen move slot; no ambiguous name-based removal."
+    },
+    {
+      "proposal": "/setnature [pokemon] [nature]",
+      "function": "Set nature.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "setnature",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/setability [pokemon] [ability]",
+      "function": "Set ability.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "Abilities are not fully implemented; setting a label would imply unsupported battle behavior."
+    },
+    {
+      "proposal": "/setivs [pokemon] [HP ATK DEF SPA SPD SPE]",
+      "function": "Set IVs.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "setivs",
+      "note": "Proposal order HP ATK DEF SPA SPD SPE is explicitly converted to NXT internal order."
+    },
+    {
+      "proposal": "/setevs [pokemon] [HP ATK DEF SPA SPD SPE]",
+      "function": "Set EVs.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No complete EV growth/persistence mechanic exists in this baseline."
+    },
+    {
+      "proposal": "/setshiny [pokemon] [true/false]",
+      "function": "Set shiny status.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "setshiny",
+      "note": "true means Shiny and false means Normal; setvariety adds all six current cosmetic identities."
+    },
+    {
+      "proposal": "/setgender [pokemon] [gender]",
+      "function": "Set gender.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No independent supported saved gender mechanic is added. Nidoran identities remain separate species."
+    },
+    {
+      "proposal": "/setnickname [pokemon] [name]",
+      "function": "Change nickname.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No complete nickname presentation/persistence contract exists; do not set an invisible field."
+    },
+    {
+      "proposal": "/clonepokemon [pokemon]",
+      "function": "Create a copy for testing.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "clonepokemon",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/pokemoninfo [pokemon]",
+      "function": "Display Pokémon data.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "pokemoninfo",
+      "note": "Explicit owner plus exact Pokémon UID or party slot; no ambiguous global creature selection."
+    },
+    {
+      "proposal": "/giveitem [player] [item] [amount]",
+      "function": "Give an item.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "giveitem",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/removeitem [player] [item] [amount]",
+      "function": "Remove an item.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "removeitem",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/setitem [player] [item] [amount]",
+      "function": "Set exact item quantity.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "setitem",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/iteminfo [item]",
+      "function": "Show item information.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "iteminfo",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/clearinventory [player]",
+      "function": "Clear inventory; require confirmation.",
+      "proposedPermission": "ADMIN",
+      "decision": "adapted_local_console",
+      "nxtCommand": "clearinventory",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/money",
+      "function": "Show current currency.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "money",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/balance",
+      "function": "Show balance.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "money",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/givemoney [player] [amount]",
+      "function": "Give currency.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "givemoney",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/removemoney [player] [amount]",
+      "function": "Remove currency.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "removemoney",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/setmoney [player] [amount]",
+      "function": "Set exact balance.",
+      "proposedPermission": "ADMIN",
+      "decision": "adapted_local_console",
+      "nxtCommand": "setmoney",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/economy",
+      "function": "Show economy statistics.",
+      "proposedPermission": "ADMIN",
+      "decision": "adapted_local_console",
+      "nxtCommand": "economy",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/trade [player]",
+      "function": "Request a trade.",
+      "proposedPermission": "PLAYER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "Player trade invitation already belongs to the game UI. Console tradecancel/blocktrade administer existing trades."
+    },
+    {
+      "proposal": "/tradecancel",
+      "function": "Cancel current trade.",
+      "proposedPermission": "PLAYER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "tradecancel",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/tradehistory [player]",
+      "function": "View trade history.",
+      "proposedPermission": "MODERATOR",
+      "decision": "adapted_local_console",
+      "nxtCommand": "tradehistory",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/spectate [player]",
+      "function": "Spectate a battle/player where supported.",
+      "proposedPermission": "MODERATOR",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No battle spectator replication/UI is implemented."
+    },
+    {
+      "proposal": "/blocktrade [player]",
+      "function": "Block trading with a player.",
+      "proposedPermission": "MODERATOR",
+      "decision": "adapted_local_console",
+      "nxtCommand": "blocktrade",
+      "note": "Explicit true/false account restriction, persisted and applied to both sides of invitations/trades."
+    },
+    {
+      "proposal": "/tp [location]",
+      "function": "Teleport yourself.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "teleport",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/teleport [location]",
+      "function": "Teleport yourself.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "teleport",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/goto [player]",
+      "function": "Teleport to a player.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "goto",
+      "note": "Explicit source player and destination player; the server console has no avatar."
+    },
+    {
+      "proposal": "/bring [player]",
+      "function": "Bring a player to you.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "goto",
+      "note": "Alias of goto with explicit source player then destination player, not an implicit console avatar."
+    },
+    {
+      "proposal": "/teleportplayer [player] [location]",
+      "function": "Teleport a player.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "teleport",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/setlocation [player] [location]",
+      "function": "Set player location.",
+      "proposedPermission": "ADMIN",
+      "decision": "adapted_local_console",
+      "nxtCommand": "teleport",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/spawn [pokemon]",
+      "function": "Spawn a test Pokémon/NPC where supported.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "There is no managed world entity-spawn/despawn system. Developer testbattle offers an explicitly cloned AI duel, not a map spawn."
+    },
+    {
+      "proposal": "/despawn [id]",
+      "function": "Remove a spawned entity.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No managed persistent spawned-entity system exists."
+    },
+    {
+      "proposal": "/weather [type]",
+      "function": "Change world weather if supported.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No authoritative world-weather battle/presentation mechanic exists."
+    },
+    {
+      "proposal": "/setweather [type]",
+      "function": "Set weather.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No authoritative world-weather battle/presentation mechanic exists."
+    },
+    {
+      "proposal": "/day",
+      "function": "Set daytime.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "Crystal encounters retain actual server-local time; do not silently override the world clock."
+    },
+    {
+      "proposal": "/night",
+      "function": "Set nighttime.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "Crystal encounters retain actual server-local time; do not silently override the world clock."
+    },
+    {
+      "proposal": "/clearweather",
+      "function": "Clear weather.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No authoritative world-weather battle/presentation mechanic exists."
+    },
+    {
+      "proposal": "/warn [player] [reason]",
+      "function": "Issue a warning.",
+      "proposedPermission": "MODERATOR",
+      "decision": "adapted_local_console",
+      "nxtCommand": "warn",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/warnings [player]",
+      "function": "View warnings.",
+      "proposedPermission": "MODERATOR",
+      "decision": "adapted_local_console",
+      "nxtCommand": "warnings",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/kick [player] [reason]",
+      "function": "Disconnect a player.",
+      "proposedPermission": "MODERATOR",
+      "decision": "adapted_local_console",
+      "nxtCommand": "kick",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/ban [player] [time] [reason]",
+      "function": "Temporarily/permanently ban.",
+      "proposedPermission": "MODERATOR",
+      "decision": "adapted_local_console",
+      "nxtCommand": "ban",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/unban [player]",
+      "function": "Remove a ban.",
+      "proposedPermission": "MODERATOR",
+      "decision": "adapted_local_console",
+      "nxtCommand": "unban",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/jail [player] [time] [reason]",
+      "function": "Restrict player to a jail area.",
+      "proposedPermission": "MODERATOR",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No validated jail area/release persistence contract exists. Ban/lock/freeze provide distinct implemented restrictions."
+    },
+    {
+      "proposal": "/unjail [player]",
+      "function": "Release from jail.",
+      "proposedPermission": "MODERATOR",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No jail/release system exists."
+    },
+    {
+      "proposal": "/freeze [player]",
+      "function": "Prevent player movement/actions.",
+      "proposedPermission": "MODERATOR",
+      "decision": "adapted_local_console",
+      "nxtCommand": "freeze",
+      "note": "Persistent gameplay freeze; apply only while idle, not during an active battle/trade. Login/chat remain available."
+    },
+    {
+      "proposal": "/unfreeze [player]",
+      "function": "Remove freeze.",
+      "proposedPermission": "MODERATOR",
+      "decision": "adapted_local_console",
+      "nxtCommand": "unfreeze",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/invisible",
+      "function": "Toggle staff invisibility.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "There is no console avatar or staff-invisibility replication contract."
+    },
+    {
+      "proposal": "/visible",
+      "function": "Return to visible status.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "There is no console avatar or staff-invisibility replication contract."
+    },
+    {
+      "proposal": "/ipinfo [player]",
+      "function": "View connection information where legally appropriate.",
+      "proposedPermission": "ADMIN",
+      "decision": "adapted_local_console",
+      "nxtCommand": "ipinfo",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/history [player]",
+      "function": "View moderation history.",
+      "proposedPermission": "MODERATOR",
+      "decision": "adapted_local_console",
+      "nxtCommand": "history",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/event list",
+      "function": "List available events.",
+      "proposedPermission": "PLAYER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No event lifecycle/participant/reward framework exists. Individual givepokemon/giveitem/givemoney commands do not pretend to create an event."
+    },
+    {
+      "proposal": "/event info [event]",
+      "function": "Show event information.",
+      "proposedPermission": "PLAYER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No event lifecycle/participant/reward framework exists. Individual givepokemon/giveitem/givemoney commands do not pretend to create an event."
+    },
+    {
+      "proposal": "/event create [name]",
+      "function": "Create an event.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No event lifecycle/participant/reward framework exists. Individual givepokemon/giveitem/givemoney commands do not pretend to create an event."
+    },
+    {
+      "proposal": "/event start [name]",
+      "function": "Start an event.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No event lifecycle/participant/reward framework exists. Individual givepokemon/giveitem/givemoney commands do not pretend to create an event."
+    },
+    {
+      "proposal": "/event stop [name]",
+      "function": "Stop an event.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No event lifecycle/participant/reward framework exists. Individual givepokemon/giveitem/givemoney commands do not pretend to create an event."
+    },
+    {
+      "proposal": "/event join",
+      "function": "Join an active event.",
+      "proposedPermission": "PLAYER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No event lifecycle/participant/reward framework exists. Individual givepokemon/giveitem/givemoney commands do not pretend to create an event."
+    },
+    {
+      "proposal": "/event leave",
+      "function": "Leave an event.",
+      "proposedPermission": "PLAYER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No event lifecycle/participant/reward framework exists. Individual givepokemon/giveitem/givemoney commands do not pretend to create an event."
+    },
+    {
+      "proposal": "/event reward [player] [reward]",
+      "function": "Give event reward.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No event lifecycle/participant/reward framework exists. Individual givepokemon/giveitem/givemoney commands do not pretend to create an event."
+    },
+    {
+      "proposal": "/event announce [message]",
+      "function": "Announce event information.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "All announcement/chat commands are excluded at the user's request."
+    },
+    {
+      "proposal": "/createaccount [username]",
+      "function": "Create an account for testing/admin use.",
+      "proposedPermission": "ADMIN",
+      "decision": "adapted_local_console",
+      "nxtCommand": "createaccount",
+      "note": "Developer-gated ordinary account with explicit region/starter and generated password shown once after confirmed commit."
+    },
+    {
+      "proposal": "/deleteaccount [username]",
+      "function": "Delete an account; require confirmation.",
+      "proposedPermission": "OWNER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "Destructive account erasure needs an explicit retention/recovery policy. Use lockaccount to revoke access reversibly."
+    },
+    {
+      "proposal": "/resetpassword [username]",
+      "function": "Reset account password through a safe flow.",
+      "proposedPermission": "ADMIN",
+      "decision": "adapted_local_console",
+      "nxtCommand": "resetpassword",
+      "note": "Generated strong password only, shown once locally after commit; no command-line secret or plaintext audit."
+    },
+    {
+      "proposal": "/setrank [player] [rank]",
+      "function": "Set staff/player rank.",
+      "proposedPermission": "OWNER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No in-game rank can invoke local console commands; access is the OS-controlled server terminal."
+    },
+    {
+      "proposal": "/promote [player]",
+      "function": "Promote staff member.",
+      "proposedPermission": "OWNER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No in-game rank can invoke local console commands; no remote staff-permission system is introduced."
+    },
+    {
+      "proposal": "/demote [player]",
+      "function": "Demote staff member.",
+      "proposedPermission": "OWNER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No in-game rank can invoke local console commands; no remote staff-permission system is introduced."
+    },
+    {
+      "proposal": "/lockaccount [player]",
+      "function": "Lock an account.",
+      "proposedPermission": "ADMIN",
+      "decision": "adapted_local_console",
+      "nxtCommand": "lockaccount",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/unlockaccount [player]",
+      "function": "Unlock an account.",
+      "proposedPermission": "ADMIN",
+      "decision": "adapted_local_console",
+      "nxtCommand": "unlockaccount",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/debug",
+      "function": "Toggle developer debug information.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "Use concrete read-only diagnostics; do not enable an undefined debug mode or expose raw secret-bearing logs."
+    },
+    {
+      "proposal": "/reload",
+      "function": "Reload supported server data.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "reloadconfig",
+      "note": "Alias of reloadconfig: only console policy and registration admission can reload; no content/script/DB/network hot swap."
+    },
+    {
+      "proposal": "/reloadconfig",
+      "function": "Reload configuration.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "reloadconfig",
+      "note": "Only console policy and world.registration_enabled reload. Other edits reject; confirmation is required."
+    },
+    {
+      "proposal": "/reloadscripts",
+      "function": "Reload scripts where supported.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "Runtime script replacement cannot safely undo registered hooks. Use a clean restart."
+    },
+    {
+      "proposal": "/saveall",
+      "function": "Save all active players/world state.",
+      "proposedPermission": "ADMIN",
+      "decision": "adapted_local_console",
+      "nxtCommand": "saveall",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/dbsave",
+      "function": "Force database save/flush where supported.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "saveall",
+      "note": "Alias of saveall; checkpoints characters without claiming a physical DB-server disk flush."
+    },
+    {
+      "proposal": "/clearcache",
+      "function": "Clear supported caches.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No reviewed server cache-invalidation contract exists. Client asset caches are not controlled by this console."
+    },
+    {
+      "proposal": "/gc",
+      "function": "Request garbage collection/diagnostic operation.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "gc",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/memory",
+      "function": "Show memory usage.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "memory",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/threads",
+      "function": "Show thread information.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "threads",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/connections",
+      "function": "Show active connections.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "connections",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/logs",
+      "function": "Show recent server log information.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "logs",
+      "note": "Reads bounded local administrative audit only, never raw secret-bearing configuration or database exception payloads."
+    },
+    {
+      "proposal": "/test",
+      "function": "Run configured server tests.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "Do not execute arbitrary tests or shell code against a running production world. Run the isolated source regression suite."
+    },
+    {
+      "proposal": "/shutdown [seconds]",
+      "function": "Schedule server shutdown.",
+      "proposedPermission": "ADMIN",
+      "decision": "adapted_local_console",
+      "nxtCommand": "shutdown",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/restart [seconds]",
+      "function": "Schedule server restart.",
+      "proposedPermission": "ADMIN",
+      "decision": "adapted_local_console",
+      "nxtCommand": "restart",
+      "note": "Confirmed clean restart; only supplied launchers restart on exit 75 after successful save/lease cleanup."
+    },
+    {
+      "proposal": "/battle [player]",
+      "function": "Request/force a test battle where supported.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "testbattle",
+      "note": "Alias of developer-gated testbattle: cloned AI duel only; no capture/items/progression."
+    },
+    {
+      "proposal": "/win",
+      "function": "Force a test battle victory.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "win",
+      "note": "Only developer-gated console-created test duels, never ordinary gym, wild, trainer or player battles."
+    },
+    {
+      "proposal": "/lose",
+      "function": "Force a test battle loss.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "lose",
+      "note": "Only developer-gated console-created test duels, never ordinary gym, wild, trainer or player battles."
+    },
+    {
+      "proposal": "/sethp [pokemon] [amount]",
+      "function": "Set test Pokémon HP.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "sethp",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/setstatus [pokemon] [status]",
+      "function": "Apply a test status condition.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "setstatus",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/addmove [pokemon] [move]",
+      "function": "Add a move for testing.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "addmove",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/clearmoves [pokemon]",
+      "function": "Clear moves for testing.",
+      "proposedPermission": "DEVELOPER",
+      "decision": "adapted_local_console",
+      "nxtCommand": "clearmoves",
+      "note": "Available only in the local console, with explicit player targeting where applicable, shared validation/auditing and the documented NXT syntax."
+    },
+    {
+      "proposal": "/emote [text]",
+      "function": "Display an emote.",
+      "proposedPermission": "PLAYER",
+      "decision": "excluded_communication",
+      "nxtCommand": null,
+      "note": "Chat, communication and social commands are intentionally deferred to the separate chatbox update."
+    },
+    {
+      "proposal": "/sit",
+      "function": "Character sit action.",
+      "proposedPermission": "PLAYER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No supported avatar-sit action exists."
+    },
+    {
+      "proposal": "/dance",
+      "function": "Character dance action.",
+      "proposedPermission": "PLAYER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No supported avatar-dance action exists."
+    },
+    {
+      "proposal": "/title [title]",
+      "function": "Set an unlocked title.",
+      "proposedPermission": "PLAYER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No title/unlock system exists."
+    },
+    {
+      "proposal": "/titles",
+      "function": "List unlocked titles.",
+      "proposedPermission": "PLAYER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No title/unlock system exists."
+    },
+    {
+      "proposal": "/settitle [player] [title]",
+      "function": "Grant/set a title.",
+      "proposedPermission": "GAME MASTER",
+      "decision": "deferred_unsupported",
+      "nxtCommand": null,
+      "note": "No title/unlock system exists."
+    }
+  ]
+}

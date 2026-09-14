@@ -12,5 +12,9 @@ if not exist ".venv\Scripts\python.exe" (
  pause
  exit /b 1
 )
+:start_world
 ".venv\Scripts\python.exe" -u server.py --config "%~dp0config.ini" --dev-sqlite
+set "NXT_WORLD_RESULT=%ERRORLEVEL%"
+if "%NXT_WORLD_RESULT%"=="75" goto start_world
 pause
+exit /b %NXT_WORLD_RESULT%

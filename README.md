@@ -1,6 +1,20 @@
 # Pokemon NXT MMO
 
-## 0.3.5-alpha · Pokémon varieties and mirrored front sprites · Build tools 1.3.4
+## 0.3.6-alpha · Local administrator console · Build tools 1.4.1
+
+**Windows build correction (1.4.1):** Explicitly close temporary SQLite probe connections; this fixes the reported `WinError 32` in the schema/lease regression without disabling it or changing the server. See `Docs/WINDOWS_BUILD_FIX_1.4.1.md` and its test report. Gameplay, schema 2 and the content pack remain unchanged.
+
+Type commands in the **world-server terminal on the host PC**, never in player chat. The console provides **81 canonical commands and 21 aliases** selected/adapted from the supplied proposal for NXT's existing systems. It is not an RCON service, HTTP admin panel or client permission rank. The operating-system account controlling the server process is trusted; Windows elevation is not required.
+
+Use `help`, `who`, `help givepokemon`, `team TrainerName` and `species Pikachu` to begin. Manage Pokémon (all six varieties), inventory, currency, safe locations, account restrictions, saves and maintenance. Readouts and edits accept exact usernames or `#accountID`; Pokémon edits accept exact owned UUIDs or `party:1` through `party:6`. Destructive edits require short-lived single-use confirmations bound to unchanged state and session identity. Writes and their successful administrative audits commit together before clients see them. Developer/test commands are disabled by default; isolated test duels cannot award gym wins, money, captures or experience.
+
+**Chat commands are intentionally excluded**, including announce, broadcast, mute and whisper. Unsupported gameplay systems are not exposed as pretend commands. See **`Docs/LOCAL_ADMIN_CONSOLE.md`** for the complete command reference, configuration, safety model, examples, upgrade and rollback instructions; **`Docs/LOCAL_ADMIN_PROPOSAL_AUDIT.md`** maps every proposal row to its implementation or explicit exclusion. Current executed checks are recorded in **`Docs/LOCAL_ADMIN_TEST_REPORT.md`**.
+
+**Upgrade:** back up the database and configured deployment, stop the old server, then deploy matching rebuilt Client and Server. The first new startup adds schema-2 account-control/audit tables, without resetting accounts or replacing existing credentials. Preserve your configurations and certificates; do not rerun MySQL setup for this update. A schema-1 server cannot downgrade this database; rollback requires restoring the pre-upgrade database backup together with its matching old deployment.
+
+The accepted **1.3.4 standard-user Windows build correction is preserved**: the variety publisher tests use isolated real sprite copies, not privileged links. No Developer Mode, elevated console, dependency downgrade or skipped variety checks is needed. Its historical repair guide is `Docs/WINDOWS_BUILD_FIX_1.3.4.md`.
+
+## Preserved 0.3.5 Pokémon varieties and mirrored front sprites
 
 Ancient, Metallic, Shiny, Mystic and Shadow are now persistent cosmetic Pokémon identities. All **251 Kanto/Johto species** have all five supplied variety fronts. The import also binds matching supplied fronts for supported later-generation/Sigma profiles: **3,697 additional fronts** in total, with an exhaustive coverage/provenance audit. Unsupported extra forms are not given invented recolours.
 
@@ -11,6 +25,26 @@ Normal wild rolls are **90%**; Ancient, Metallic and Mystic are **2.5% each**; S
 Variety survives captures, relogging, PC transfers, trades and supported evolutions. Existing Shiny Pokémon are migrated without rerolling, healing or resetting their progress. Followers retain the existing regular icon sheets and gain a bounded, animated colour-coded sparkle effect visible to nearby players. Collection filters, full names, summaries, trade screens, battle portraits and owner-only Pokédex variety records use the same identity.
 
 Read **`Docs/POKEMON_VARIETIES.md`** for exact rates, upgrade steps and supported scope, **`Docs/POKEMON_VARIETIES_TEST_REPORT.md`** for executed checks, and **`Docs/POKEMON_VARIETY_ASSET_AUDIT.json`** for per-profile coverage.
+
+### Preserved 0.3.4 regional encounters and personal Cut
+
+This release replaces starter-area fallback spawns with explicit FireRed/Crystal location and floor tables, including Crystal morning/day/night pools and separate Surf selection. Every one of the 959 maps has an audited encounter decision; 248 contain pools, and places without a verified normal encounter table do not invent one.
+
+**Cut unlocks automatically after Misty in Kanto or Bugsy in Johto, independently per region.** Click a small HM tree to open its enabled/locked Cut button. Cutting durably removes that tree's sprite and collision only for your character; other trainers must cut their own. All 120 HM trees use this behavior. Existing qualifying badges are recognized on login and no combat move slot is overwritten.
+
+See **`Docs/REGIONAL_ENCOUNTERS_AND_CUT.md`** for upgrade instructions, exact rules, the Nidoran♂ identity repair and the existing Sigma-layout/special-encounter limits; see **`Docs/REGIONAL_ENCOUNTERS_CUT_TEST_REPORT.md`** for executed checks. The exhaustive map/tree audit is `Docs/ENCOUNTER_CUT_AUDIT.json`.
+
+### Preserved battle and learning fixes
+
+The preserved 0.3.3 fix corrects the battle entry regression: browser timers are invoked with their proper context, the battle dialog opens before effects start, and an effect failure restores usable battle controls. It preserves the previous sound cancellation and battle feedback. See `Docs/BATTLE_SCREEN_FIX.md` for validation and upgrade steps.
+
+Battles show short attack lunges from either side, hit reactions, floating damage and effectiveness text beside the affected Pokémon. Feedback comes from accepted server battle events and does not change combat outcomes. Rapid turns retire old effects and sound tails; repeated snapshots do not replay them. Reduced-motion settings are respected. See `Docs/BATTLE_FEEDBACK.md` for behavior, validation and update instructions.
+
+The previous update corrected level-up learning across all 876 then-published Pokémon profiles using the supplied FireRed and Sigma ROMs. It replaces the remaining 28 fallback Sigma lists, separates seven renamed Sigma move identities, clears invalid queued choices and adds an explicit Move Reminder. Your selected moves, ownership and server progress are preserved; no account reset is needed.
+
+**Cyndaquil learns Ember at level 12 in both supplied ROMs.** Its summary now shows the complete native level-up list and next move. Open a Pokémon from **P → Party & storage**, then use **Move Reminder** to recover eligible current-species moves. Replacing a move requires your confirmation. See `Docs/LEARNSET_GUIDE.md`, `Docs/LEARNSET_ROM_AUDIT.md` and `Docs/LEARNSET_TEST_REPORT.md`.
+
+**Download all FOUR full-source ZIPs, Parts 1–4. Extract every part into the same destination so the identically named `Pokemon_NXT_MMO_v0.3.6-alpha_Source_LocalAdminConsole` folders merge, then run `BUILD_ALL.bat`.** These are ordinary mergeable ZIPs, not byte-split volumes: do not concatenate them. All four parts are required and together contain the complete source and assets. No previous pack, original ROM, images.rar, Pillow, FFmpeg or audio renderer is needed for a normal build.
 
 ### Play the adventure
 

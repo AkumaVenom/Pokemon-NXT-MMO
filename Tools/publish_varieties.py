@@ -55,7 +55,7 @@ def assemble(world, root=ROOT):
     policy['assetManifestSha256']=hashlib.sha256(source.read_bytes()).hexdigest()
     policy['coverage']={'species':len(world['species']),'fullyCoveredSpecies':sum(set(p['varieties'])==set(VARIETIES) for p in world['species'].values()),
         'kantoJohtoSpecies':251,'uploadedFronts':uploaded,'availableCounts':counts}
-    world['varietyPolicy']=policy;world['version']='0.3.5-alpha'
+    world['varietyPolicy']=policy;world['version']='0.3.6-alpha'
     report={'format':1,'policy':policy,'sourceArchiveSha256':manifest.get('sourceArchiveSha256'),
         'sourceImportProblems':manifest.get('importProblems',[]),'species':audit,
         'presentation':'Every player-side battle sprite uses a horizontally flipped FRONT; followers retain normal native icons.',

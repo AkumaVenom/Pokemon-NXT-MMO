@@ -1,0 +1,225 @@
+{
+  "gameplay": "0.3.6-alpha",
+  "buildTools": "1.4.1",
+  "schema": 2,
+  "contentPack": "6d5c55ab09dc9ab7d17928b7",
+  "inputLogFailure": {
+    "file": "build-20260914-122114-117629Z.log",
+    "test": "test_schema_upgrade_refuses_recent_or_future_old_world_lease",
+    "error": "WinError 32 during temporary SQLite cleanup",
+    "inputRun": 596,
+    "inputErrors": 1,
+    "inputSkipped": 10
+  },
+  "baselineLifetime": {
+    "test": "Tests.test_admin_console.LocalConsoleTests.test_schema_upgrade_refuses_recent_or_future_old_world_lease",
+    "resultOnLinux": true,
+    "openedConnections": 10,
+    "explicitlyClosedConnections": 4,
+    "leakedConnections": 6,
+    "strongReferencesRetained": true,
+    "details": "test_schema_upgrade_refuses_recent_or_future_old_world_lease (Tests.test_admin_console.LocalConsoleTests.test_schema_upgrade_refuses_recent_or_future_old_world_lease) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 1.052s\n\nOK\n",
+    "explanation": "Actual shipped test with real SQLite connections retained until inspection. Linux permits deletion of open files; this records leaked handles without claiming a native Windows error reproduction."
+  },
+  "correctedLifetime": {
+    "test": "Tests.test_admin_console.LocalConsoleTests.test_schema_upgrade_refuses_recent_or_future_old_world_lease",
+    "resultOnLinux": true,
+    "openedConnections": 10,
+    "explicitlyClosedConnections": 10,
+    "leakedConnections": 0,
+    "strongReferencesRetained": true,
+    "details": "test_schema_upgrade_refuses_recent_or_future_old_world_lease (Tests.test_admin_console.LocalConsoleTests.test_schema_upgrade_refuses_recent_or_future_old_world_lease) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.714s\n\nOK\n",
+    "explanation": "Corrected actual fixture using real SQLite handles retained until inspection; every handle explicitly closed before cleanup. Not a native Windows execution claim."
+  },
+  "cleanBuild": {
+    "game": "Pokemon NXT MMO",
+    "version": "0.3.6-alpha",
+    "build_tools": "1.4.1",
+    "build_id": "build-20260914-123722-358062Z",
+    "created_utc": "2026-09-14T12:40:55.147305+00:00",
+    "target": "windows/amd64",
+    "build_host": {
+      "system": "Linux",
+      "machine": "x86_64"
+    },
+    "go": "go version go1.23.2 linux/amd64",
+    "python_environment": {
+      "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+      "packages": {
+        "aiohttp": "3.13.3",
+        "PyMySQL": null,
+        "cryptography": "46.0.4"
+      }
+    },
+    "production_dependency_pins_enforced": false,
+    "content_pack": "6d5c55ab09dc9ab7d17928b7",
+    "asset_digest": "f9d8e8aa8d09b6378a1219a383cdeaf1252102581906e48867998920dc796a3e",
+    "audio": {
+      "format": 1,
+      "catalogSha256": "e4100ba57b556f5223b7f82bdaec660b95433c73c4424e54eab7c337556bb2d4",
+      "clipCount": 2366,
+      "mapCount": 959,
+      "speciesCryCount": 877,
+      "sourceHashes": {
+        "kanto": "729041b940afe031302d630fdbe57c0c145f3f7b6d9b8eca5e98678d0ca4d059",
+        "johto": "62d1a99f5b64a45cd4f6364273743f9d8961e9c439d8201bfeedb27c02f32c64"
+      }
+    },
+    "world_startup_fix": "1.1.2",
+    "checks": {
+      "python_tests_run": 600,
+      "python_tests_passed": 599,
+      "python_tests_skipped": 1,
+      "go_tests": "passed",
+      "windows_go_vet": "passed",
+      "launcher_platform": "Linux headless shell; Windows outputs cross-compiled, not executed",
+      "http_smoke": {
+        "index_served": true,
+        "content_policy": true,
+        "no_sniff": true,
+        "frame_denial": true,
+        "bootstrap_no_secrets": true,
+        "unexpected_host_blocked": true,
+        "server_config_inaccessible": true,
+        "directory_listing_disabled": true,
+        "traversal_blocked": true,
+        "heartbeat_requires_origin_and_token": true,
+        "heartbeat_accepted": true,
+        "js_served_as_module": true,
+        "extracted_map_served": true,
+        "audio_module_mime": true,
+        "audio_catalog_served": true,
+        "ogg_audio_mime": true,
+        "wav_audio_mime": true,
+        "audio_bootstrap_preferences": true,
+        "audio_wrong_origin_blocked": true,
+        "audio_missing_origin_blocked": true,
+        "audio_wrong_nonce_blocked": true,
+        "audio_partial_settings_rejected": true,
+        "audio_rejected_requests_leave_settings_unchanged": true,
+        "audio_preferences_saved": true,
+        "audio_bootstrap_readback": true,
+        "audio_preferences_isolated_on_disk": true
+      },
+      "javascript_syntax": "passed with installed Node.js",
+      "extracted_audio": "verified before content publication",
+      "audio_engine": "passed with installed Node.js",
+      "audio_app_integration": "passed with installed Node.js",
+      "registration_and_replication_client": "passed with installed Node.js"
+    },
+    "executables": [
+      {
+        "file": "Pokemon NXT MMO.exe",
+        "architecture": "Windows x64",
+        "subsystem": 2,
+        "bytes": 6075904,
+        "sha256": "6d12152fbff143096aed0493c71e607fdde5da374ac6384de890a3726425a589"
+      },
+      {
+        "file": "Pokemon NXT World Server.exe",
+        "architecture": "Windows x64",
+        "subsystem": 3,
+        "bytes": 1826304,
+        "sha256": "b681825795af6c84df37e00b11825d00e79c58048a1ae1cfd07a99c1fe76cd9c"
+      }
+    ],
+    "not_verified_by_this_build": [
+      "Native Edge app UI",
+      "MySQL/MariaDB runtime and persistence",
+      "TLS deployment",
+      "1,000 concurrent network sessions"
+    ],
+    "configuration_policy": "Release templates only. Deployed Client/config.ini and Server/config.ini are not copied."
+  },
+  "strictLifetimeNoLinksSuite": {
+    "success": true,
+    "run": 600,
+    "passed": 589,
+    "skipped": [
+      {
+        "test": "test_auto_bootstrap.NativePowerShellTests.test_bootstrap_helper_contracts_on_windows",
+        "reason": "Windows PowerShell execution requires Windows; not simulated as passed"
+      },
+      {
+        "test": "test_build_tools.BuildFilesystemTests.test_symlinked_source_directory_is_rejected",
+        "reason": "Creating symlinks requires privileges on this Windows host"
+      },
+      {
+        "test": "test_build_tools.BuildFilesystemTests.test_symlinked_source_file_is_rejected",
+        "reason": "Creating symlinks requires privileges on this Windows host"
+      },
+      {
+        "test": "test_mysql_setup_patch.PatchTests.test_payload_symlink_is_rejected",
+        "reason": "symlinks unavailable"
+      },
+      {
+        "test": "test_world_startup_patch.WorldStartupPatchTests.test_backup_directory_symlink_is_rejected",
+        "reason": "symlinks unavailable"
+      },
+      {
+        "test": "test_world_startup_patch.WorldStartupPatchTests.test_nested_directory_swapped_during_patch_never_writes_outside",
+        "reason": "symlinks unavailable"
+      },
+      {
+        "test": "test_world_startup_patch.WorldStartupPatchTests.test_payload_file_symlink_is_rejected",
+        "reason": "symlinks unavailable"
+      },
+      {
+        "test": "test_world_startup_patch.WorldStartupPatchTests.test_payload_nested_directory_symlink_is_rejected",
+        "reason": "symlinks unavailable"
+      },
+      {
+        "test": "test_world_startup_patch.WorldStartupPatchTests.test_selected_folder_symlink_is_rejected_before_resolution",
+        "reason": "symlinks unavailable"
+      },
+      {
+        "test": "test_world_startup_patch.WorldStartupPatchTests.test_target_file_symlink_is_rejected",
+        "reason": "symlinks unavailable"
+      },
+      {
+        "test": "test_world_startup_patch.WorldStartupPatchTests.test_target_nested_directory_symlink_is_rejected",
+        "reason": "symlinks unavailable"
+      }
+    ],
+    "errors": [],
+    "failures": [],
+    "trackedRealConnections": 315,
+    "inspectedConnections": 315,
+    "connectionsKeptAliveUntilInspection": true,
+    "leaks": [],
+    "symbolicAndHardLinks": "deliberately denied",
+    "platform": "linux"
+  },
+  "actualConsoleProcess": {
+    "result": "PASS",
+    "platform": "linux",
+    "backend": "temporary SQLite",
+    "transport": "actual server.py process with POSIX PTY / separate rejected PIPE",
+    "checks": [
+      "Actual TTY stdin grants a variety and applies confirmation only after preview; offline state is durable.",
+      "Real console rejects developer alias by default and has no announce/chat handler.",
+      "Timed shutdown from actual terminal exits 0, closes resources and releases its lease while stdin reader waits.",
+      "Actual server restart request exits 75 only after clean save/lease release; immediate next startup succeeds.",
+      "Real piped stdin never executes a grant/shutdown; OS SIGTERM still performs clean shutdown.",
+      "Only four successfully executed terminal actions enter the transaction audit; no piped grant or password leak."
+    ]
+  },
+  "initialParallelSupplementalAttempt": {
+    "run": 600,
+    "passed": 588,
+    "skipped": 11,
+    "errors": [
+      {
+        "test": "test_replication_network.ReplicationNetworkTests.test_every_starter_in_both_regions_survives_concurrent_creation_logout_and_login",
+        "type": "TimeoutError waiting for joined packet under existing six-second deadline"
+      }
+    ],
+    "trackedRealConnections": 315,
+    "leaks": [],
+    "context": "Overlapped the clean build and supplementary process QA. The unchanged instrumented full suite was rerun sequentially after that build and passed. No timeout or source change was used to obtain the rerun result."
+  },
+  "reference": "https://docs.python.org/3/library/sqlite3.html#how-to-use-the-connection-context-manager",
+  "nativeWindowsExecuted": false,
+  "liveMySQLTested": false,
+  "browserRerunInThisRepair": false
+}

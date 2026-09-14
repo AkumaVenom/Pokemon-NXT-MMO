@@ -144,7 +144,7 @@ function Save-NxtHttpFile {
         $request.AllowAutoRedirect = $false
         $request.Timeout = 120000
         $request.ReadWriteTimeout = 120000
-        $request.UserAgent = 'Pokemon-NXT-MMO-Build/1.3.4'
+        $request.UserAgent = 'Pokemon-NXT-MMO-Build/1.4.1'
         if ($null -ne $request.Proxy) { $request.Proxy.Credentials = [Net.CredentialCache]::DefaultCredentials }
         $response = $null
         try {

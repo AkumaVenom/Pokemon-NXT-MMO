@@ -23,6 +23,9 @@ class Player:
  state:dict
  queue:asyncio.Queue
  closed:bool=False
+ frozen:bool=False
+ trade_blocked:bool=False
+ connection_peer:str='unavailable'
  battle:str|None=None
  trade:str|None=None
  last_move:float=0
@@ -77,9 +80,15 @@ class World:
   if hasattr(self.c,'growth'):migrated=self.c.growth.migrate(migrated)
   migrated=self.c.varieties.migrate(migrated)
   state.clear();state.update(migrated)
- async def join(self,uid,name,state,queue):
+ async def join(self,uid,name,state,queue,*,auth_hash=None):
   async with self.lock:
    require(not self.stopping,'World is shutting down.');require(uid not in self.players,'This account is already online.');require(len(self.players)<self.s.max_players,'This world is full. Please try again later.')
+   # Recheck bans/locks/password changes after the costly authentication hash,
+   # serialized against console mutations before publishing this session.
+   controls=(await asyncio.to_thread(self.db.auth_guard,uid,auth_hash)) if auth_hash is not None else (await asyncio.to_thread(self.db.admin_account,uid=uid) or {})
+   if controls:
+    require(not controls.get('locked'),'This account is locked. Contact the server administrator.')
+    require(not (controls.get('banned_raw') and (not controls.get('ban_until') or controls['ban_until']>int(time.time()))),'This account is banned. Contact the server administrator.')
    # Login must load after a previous session's final save and removal, under
    # the same lock. A preloaded snapshot can otherwise resurrect old progress.
    if state is None:state=await asyncio.to_thread(self.db.load,uid)
@@ -88,9 +97,10 @@ class World:
     state['revision']=original['revision']+1
     try:await complete_before_cancelling(asyncio.to_thread(self.db.save_many,[(uid,state)]))
     except Exception as e:raise RequestError('The database could not save your adventure migration. Your account was not changed; try again after the database is available.') from e
-   p=Player(uid,name,state,queue);self.follower_anchor(p);p.saved_revision=state['revision'];p.chat_bucket=Bucket(self.s.int('security','chat_messages_per_10_seconds'),10);self.players[uid]=p
+   p=Player(uid,name,state,queue);p.frozen=bool(controls.get('frozen'));p.trade_blocked=bool(controls.get('trade_blocked'));self.follower_anchor(p);p.saved_revision=state['revision'];p.chat_bucket=Bucket(self.s.int('security','chat_messages_per_10_seconds'),10);self.players[uid]=p
    p.send('joined',id=uid,username=name,pack=self.c.pack,version=self.c.data['version'],world=self.s.get('world','name'),cap=self.s.max_players,online=len(self.players),stepMs=self.s.step_ms,alphaAtlas=self.s.flag('world','allow_alpha_atlas'),alphaSurf=self.s.flag('world','allow_alpha_surf'),motd=self.s.get('world','motd'))
    self.send_map(p);self.send_state(p)
+   if p.frozen:p.send('notice',message='Your gameplay is frozen by the local administrator. Chat, saving and logout remain available.')
    for channel,messages in self.chat.items():p.send('chat_history',channel=channel,messages=list(messages))
    self.emit('login',player=p);log.info('Joined %s (%d); online=%d',name,uid,len(self.players));return p
  def send_map(self,p,transition='arrival'):
@@ -104,7 +114,7 @@ class World:
   try:await asyncio.to_thread(self.db.save_many,[(p.id,state)])
   except Exception as e:log.exception('State commit failed for %s',p.username);raise RequestError('The database could not save this action. Nothing was changed; contact the administrator.') from e
   p.state=state;p.saved_revision=state['revision'];self.send_state(p)
- def free(self,p):require(not p.battle and not p.trade,'Finish your current battle or trade first.')
+ def free(self,p):require(not p.frozen,'Your gameplay is frozen by the local administrator.');require(not p.battle and not p.trade,'Finish your current battle or trade first.')
  def nearby(self,a,b,radius=8):return a.state['map']==b.state['map'] and max(abs(a.state['x']-b.state['x']),abs(a.state['y']-b.state['y']))<=radius
  def require_peer(self,p,uid):
   integer(uid,1,2**53-1,'Trainer ID');q=self.players.get(uid);require(q is not None and not q.closed and q.id!=p.id,'That trainer is not available.');require(self.nearby(p,q),'Move closer to that trainer.');return q
@@ -146,6 +156,7 @@ class World:
   seq=integer(d.get('seq'),0,2**31-1,'Movement sequence');direction=d.get('direction');require(direction in DIRECTIONS,'Invalid movement direction.')
   if seq<=p.last_seq:p.send('move',seq=seq,accepted=False,reason='stale',entity=p.entity());return
   p.last_seq=seq;now=time.monotonic()
+  if p.frozen:p.send('move',seq=seq,accepted=False,reason='frozen',entity=p.entity());return
   if p.battle or p.trade or not p.move_bucket.take() or now-p.last_move<(self.s.step_ms-5)/1000:p.send('move',seq=seq,accepted=False,reason='busy' if p.battle or p.trade else 'rate',entity=p.entity());return
   p.last_move=now;s=p.state;m=self.c.maps[s['map']];dx,dy,conndir=DIRECTIONS[direction];previous={k:s[k] for k in ('map','x','y','revision')};previous['direction']=s.get('direction','down');previous_follower=(p.fx,p.fy);s['direction']=direction;s['revision']+=1;x,y=s['x']+dx,s['y']+dy;oldx,oldy=s['x'],s['y'];changed=False;accepted=False;movement='step'
   async def cross_map(key,tx,ty,transition):
@@ -251,6 +262,7 @@ class World:
   if b.ended:self.battles.pop(b.id,None);self.emit('battle_end',battle=b)
  async def invite(self,p,d):
   self.free(p);kind=d.get('kind');require(kind in ('trade','challenge'),'Unknown invitation.');q=self.require_peer(p,d.get('target'));self.free(q)
+  require(kind!='trade' or not (p.trade_blocked or q.trade_blocked),'Trading is restricted for one of these accounts.')
   require(not any(p.id in (v['from'],v['to']) or q.id in (v['from'],v['to']) for v in self.invites.values()),'One trainer already has a pending invitation.')
   key=str(uuid.uuid4());inv={'id':key,'kind':kind,'from':p.id,'to':q.id,'expires':time.monotonic()+self.s.int('gameplay','invite_timeout_seconds')};self.invites[key]=inv
   q.send('invite',id=key,kind=kind,trainer=p.username,fromId=p.id,seconds=self.s.int('gameplay','invite_timeout_seconds'));p.send('notice',message=f'{kind.title()} invitation sent to {q.username}.')
@@ -258,6 +270,7 @@ class World:
   key=d.get('id');inv=self.invites.get(key);require(inv is not None and inv['to']==p.id,'That invitation is no longer available.');self.invites.pop(key,None);q=self.players.get(inv['from']);require(q is not None,'The other trainer disconnected.')
   if d.get('accept') is not True:q.send('notice',message=f'{p.username} declined your invitation.');return
   require(inv['expires']>time.monotonic(),'That invitation expired.');self.free(p);self.free(q);require(self.nearby(p,q),'The trainers moved too far apart.')
+  require(inv['kind']!='trade' or not (p.trade_blocked or q.trade_blocked),'Trading is restricted for one of these accounts.')
   if inv['kind']=='challenge':
    require(all(any(m['hp']>0 for m in self.party(t)) for t in (q,p)),'Both trainers need at least one healthy Pokemon.')
    b=Battle(self.c,'duel',[q.id,p.id],[q.username,p.username],[self.party(q),self.party(p)],[{},{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=p.state['map'].split('_',1)[0]);self.battles[b.id]=b;q.battle=b.id;p.battle=b.id;q.send('battle',battle=b.view(0));p.send('battle',battle=b.view(1))
@@ -288,6 +301,7 @@ class World:
  async def trade_action(self,p,d):
   require(p.trade in self.trades,'You are not in a trade.');t=self.trades[p.trade];require(d.get('id')==t['id'],'That trade has ended.');action=d.get('action')
   if action=='cancel':self.cancel_trade(t,'The exchange was cancelled. Nothing was transferred.');return
+  require(all(not self.players[uid].trade_blocked and not self.players[uid].frozen for uid in t['players']),'Trading is restricted for one of these accounts.')
   require(d.get('revision')==t['revision'],'This offer changed. Review the current exchange before proceeding.')
   if action=='offer':
    t['offers'][p.id]=self.check_offer(p,d.get('offer'));t['revision']+=1;t['ready'].clear();t['confirmed'].clear()
@@ -382,6 +396,8 @@ class World:
  async def dispatch(self,p,d):
   async with self.lock:
    require(not p.closed and self.players.get(p.id) is p,'Your session is closed.');require(p.command_bucket.take(),'Too many commands; please slow down.');op=d.get('op')
+   require(not self.stopping,'World is shutting down.')
+   require(not p.frozen or op in ('move','chat','ping','save'),'Your gameplay is frozen by the local administrator.')
    if op=='move':await self.move(p,d)
    elif op=='chat':
     require(p.chat_bucket.take(),'Chat rate limit: please wait a moment.');require(time.monotonic()>=p.muted_until,'You are muted by the world administrator.');channel=d.get('channel');message=d.get('text');require(channel in self.chat,'Choose General or Trade.');require(isinstance(message,str) and 1<=len(message.strip())<=240 and all(ord(x)>=32 for x in message),'Messages must be 1-240 characters on one line.')

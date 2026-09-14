@@ -8,7 +8,8 @@ from __future__ import annotations
 import json,sqlite3,threading,time,uuid
 from contextlib import contextmanager,suppress
 from .security import RequestError
-SCHEMA=1
+from .admin_store import AdminStoreMixin
+SCHEMA=2
 LEASE_SECONDS=60
 
 class WorldLeaseBusy(RuntimeError):
@@ -18,7 +19,12 @@ class WorldLeaseBusy(RuntimeError):
   self.remaining_seconds=max(1,LEASE_SECONDS-(self.observed_at-self.heartbeat))
   super().__init__(f'Another NXT world has a recent database lease. It expires in {self.remaining_seconds} seconds unless that world refreshes it. Stop the other NXT world before starting this copy.')
 
-class Store:
+class WorldSchemaUpgradeBusy(RuntimeError):
+ """Safe operator guidance; never serialize a driver/configuration payload."""
+ def __init__(self):
+  super().__init__('Stop the previous world before upgrading the database schema. A recent world lease is still present; no schema-2 upgrade was applied. After an unclean stop, allow the stale lease to expire, then retry. Keep the pre-upgrade database backup.')
+
+class Store(AdminStoreMixin):
  def __init__(self,settings):
   self.s=settings;self.mysql=settings.get('database','backend')=='mysql';self.lock=threading.RLock();self.db=None;self.closed=False
   self.lease_id=str(uuid.uuid4());self.lease_active=False
@@ -61,7 +67,14 @@ class Store:
    c.execute(f'CREATE TABLE IF NOT EXISTS characters (account_id BIGINT PRIMARY KEY, revision BIGINT NOT NULL, state_json {large} NOT NULL, updated_at BIGINT NOT NULL, FOREIGN KEY (account_id) REFERENCES accounts(id))'+suffix)
    c.execute(f'CREATE TABLE IF NOT EXISTS trade_audit (trade_id VARCHAR(36) PRIMARY KEY, account_a BIGINT NOT NULL, account_b BIGINT NOT NULL, payload {large} NOT NULL, created_at BIGINT NOT NULL)'+suffix)
    c.execute(f'CREATE TABLE IF NOT EXISTS world_leases (id INTEGER PRIMARY KEY, owner VARCHAR(36) NOT NULL, heartbeat BIGINT NOT NULL)'+suffix)
-   if not row:c.execute('INSERT INTO nxt_schema(id,version) VALUES(1,1)')
+   # Do not silently advance an old deployment's schema merely because a
+   # second program was opened while that world still owns a recent lease.
+   if row and row[0]<SCHEMA:
+    c.execute('SELECT heartbeat FROM world_leases WHERE id=1'+(' FOR UPDATE' if self.mysql else ''));lease=c.fetchone()
+    if lease and int(time.time())-lease[0]<LEASE_SECONDS:raise WorldSchemaUpgradeBusy()
+   self.migrate_admin(c,suffix,large)
+   if not row:c.execute(self.sql('INSERT INTO nxt_schema(id,version) VALUES(1,%s)'),(SCHEMA,))
+   elif row[0]<SCHEMA:c.execute(self.sql('UPDATE nxt_schema SET version=%s WHERE id=1'),(SCHEMA,))
  def acquire_lease(self):
   """One world process per database: prevent dual-server ownership races."""
   # Keep ownership publication and close serialized even if a to_thread waiter
@@ -85,7 +98,10 @@ class Store:
  def account(self,login):
   with self.transaction() as c:
    c.execute(self.sql('SELECT id,username,password_hash,banned FROM accounts WHERE login_key=%s'),(login.lower(),));r=c.fetchone()
-   return {'id':r[0],'username':r[1],'password_hash':r[2],'banned':bool(r[3])} if r else None
+   if not r:return None
+   control=self._admin_account(c,uid=r[0])
+   banned=bool(r[3]) and (control['ban_until']==0 or control['ban_until']>int(time.time()))
+   return {'id':r[0],'username':r[1],'password_hash':r[2],'banned':banned}
  def create(self,username,password_hash,state):
   try:
    with self.transaction() as c:
@@ -118,7 +134,10 @@ class Store:
    c.execute(self.sql('INSERT INTO trade_audit(trade_id,account_a,account_b,payload,created_at) VALUES(%s,%s,%s,%s,%s)'),(trade_id,a,b,json.dumps(payload,separators=(',',':')),int(time.time())))
    for uid,state in [(a,astate),(b,bstate)]:c.execute(self.sql('UPDATE characters SET state_json=%s,revision=%s,updated_at=%s WHERE account_id=%s'),(json.dumps(state,separators=(',',':')),state['revision'],int(time.time()),uid))
  def ban(self,username,banned):
-  with self.transaction() as c:c.execute(self.sql('UPDATE accounts SET banned=%s WHERE login_key=%s'),(int(banned),username.lower()));return c.rowcount
+  # Legacy trusted-extension API; the interactive console uses audited admin_commit.
+  with self.transaction() as c:
+   self.fence(c);c.execute(self.sql('UPDATE accounts SET banned=%s WHERE login_key=%s'),(int(banned),username.lower()));count=c.rowcount
+   c.execute(self.sql('UPDATE account_controls SET ban_until=0,epoch=epoch+1 WHERE account_id=(SELECT id FROM accounts WHERE login_key=%s)'),(username.lower(),));return count
  def close(self):
   # Startup failures and normal shutdown share cleanup. A rejected contender
   # must not remove the other world's lease, and a second close must be harmless.

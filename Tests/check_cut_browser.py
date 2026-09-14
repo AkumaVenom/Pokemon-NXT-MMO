@@ -58,8 +58,11 @@ async def main():
    async def click_tree(p,key,npc):
     print('Click tree',key,npc,flush=True)
     await p.bring_to_front();await p.wait_for_timeout(250)
-    await p.wait_for_function('([key,npc])=>{const s=__cutQA.snapshot();return s.map===key&&!s.pending&&s.hits.some(h=>h.kind==="npc"&&h.id===npc)}',arg=[key,npc])
-    xy=await p.evaluate('npc=>{const s=__cutQA.snapshot(),h=s.hits.find(h=>h.kind==="npc"&&h.id===npc),r=document.querySelector("#world-canvas").getBoundingClientRect();return [r.left+h.x+h.w/2,r.top+h.y+h.h/4]}',npc)
+    # Capture coordinates in the same frame that satisfies readiness. Reading
+    # hits in a second protocol call can race the next renderer frame/reset.
+    hit=await p.wait_for_function('([key,npc])=>{const s=__cutQA.snapshot();if(s.map!==key||s.pending)return false;const h=s.hits.find(h=>h.kind==="npc"&&h.id===npc);if(!h)return false;const r=document.querySelector("#world-canvas").getBoundingClientRect();return [r.left+h.x+h.w/2,r.top+h.y+h.h/4]}',arg=[key,npc])
+    try:xy=await hit.json_value()
+    finally:await hit.dispose()
     await p.mouse.click(*xy);await p.locator('#modal').wait_for(state='visible')
    try:
     aid=await login(a,'CutBrowserOwner',True);bid=await login(b,'CutBrowserPeer',True)
