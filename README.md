@@ -1,19 +1,5 @@
 # Pokemon NXT MMO
 
-## Standard-user Windows build correction · 1.3.4
-
-This source includes the correction for the two variety publisher tests that failed
-with **`WinError 1314: A required privilege is not held by the client`**. The tests now
-use isolated real copies of the small variety-front directory, not symbolic links
-or hard links. Both checks remain active, including exact sprite checksums and
-rejection of unsafe/cross-species asset paths. No administrator session, Developer
-Mode, permission change, dependency downgrade or test bypass is required.
-
-The gameplay version stays **0.3.5-alpha**, and the content pack remains
-**`76fad1c40143e106528d0c53`**. Client/server gameplay, sprites, rarity, followers,
-encounters, Cut and saved accounts are unchanged. The build banner is **1.3.4**.
-See **`Docs/WINDOWS_BUILD_FIX_1.3.4.md`** for repair steps and validation limits.
-
 ## 0.3.5-alpha · Pokémon varieties and mirrored front sprites · Build tools 1.3.4
 
 Ancient, Metallic, Shiny, Mystic and Shadow are now persistent cosmetic Pokémon identities. All **251 Kanto/Johto species** have all five supplied variety fronts. The import also binds matching supplied fronts for supported later-generation/Sigma profiles: **3,697 additional fronts** in total, with an exhaustive coverage/provenance audit. Unsupported extra forms are not given invented recolours.
@@ -25,26 +11,6 @@ Normal wild rolls are **90%**; Ancient, Metallic and Mystic are **2.5% each**; S
 Variety survives captures, relogging, PC transfers, trades and supported evolutions. Existing Shiny Pokémon are migrated without rerolling, healing or resetting their progress. Followers retain the existing regular icon sheets and gain a bounded, animated colour-coded sparkle effect visible to nearby players. Collection filters, full names, summaries, trade screens, battle portraits and owner-only Pokédex variety records use the same identity.
 
 Read **`Docs/POKEMON_VARIETIES.md`** for exact rates, upgrade steps and supported scope, **`Docs/POKEMON_VARIETIES_TEST_REPORT.md`** for executed checks, and **`Docs/POKEMON_VARIETY_ASSET_AUDIT.json`** for per-profile coverage.
-
-### Preserved 0.3.4 regional encounters and personal Cut
-
-This release replaces starter-area fallback spawns with explicit FireRed/Crystal location and floor tables, including Crystal morning/day/night pools and separate Surf selection. Every one of the 959 maps has an audited encounter decision; 248 contain pools, and places without a verified normal encounter table do not invent one.
-
-**Cut unlocks automatically after Misty in Kanto or Bugsy in Johto, independently per region.** Click a small HM tree to open its enabled/locked Cut button. Cutting durably removes that tree's sprite and collision only for your character; other trainers must cut their own. All 120 HM trees use this behavior. Existing qualifying badges are recognized on login and no combat move slot is overwritten.
-
-See **`Docs/REGIONAL_ENCOUNTERS_AND_CUT.md`** for upgrade instructions, exact rules, the Nidoran♂ identity repair and the existing Sigma-layout/special-encounter limits; see **`Docs/REGIONAL_ENCOUNTERS_CUT_TEST_REPORT.md`** for executed checks. The exhaustive map/tree audit is `Docs/ENCOUNTER_CUT_AUDIT.json`.
-
-### Preserved battle and learning fixes
-
-The preserved 0.3.3 fix corrects the battle entry regression: browser timers are invoked with their proper context, the battle dialog opens before effects start, and an effect failure restores usable battle controls. It preserves the previous sound cancellation and battle feedback. See `Docs/BATTLE_SCREEN_FIX.md` for validation and upgrade steps.
-
-Battles show short attack lunges from either side, hit reactions, floating damage and effectiveness text beside the affected Pokémon. Feedback comes from accepted server battle events and does not change combat outcomes. Rapid turns retire old effects and sound tails; repeated snapshots do not replay them. Reduced-motion settings are respected. See `Docs/BATTLE_FEEDBACK.md` for behavior, validation and update instructions.
-
-The previous update corrected level-up learning across all 876 then-published Pokémon profiles using the supplied FireRed and Sigma ROMs. It replaces the remaining 28 fallback Sigma lists, separates seven renamed Sigma move identities, clears invalid queued choices and adds an explicit Move Reminder. Your selected moves, ownership and server progress are preserved; no account reset is needed.
-
-**Cyndaquil learns Ember at level 12 in both supplied ROMs.** Its summary now shows the complete native level-up list and next move. Open a Pokémon from **P → Party & storage**, then use **Move Reminder** to recover eligible current-species moves. Replacing a move requires your confirmation. See `Docs/LEARNSET_GUIDE.md`, `Docs/LEARNSET_ROM_AUDIT.md` and `Docs/LEARNSET_TEST_REPORT.md`.
-
-**Download all FOUR full-source ZIPs, Parts 1–4. Extract every part into the same destination so the identically named `Pokemon_NXT_MMO_v0.3.5-alpha_Source_PokemonVarieties` folders merge, then run `BUILD_ALL.bat`.** These are ordinary mergeable ZIPs, not byte-split volumes: do not concatenate them. All four parts are required and together contain the complete source and assets. No previous pack, original ROM, images.rar, Pillow, FFmpeg or audio renderer is needed for a normal build.
 
 ### Play the adventure
 
