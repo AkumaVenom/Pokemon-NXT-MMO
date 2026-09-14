@@ -15,6 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'Server'))
 from nxt.combat import Battle
+from nxt.varieties import Varieties
 from nxt.content import Content
 from nxt.security import RequestError
 
@@ -26,7 +27,7 @@ class SigmaMoveTests(unittest.TestCase):
         cls.audit = json.loads((ROOT / 'Server/data/learnsets.json').read_text())
 
     def setUp(self):
-        self.c = copy.copy(self.base)
+        self.c = copy.copy(self.base);self.c.varieties=Varieties(self.c)
         self.c.moves = dict(self.base.moves)
         self.c.rng = random.Random(671)
 

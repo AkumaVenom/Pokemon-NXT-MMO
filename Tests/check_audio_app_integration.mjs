@@ -1,3 +1,4 @@
+import * as varietyPresentation from '../Client/app/varieties.js';
 /** Execute the actual app functions against a small DOM/transport adapter.
  * Covers async lifecycle and mixer wiring; this is not a browser rendering test.
  * Run: node --test Tests/check_audio_app_integration.mjs
@@ -58,7 +59,7 @@ function harness() {
  const mon={uid:'test-mon',species:'fr_1',name:'Bulbasaur',level:5,hp:20,maxHp:20,status:'',shiny:false,moves:[{id:33,pp:20}],stats:[20,10,10,10,10,10],exp:100,nextExp:200,levelExp:100};
  const content={species:{fr_1:{front:'test.png',back:'back.png',types:[12],name:'Bulbasaur'}},moves:{33:{name:'Tackle',type:0,pp:20}},items:{},starters:['fr_1']};
  const mixer={opened:0,saves:[],open(){this.opened++;},setPersistence(value){this.saves.push(value);}};
- const context=vm.createContext({Node:Element,BattleFX:class{matches(){return false;}reset(){}play(){return false;}},GameAudio:Audio,WebSocket:Socket,WorldRenderer:class{},mountAudioControls:()=>mixer,document,window:new Element(),performance:{now:()=>0},innerWidth:1600,innerHeight:1000,setInterval:()=>0,setTimeout:()=>0,clearTimeout(){},fetch:async()=>({ok:true,json:async()=>({persisted:true})}),console});
+ const context=vm.createContext({...varietyPresentation,Node:Element,BattleFX:class{matches(){return false;}reset(){}play(){return false;}},GameAudio:Audio,WebSocket:Socket,WorldRenderer:class{},mountAudioControls:()=>mixer,document,window:new Element(),performance:{now:()=>0},innerWidth:1600,innerHeight:1000,setInterval:()=>0,setTimeout:()=>0,clearTimeout(){},fetch:async()=>({ok:true,json:async()=>({persisted:true})}),console});
  const source=appSource.replace(/^import .*?;\n/gm,'').replace(/boot\(\);\s*$/,`globalThis.appTest={handle,loadMap,logout,connect,persistAudioSettings,renderBattle,setupInput,boot,get audio(){return audio;},get session(){return session;},seed(values){({config,content,renderer,session,state,audioControls}=values);}};`);
  vm.runInContext(source,context,{filename:'app.js'});
  context.appTest.seed({config,content,renderer,session:{id:1,username:'UnitTrainer'},state:{items:{},party:[mon.uid],creatures:[mon]},audioControls:mixer});

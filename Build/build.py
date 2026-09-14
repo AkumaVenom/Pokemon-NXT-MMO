@@ -32,7 +32,7 @@ import traceback
 import zipfile
 from typing import Iterator, Mapping, Sequence, TextIO
 
-BUILD_TOOL_VERSION = "1.3.3"
+BUILD_TOOL_VERSION = "1.3.4"
 ROOT = Path(__file__).resolve().parents[1]
 TOP_FILES = {
     "README.md", "CHANGELOG.md", "THIRD_PARTY_NOTICES.md", ".gitignore",
@@ -62,9 +62,11 @@ SOURCE_DATA_FILES = {
     "world.json", "adventure.json", "adventure_rom.json", "centers.json",
     "interior_repairs.json", "interior_maps.json",
     "interior_navigation.json", "learnsets.json",
-    "encounters_firered.json", "encounters_crystal.json", "encounter_bindings.json", "species_additions.json",
+    "encounters_firered.json", "encounters_crystal.json", "encounter_bindings.json", "species_additions.json", "varieties.json",
 }
 REQUIRED_SOURCE = (
+    "Server/nxt/varieties.py", "Server/data/varieties.json", "Tools/publish_varieties.py",
+    "Tools/import_variety_assets.py", "Client/app/varieties.js", "Tests/test_varieties.py", "Tests/check_varieties.mjs",
     "Server/nxt/encounters.py", "Server/nxt/field_moves.py",
     "Server/data/encounters_firered.json", "Server/data/encounters_crystal.json",
     "Server/data/encounter_bindings.json", "Server/data/species_additions.json",
@@ -547,7 +549,7 @@ def build(args: argparse.Namespace, root: Path, cache: Path, log: Log, build_id:
                 audio_app_integration = "passed with installed Node.js"
             else:
                 audio_app_integration = "not run: optional audio app integration test is absent"
-            run([node, "--test", stage / "Tests/check_registration.mjs", stage / "Tests/check_renderer_replication.mjs", stage / "Tests/check_adventure_ui.mjs", stage / "Tests/check_learnsets.mjs", stage / "Tests/check_battle_fx.mjs"], cwd=stage, log=log)
+            run([node, "--test", stage / "Tests/check_registration.mjs", stage / "Tests/check_renderer_replication.mjs", stage / "Tests/check_adventure_ui.mjs", stage / "Tests/check_learnsets.mjs", stage / "Tests/check_battle_fx.mjs", stage / "Tests/check_varieties.mjs"], cwd=stage, log=log)
             replication_client = "passed with installed Node.js"
             javascript = "passed with installed Node.js"
         else:

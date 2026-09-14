@@ -3,9 +3,9 @@ setlocal EnableExtensions DisableDelayedExpansion
 title Pokemon NXT MMO - Automatic Source Build
 echo.
 echo ================================================================
-echo   POKEMON NXT MMO - AUTOMATIC ALL-IN-ONE SOURCE BUILD 1.3.3
+echo   POKEMON NXT MMO - AUTOMATIC ALL-IN-ONE SOURCE BUILD 1.3.4
 echo   Missing Go + Python + build packages are installed automatically
-echo   Gameplay 0.3.3-alpha includes World Startup Fix 1.1.2
+echo   Gameplay 0.3.5-alpha - Varieties + standard-user Windows build fix
 echo ================================================================
 echo.
 echo Extract the entire package first. An internet connection is needed

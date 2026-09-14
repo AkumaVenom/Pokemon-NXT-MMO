@@ -1,3 +1,4 @@
+import * as varietyPresentation from '../Client/app/varieties.js';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -29,7 +30,7 @@ function appHarness({browserTimers=false,entryEvents=[],scheduleFailureAt=0,anim
  const time=clock(),nodes=new Map(),doc={createElement(tag){const node=new Element(tag);node.ownerDocument=doc;return node;},createTextNode(text){const node=this.createElement('#text');node.textContent=String(text);return node;},getElementById(id){if(!nodes.has(id))nodes.set(id,this.createElement('div'));return nodes.get(id);}},socket={readyState:1,sent:[],send(text){this.sent.push(JSON.parse(text));}};
  const warnings=[],observed={scheduled:0,cleared:0,wrongReceiver:0,animationCalls:0,scheduleFailureAt,animationFailure};
  const makeElement=doc.createElement.bind(doc);doc.createElement=tag=>{const node=makeElement(tag);const animate=node.animate.bind(node);node.animate=(...args)=>{observed.animationCalls++;if(observed.animationFailure)throw Error('Animation backend unavailable');return animate(...args);};return node;};
- const source=fs.readFileSync(new URL('../Client/app/app.js',import.meta.url),'utf8');const context=vm.createContext({Node:Element,document:doc,window:{},BattleFX:class extends BattleFX{constructor(){super({...time,reducedMotion:()=>false});}},GameAudio:class{setBattle(){}ui(){}},WebSocket:{OPEN:1},setTimeout:time.setTimer,clearTimeout:time.clearTimer,console:{...console,warn:(...args)=>warnings.push(args)},__clock:time,__observed:observed,planBattleEvents});
+ const source=fs.readFileSync(new URL('../Client/app/app.js',import.meta.url),'utf8');const context=vm.createContext({...varietyPresentation,Node:Element,document:doc,window:{},BattleFX:class extends BattleFX{constructor(){super({...time,reducedMotion:()=>false});}},GameAudio:class{setBattle(){}ui(){}},WebSocket:{OPEN:1},setTimeout:time.setTimer,clearTimeout:time.clearTimer,console:{...console,warn:(...args)=>warnings.push(args)},__clock:time,__observed:observed,planBattleEvents});
  if(browserTimers){
   vm.runInContext(`
    globalThis.setTimeout=function(fn,delay){'use strict';if(this!==undefined&&this!==globalThis){__observed.wrongReceiver++;throw new TypeError('Illegal invocation');}__observed.scheduled++;if(__observed.scheduled===1)__observed.openedAtFirstTimer=document.getElementById('battle-dialog').open;if(__observed.scheduled===__observed.scheduleFailureAt)throw Error('Timer backend unavailable');return __clock.setTimer(fn,delay);};
@@ -82,7 +83,7 @@ test('asynchronous sendout failure releases controls without replaying failed sn
  assert.equal(h.dialog.open,true);assert.equal(h.root.querySelector('.battle-choice-panel').disabled,true);
  h.time.tick(0);assert.equal(h.dialog.open,true);assert.equal(h.warnings.length,1);assert.equal(h.time.size,0);
  assert.equal(h.root.querySelector('.battle-choice-panel').disabled,false);assert.equal(h.observed.animationCalls,1);
- assert.equal(h.root.querySelector('.battle-sprite.you').getAttribute('src'),'assets/b.png');
+ assert.equal(h.root.querySelector('.battle-sprite.you').getAttribute('src'),'assets/f.png');
  assert.equal(h.root.querySelector('.battle-sprite.enemy').getAttribute('src'),'assets/f.png');
  for(let i=0;i<3;i++)h.api.handle({type:'battle',battle:h.battle});
  h.time.tick(20000);assert.equal(h.observed.animationCalls,1);assert.equal(h.warnings.length,1);assert.equal(h.time.size,0);
@@ -110,3 +111,5 @@ test('duplicate snapshots after animation failure preserve the submitted-action 
  h.api.handle({type:'battle',battle:h.battle});h.api.battleAction('attack',{slot:0});assert.equal(h.socket.sent.length,2);
  assert.equal(h.dialog.open,true);assert.equal(h.observed.animationCalls,1);assert.equal(h.warnings.length,1);
 });
+
+test('residual damage and faint retain the outgoing identity before same-species replacement',()=>{const f=fixture();f.play([{id:'d',cue:'damage',side:'you',species:'fr_25',uid:'old',variety:'ancient',reason:'poison'},{id:'f',cue:'faint',side:'you',species:'fr_25',uid:'old',variety:'ancient'},{id:'s',cue:'sendout',side:'you',species:'fr_25',uid:'new',variety:'shadow'}]);assert.deepEqual(f.shown[0],['you','fr_25']);f.time.tick(2000);assert.ok(f.shown.length>=4);});

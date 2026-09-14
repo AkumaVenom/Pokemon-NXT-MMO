@@ -1,0 +1,14 @@
+{
+  "result": "PASS",
+  "pythonDiscovered": 523,
+  "pythonPassed": 522,
+  "pythonSkipped": 1,
+  "javascriptReportedTests": 112,
+  "javascriptPassed": 112,
+  "javascriptFailed": 0,
+  "newPythonVarietyTests": 29,
+  "newJavascriptVarietyTests": 15,
+  "buildInfo": "varieties_build.json",
+  "browserInfo": "varieties_browser.json",
+  "preservationInfo": "varieties_preservation.json"
+}

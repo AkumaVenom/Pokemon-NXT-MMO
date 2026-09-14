@@ -1,0 +1,21 @@
+{
+  "result": "PASS",
+  "browser": "144.0.7559.96",
+  "transport": "DOM/asset bridge + real aiohttp WebSocket / temporary SQLite",
+  "checks": [
+    "real collection dropdown filters six same-species identities with correct portraits",
+    "actual player WAAPI attack/hit transforms keep negative determinant; no mid-animation unmirror",
+    "same-species normal-to-Ancient switch preserves separate opponent identity and correct incoming portrait",
+    "normal: correct front bytes on both battle sides, flipped player only, peer-replicated native follower icon and bounded colour effect",
+    "ancient: correct front bytes on both battle sides, flipped player only, peer-replicated native follower icon and bounded colour effect",
+    "metallic: correct front bytes on both battle sides, flipped player only, peer-replicated native follower icon and bounded colour effect",
+    "shiny: correct front bytes on both battle sides, flipped player only, peer-replicated native follower icon and bounded colour effect",
+    "mystic: correct front bytes on both battle sides, flipped player only, peer-replicated native follower icon and bounded colour effect",
+    "real item selector captures server-rolled Shadow Pikachu; original UUID/variety saved in SQLite",
+    "shadow: correct front bytes on both battle sides, flipped player only, peer-replicated native follower icon and bounded colour effect",
+    "browser reduced-motion setting keeps readable static follower markers",
+    "fresh-page relog restores captured variety and collection; second account does not acquire it"
+  ],
+  "pageErrors": [],
+  "sourcePack": "76fad1c40143e106528d0c53"
+}

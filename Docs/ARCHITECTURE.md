@@ -49,3 +49,7 @@ Future trainer bots should have a scheduled intent queue that goes through the s
 ## Scaling boundary
 
 Area-of-interest diffs reduce ordinary replication, but do not establish capacity by themselves. One world lock and one store connection serialize significant work. Scrypt login work, dense scenes, autosave batches, JSON sizes, large collections and simultaneous trades need load measurements. The highest allowed configured cap is 1,000; deployment should begin far below it. Do not add a second process sharing the same DB or bypass the lease to increase capacity. Partitioning and durable cross-partition ownership would need a separate architecture update.
+
+## 0.3.5 cosmetic variety identity
+
+`Server/nxt/varieties.py` validates policy and migrates/serializes the creature's canonical `variety` plus derived legacy `shiny` flag. Wild identity is rolled after the authoritative encounter resolver, not in generic creature creation. Capture/PC/trade/evolution retain identity; `adventure.varietyDex` remains private. Public entity replication includes only `followerVariety` needed to render nearby native-icon sparkles. `Client/app/varieties.js` centralizes front-only art, names, event UUID identity and bounded deterministic effects. `Tools/publish_varieties.py` publishes the sidecar and checks hashes before the shared pack is computed. See `POKEMON_VARIETIES.md` for boundaries.

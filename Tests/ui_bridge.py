@@ -16,9 +16,9 @@ def response_payload(data,mime='application/json',status=200):
  if isinstance(data,str):data=data.encode('utf-8')
  return {'status':status,'mime':mime,'body':base64.b64encode(data).decode('ascii')}
 def source_bundle(observer=""):
- """Bundle the six current modules for the optional local DOM-only fixture."""
+ """Bundle the current modules for the optional local DOM-only fixture."""
  modules=[]
- for name in ('battle_timing.js','renderer.js','audio.js','audio_controls.js','battle_fx.js','app.js'):
+ for name in ('battle_timing.js','varieties.js','renderer.js','audio.js','audio_controls.js','battle_fx.js','app.js'):
   text=ROOT.joinpath(name).read_text(encoding='utf-8')
   text=re.sub(r"^import .*?;\n",'',text,flags=re.M)
   text=re.sub(r"^export (?=(?:const|function|class) )",'',text,flags=re.M)

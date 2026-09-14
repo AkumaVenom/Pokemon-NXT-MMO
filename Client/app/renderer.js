@@ -1,7 +1,8 @@
 /** Integer-scaled ROM assets, device-pixel-ratio canvas, interpolated replicated entities. */
+import {drawFollowerSparkles} from './varieties.js';
 export class WorldRenderer {
  constructor(canvas,content,onPick){
-  this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.content=content;this.onPick=onPick;this.images=new Map();this.players=new Map();this.cutTrees=new Map();this.map=null;this.pendingMap=null;this.selfId=null;this.scale=3;this.manualScale=0;this.hits=[];this.generation=0;this.cam={x:0,y:0};this.frames=0;this.lastFps=performance.now();this.fps=0;this.active=false;
+  this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.content=content;this.onPick=onPick;this.images=new Map();this.players=new Map();this.cutTrees=new Map();this.map=null;this.pendingMap=null;this.selfId=null;this.scale=3;this.manualScale=0;this.hits=[];this.generation=0;this.cam={x:0,y:0};this.frames=0;this.lastFps=performance.now();this.fps=0;this.active=false;this.motionPreference=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)');
   this.resizeObserver=new ResizeObserver(()=>this.resize());this.resizeObserver.observe(canvas);
   canvas.addEventListener('click',e=>{const r=canvas.getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;const candidates=this.hits.filter(h=>x>=h.x&&x<=h.x+h.w&&y>=h.y&&y<=h.y+h.h);const hit=candidates.find(h=>h.kind==='player'&&h.id!==this.selfId)||candidates.find(h=>h.kind==='npc');if(hit)this.onPick(hit,e.clientX,e.clientY);});
   canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;canvas.style.cursor=this.hits.some(h=>x>=h.x&&x<=h.x+h.w&&y>=h.y&&y<=h.y+h.h&&!(h.kind==='player'&&h.id===this.selfId))?'pointer':'default';});
@@ -49,7 +50,7 @@ export class WorldRenderer {
   drawables.sort((a,b)=>a.y-b.y||(a.kind==='follower'?-1:1));
   for(const d of drawables){const cx=ox+(d.x+.5)*tile,feet=oy+(d.y+1)*tile;if(cx<-tile||cx>w+tile||feet<-tile||feet>h+tile*2)continue;
    if(d.kind==='follower'){
-    const sp=this.content.species[d.e.follower],img=this.image(sp?.icon);if(!img)continue;const frame=Math.floor(now/260)%2;const size=32*s*.8;ctx.fillStyle='#15332d40';ctx.beginPath();ctx.ellipse(cx,feet-2*s,6*s,2*s,0,0,Math.PI*2);ctx.fill();ctx.drawImage(img,Math.min(frame*32,img.naturalWidth-32),0,32,32,Math.round(cx-size/2),Math.round(feet-size+2*s),Math.round(size),Math.round(size));continue;
+    const sp=this.content.species[d.e.follower],img=this.image(sp?.icon);if(!img)continue;const frame=Math.floor(now/260)%2;const size=32*s*.8;ctx.fillStyle='#15332d40';ctx.beginPath();ctx.ellipse(cx,feet-2*s,6*s,2*s,0,0,Math.PI*2);ctx.fill();ctx.drawImage(img,Math.min(frame*32,img.naturalWidth-32),0,32,32,Math.round(cx-size/2),Math.round(feet-size+2*s),Math.round(size),Math.round(size));drawFollowerSparkles(ctx,this.content,d.e,cx,feet,s,now,this.motionPreference?.matches===true);continue;
    }
    const spec=d.kind==='npc'?d.spec:this.content.objects.kanto[d.e.appearance]||this.content.objects.kanto['0'];const img=this.image(spec.image);if(!img)continue;
    const moving=d.kind==='player'&&d.e.moving&&now-d.e.at<175;const direction=d.kind==='player'?d.e.direction:'down';let frame=direction==='up'?1:direction==='left'||direction==='right'?2:0;if(moving)frame=(direction==='up'?5:direction==='left'||direction==='right'?7:3)+(Math.floor(now/120)%2);frame=Math.min(frame,spec.frames-1);

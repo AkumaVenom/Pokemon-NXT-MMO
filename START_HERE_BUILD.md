@@ -1,11 +1,31 @@
 # Pokemon NXT MMO — automatic all-in-one source build
 
 
-**Download both ZIPs:** `Pokemon_NXT_v0.3.3_Full_Source_Part1.zip` and `Pokemon_NXT_v0.3.3_Full_Source_Part2.zip`. Extract both into the same destination so their project folders merge. Together they contain the complete source and all assets. Run `BUILD_ALL.bat` after both parts are extracted. No earlier pack, audio conversion or ROM is needed.
+**Download all FOUR source ZIPs:** `Pokemon_NXT_MMO_v0.3.5-alpha_Source_Varieties_Part1.zip`, `Part2.zip`, `Part3.zip` and `Part4.zip` (all share the same prefix). Extract each ordinary ZIP into the same destination, merging the identically named `Pokemon_NXT_MMO_v0.3.5-alpha_Source_PokemonVarieties` folders. Do not concatenate the ZIP files. Run `BUILD_ALL.bat` only after all four parts are extracted. The four parts contain the complete source and assets; no earlier source pack or optional patch is required.
 
-Gameplay **0.3.3-alpha** · Build tools **1.3.3** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
+Gameplay **0.3.5-alpha** · Build tools **1.3.4** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
 
 The full source includes the extracted FireRed and Sigma music, sound effects and cries. `BUILD_ALL.bat` verifies and packages these files; it does not extract them again. **No ROM, FFmpeg or C++ audio-renderer build is needed for a normal build.**
+
+## Standard-user Windows build correction · 1.3.4
+
+This source includes the correction for the two variety publisher tests that failed
+with **`WinError 1314: A required privilege is not held by the client`**. The tests now
+use isolated real copies of the small variety-front directory, not symbolic links
+or hard links. Both checks remain active, including exact sprite checksums and
+rejection of unsafe/cross-species asset paths. No administrator session, Developer
+Mode, permission change, dependency downgrade or test bypass is required.
+
+The gameplay version stays **0.3.5-alpha**, and the content pack remains
+**`76fad1c40143e106528d0c53`**. Client/server gameplay, sprites, rarity, followers,
+encounters, Cut and saved accounts are unchanged. The build banner is **1.3.4**.
+See **`Docs/WINDOWS_BUILD_FIX_1.3.4.md`** for repair steps and validation limits.
+
+## Varieties and regional encounter/Cut updates
+
+Version 0.3.5 adds five persistent cosmetic varieties, server-controlled rarity, collection/dex presentation and replicated follower sparkles. All player-side battle Pokémon use horizontally flipped front sprites. Read `Docs/POKEMON_VARIETIES.md` and its test report for the full 251-species coverage and additional-form limits. The supplied converted fronts are already included; no images.rar, Pillow, image converter, new art download or back-sprite collection is needed for a normal build.
+
+The accepted 0.3.4 FireRed/Crystal encounter resolver and independent regional Cut licenses remain: Misty/Cascade for Kanto and Bugsy/Hive for Johto. Personal tree clearing remains saved per character. See `Docs/REGIONAL_ENCOUNTERS_AND_CUT.md`. Old release guides describe their historical package counts; this 0.3.5 source is supplied in **four** parts.
 
 ## Battle screen correction
 
@@ -25,9 +45,9 @@ This release keeps starter choice independent of starting region, fixes account/
 
 ## Correction for the Go prerequisite error
 
-Build tools **1.3.3** retain the correction for `Cannot overwrite variable HOME because it is read-only or constant`. Two Go helper functions used a directory variable named `$home`, which collides with PowerShell's built-in `$HOME`. Both directory variables have been renamed, including the SDK check that previously rejected valid Go installations.
+Build tools **1.3.4** retain the correction for `Cannot overwrite variable HOME because it is read-only or constant`. Two Go helper functions used a directory variable named `$home`, which collides with PowerShell's built-in `$HOME`. Both directory variables have been renamed, including the SDK check that previously rejected valid Go installations.
 
-Extract both complete ZIPs into the same new destination and run its `BUILD_ALL.bat`. The banner should say **1.3.3**. Your existing compatible Python and verified tool downloads can be reused; reinstalling Python, changing Windows HOME, or changing MySQL settings is unnecessary. See `Docs/AUTO_BUILD_1.1.1_TEST_REPORT.md` for the original correction's validation scope and `Docs/AUDIO_TEST_REPORT.md` for the audio validation and `Docs/REPLICATION_TEST_REPORT.md` for this release.
+Extract all four complete ZIPs into the same new destination and run its `BUILD_ALL.bat`. The banner should say **1.3.4**. Your existing compatible Python and verified tool downloads can be reused; reinstalling Python, changing Windows HOME, or changing MySQL settings is unnecessary. See `Docs/AUTO_BUILD_1.1.1_TEST_REPORT.md` for the original correction's validation scope and `Docs/AUDIO_TEST_REPORT.md` for the audio validation and `Docs/REPLICATION_TEST_REPORT.md` for this release.
 
 ## Online server fails because TLS files are missing?
 
@@ -41,7 +61,7 @@ For the adventure upgrade, build a fresh output and deploy its **matching Client
 
 ## Build it
 
-Extract **both entire** source ZIPs to a short writable local folder, such as `C:\Dev\PokemonNXT`, connect to the internet and double-click **`BUILD_ALL.bat`**. Do not launch the BAT from inside the ZIP. Use a normal Windows 10/11 x64 user session; Run as administrator is not needed.
+Extract **all four entire** source ZIPs to a short writable local folder, such as `C:\Dev\PokemonNXT`, connect to the internet and double-click **`BUILD_ALL.bat`**. Do not launch the BAT from inside the ZIP. Use a normal Windows 10/11 x64 user session; Run as administrator is not needed.
 
 **You do not need to install Go or Python manually.** The BAT starts with built-in Windows PowerShell, finds usable tools and automatically downloads/installs missing tools. It continues through Python package installation, tests, compilation and packaging without another manual build step. No winget, Chocolatey, Git, Node.js, Visual Studio or ROM is required.
 

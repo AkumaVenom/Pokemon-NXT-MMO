@@ -1,0 +1,32 @@
+{
+  "result": "PASS",
+  "release": "0.3.5-alpha",
+  "contentPack": "76fad1c40143e106528d0c53",
+  "sourceArchiveSha256": "a4889c97a40c57f9a1c6d75ccdfaf70a9c8f78c72729f393b1f0eb39a5d4c078",
+  "importedFrontsVerified": 3697,
+  "visiblePixels": "All original visible RGBA pixels retained without resampling/recolouring; only transparent canvas padding changed",
+  "originalMediaByteIdentical": {
+    ".wav": 1548,
+    ".ogg": 818,
+    ".png": 11116
+  },
+  "baselineFilesMissing": [],
+  "baselineFilesUnchanged": 14693,
+  "baselineFilesChanged": 41,
+  "allMapsExactlyEqual": 959,
+  "speciesNativeFactsExactlyEqual": 877,
+  "encounterPolicyExactlyEqual": true,
+  "unchangedSidecars": [
+    "encounters_firered.json",
+    "encounters_crystal.json",
+    "encounter_bindings.json",
+    "species_additions.json",
+    "adventure_rom.json",
+    "learnsets.json",
+    "interior_maps.json",
+    "interior_navigation.json",
+    "interior_repairs.json"
+  ],
+  "originalGamePngsByteIdentical": 11110,
+  "originalDocumentationPngsByteIdentical": 6
+}

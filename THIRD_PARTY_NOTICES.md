@@ -30,3 +30,11 @@ The renderer's **fmt 10.2.1** dependency is from [fmtlib/fmt](https://github.com
 The audio bank was extracted from the user's supplied **Pokemon - FireRed Version (USA, Europe) (Rev 1)** and **Pokemon Ultra Shiny Gold Sigma Completo 1.5.0** ROM files. It retains their native musical sequences, instruments, effects and species-voice assignments, subject to the documented extraction repairs and unavailable unused cry slots. The rendered music/effects and decoded cry assets remain third-party game/ROM-hack material; the renderer's open-source license does not assign ownership of that source material.
 
 `Tools/audio_provenance/render_manifest.json` records the exact ROM SHA-256 values, audio hashes, loop data and the two documented Sigma recoveries. `Docs/AUDIO_GUIDE.md` explains the preserved Sigma cry aliases and the alpha gameplay presentation limits. The original ROM files are not packaged.
+
+## User-supplied Pokémon variety artwork in 0.3.5
+
+Ancient, Metallic, Shiny, Mystic and Shadow front artwork was supplied by the user in `images.rar`. Its original author(s) and redistribution/license permissions have not been independently verified. This update does not claim ownership, endorsement, permission for public redistribution or a commercial license for this material. Pokémon names and trademarks remain with their respective rights holders. Confirm rights before publishing or redistributing the game.
+
+The source and output hashes, explicit species bindings and transparent-padding-only conversion are documented in `Server/data/varieties.json` and `Docs/POKEMON_VARIETY_ASSET_AUDIT.json`. The converted PNGs are included so rebuilding requires no original archive. No back assets or unrequested Dark variety have been newly imported. Optional asset authoring uses separately installed Pillow; neither Pillow nor another image-processing runtime is bundled or required for ordinary game execution/builds.
+
+The Vortex variant reference informed rarity tiers only: `https://wiki.pokemon-vortex.com/wiki/Variant`. NXT is a separate game and uses its own documented numeric cosmetic odds; no Vortex server code, stat perks or account data were imported.

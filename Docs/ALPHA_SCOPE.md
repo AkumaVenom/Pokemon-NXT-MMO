@@ -58,3 +58,7 @@ Seven renamed Sigma moves have distinct runtime IDs, native table parameters and
 ## 0.3.4 acceptance additions
 
 On the real Windows/Edge/MySQL deployment, test a new character and an already-badged character in each starting region. Verify locked Cut, the correct second-gym unlock, clicking a tree, moving through it and returning after relog/server restart. A second account must still see/collide with its tree. Check representative FireRed grass and cave locations, Crystal Route 29 at day/night, late Victory Road/Mt. Silver, and land versus Surf. Preserve the previous battle-screen, sound, Center, trade and account checks. `REGIONAL_ENCOUNTERS_CUT_TEST_REPORT.md` distinguishes automated and browser-fixture results from this native acceptance.
+
+## 0.3.5 variety coverage
+
+All 251 Kanto/Johto species support Ancient, Metallic, Shiny, Mystic and Shadow using supplied front art. Both battle sides now use fronts, with the player's front mirrored; native follower sheets remain regular and gain variety-coloured effects. Varieties are cosmetic, persistent identities, not Vortex battle-stat perks or new encounter methods. Later-generation/Sigma forms without matching supplied art are explicitly audited rather than fabricated; all-five coverage is not claimed for every one of the 877 catalog profiles. See `POKEMON_VARIETIES.md`.

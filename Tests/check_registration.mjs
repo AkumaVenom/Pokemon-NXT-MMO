@@ -1,3 +1,4 @@
+import * as varietyPresentation from '../Client/app/varieties.js';
 /** Actual app registration and owner-session lifecycle using DOM/socket adapters.
  * Run: node --test Tests/check_registration.mjs
  * These exercise the shipped handlers, not a duplicate registration algorithm.
@@ -38,7 +39,7 @@ function harness(){
  const config={endpoint:'ws://localhost/world',host:'localhost',port:7777,tls:false};
  const audio=new Proxy({settings:{}},{get:(target,k)=>k in target?target[k]:()=>{}});
  const clock=new Clock();
- const context=vm.createContext({Node:Element,document,window:new Element(),GameAudio:class{constructor(){return audio;}},WorldRenderer:class{},mountAudioControls(){},WebSocket:Socket,setInterval:()=>0,setTimeout:clock.set,clearTimeout:clock.clear,performance:{now:()=>clock.now},console});
+ const context=vm.createContext({...varietyPresentation,Node:Element,document,window:new Element(),GameAudio:class{constructor(){return audio;}},WorldRenderer:class{},mountAudioControls(){},WebSocket:Socket,setInterval:()=>0,setTimeout:clock.set,clearTimeout:clock.clear,performance:{now:()=>clock.now},console});
  const script=source.replace(/^import .*?;\n/gm,'').replace(/boot\(\);\s*$/,`globalThis.api={authenticate,setMode,starterChoices,handle,connect,logout,setupInput,get state(){return state;},get own(){return own;},get session(){return session;},get starter(){return starter;},get mode(){return mode;},get busy(){return loggingIn;},seed(values){({content,config,renderer}=values);}};`);
  vm.runInContext(script,context,{filename:'app.js'});context.api.seed({content,config,renderer});
  byId('home').value='Kanto';byId('appearance').value='0';byId('username').value='Akumavenom';byId('password').value='test-password-123';

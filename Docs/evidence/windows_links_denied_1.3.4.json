@@ -1,0 +1,92 @@
+{
+  "condition": "Both os.symlink and os.link raise simulated Windows privilege error 1314",
+  "nativeWindows": false,
+  "host": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+  "sourceFilesStaged": 18450,
+  "run": 526,
+  "passed": 515,
+  "failures": [],
+  "errors": [],
+  "skipped": [
+    [
+      "test_auto_bootstrap.NativePowerShellTests.test_bootstrap_helper_contracts_on_windows",
+      "Windows PowerShell execution requires Windows; not simulated as passed"
+    ],
+    [
+      "test_build_tools.BuildFilesystemTests.test_symlinked_source_directory_is_rejected",
+      "Creating symlinks requires privileges on this Windows host"
+    ],
+    [
+      "test_build_tools.BuildFilesystemTests.test_symlinked_source_file_is_rejected",
+      "Creating symlinks requires privileges on this Windows host"
+    ],
+    [
+      "test_mysql_setup_patch.PatchTests.test_payload_symlink_is_rejected",
+      "symlinks unavailable"
+    ],
+    [
+      "test_world_startup_patch.WorldStartupPatchTests.test_backup_directory_symlink_is_rejected",
+      "symlinks unavailable"
+    ],
+    [
+      "test_world_startup_patch.WorldStartupPatchTests.test_nested_directory_swapped_during_patch_never_writes_outside",
+      "symlinks unavailable"
+    ],
+    [
+      "test_world_startup_patch.WorldStartupPatchTests.test_payload_file_symlink_is_rejected",
+      "symlinks unavailable"
+    ],
+    [
+      "test_world_startup_patch.WorldStartupPatchTests.test_payload_nested_directory_symlink_is_rejected",
+      "symlinks unavailable"
+    ],
+    [
+      "test_world_startup_patch.WorldStartupPatchTests.test_selected_folder_symlink_is_rejected_before_resolution",
+      "symlinks unavailable"
+    ],
+    [
+      "test_world_startup_patch.WorldStartupPatchTests.test_target_file_symlink_is_rejected",
+      "symlinks unavailable"
+    ],
+    [
+      "test_world_startup_patch.WorldStartupPatchTests.test_target_nested_directory_symlink_is_rejected",
+      "symlinks unavailable"
+    ]
+  ],
+  "success": true,
+  "varietyTestsPassed": [
+    "test_varieties.VarietyDataTests.test_all_251_core_identities_have_all_five_fronts_and_normal",
+    "test_varieties.VarietyDataTests.test_catalog_counts_are_audited_not_assumed_for_sigma_extras",
+    "test_varieties.VarietyDataTests.test_cosmetic_variants_leave_identical_stats_moves_and_capture_data",
+    "test_varieties.VarietyDataTests.test_every_imported_front_is_checksum_verified_and_bound_to_correct_id",
+    "test_varieties.VarietyDataTests.test_exact_exhaustive_tickets_no_extra_roll_or_reweight",
+    "test_varieties.VarietyDataTests.test_inherited_identity_without_extra_form_art_is_retained_and_flagged",
+    "test_varieties.VarietyDataTests.test_invalid_policy_weights_order_colours_and_denominator_fail_closed",
+    "test_varieties.VarietyDataTests.test_legacy_migration_is_additive_idempotent_and_preserves_damage_moves",
+    "test_varieties.VarietyDataTests.test_level_stone_and_trade_evolution_keep_each_cosmetic_identity",
+    "test_varieties.VarietyDataTests.test_missing_extra_form_art_tickets_become_normal_without_reroll",
+    "test_varieties.VarietyDataTests.test_modern_identity_wins_over_conflicting_legacy_boolean",
+    "test_varieties.VarietyDataTests.test_non_wild_factories_are_normal_even_for_username_wild",
+    "test_varieties.VarietyDataTests.test_normal_fronts_and_follower_icons_are_not_replaced_by_variants",
+    "test_varieties.VarietyDataTests.test_publisher_checks_do_not_require_symlink_or_hardlink_privileges",
+    "test_varieties.VarietyDataTests.test_publisher_fixture_is_private_complete_and_cleans_after_failure",
+    "test_varieties.VarietyDataTests.test_publisher_is_idempotent_and_preserves_species_combat_facts",
+    "test_varieties.VarietyDataTests.test_publisher_rejects_cross_species_path_and_checksum_corruption",
+    "test_varieties.VarietyDataTests.test_publisher_rejects_missing_copied_front",
+    "test_varieties.VarietyDataTests.test_server_and_client_share_exact_policy_species_bindings_and_pack",
+    "test_varieties.VarietyDataTests.test_unknown_saved_variety_is_not_silently_destroyed",
+    "test_varieties.VarietyDataTests.test_variety_dex_filters_invalid_rows_and_caught_implies_seen",
+    "test_varieties.VarietyWorldTests.test_all_varieties_survive_pc_storage_and_world_relogin",
+    "test_varieties.VarietyWorldTests.test_atomic_trade_preserves_variety_uid_and_ownership_history",
+    "test_varieties.VarietyWorldTests.test_event_time_identity_is_correct_for_same_species_switch_and_capture",
+    "test_varieties.VarietyWorldTests.test_failed_encounter_save_has_no_battle_no_seen_leak",
+    "test_varieties.VarietyWorldTests.test_failed_variety_login_migration_publishes_no_partial_session",
+    "test_varieties.VarietyWorldTests.test_legacy_shiny_login_is_durably_migrated_without_resetting_cut_badges",
+    "test_varieties.VarietyWorldTests.test_public_follower_identity_changes_even_between_same_species",
+    "test_varieties.VarietyWorldTests.test_real_wild_capture_preserves_all_six_varieties_uid_and_private_dex",
+    "test_varieties.VarietyWorldTests.test_save_failure_cannot_publish_variant_catch_or_spend_ball",
+    "test_varieties.VarietyWorldTests.test_trade_failure_leaves_both_variety_collections_unchanged",
+    "test_varieties.VarietyWorldTests.test_untrusted_encounter_packet_cannot_choose_species_level_or_variety"
+  ]
+}

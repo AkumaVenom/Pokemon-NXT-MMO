@@ -1,0 +1,13 @@
+{
+  "result": "PASS",
+  "browser": "144.0.7559.96",
+  "transport": "DOM/asset bridge + real aiohttp WebSocket / temporary SQLite",
+  "checks": [
+    "kanto: real keyboard movement enters cleared tile for owner and remains blocked for peer",
+    "kanto: native canvas click -> enabled/locked menu -> real nxt.v1 command through selected QA transport -> SQLite commit -> owner sprite/hit removed -> peer retained",
+    "johto: real keyboard movement enters cleared tile for owner and remains blocked for peer",
+    "johto: native canvas click -> enabled/locked menu -> real nxt.v1 command through selected QA transport -> SQLite commit -> owner sprite/hit removed -> peer retained",
+    "fresh-page relog restores both regional cut flags without affecting peer"
+  ],
+  "pageErrors": []
+}

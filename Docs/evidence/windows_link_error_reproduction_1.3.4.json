@@ -1,0 +1,13 @@
+{
+  "stage": "unmodified v0.3.5 source",
+  "condition": "os.symlink raises simulated Windows privilege error 1314",
+  "testsRun": 2,
+  "failures": 0,
+  "errors": 2,
+  "skips": 0,
+  "expectedErrorNames": [
+    "test_publisher_is_idempotent_and_preserves_species_combat_facts",
+    "test_publisher_rejects_cross_species_path_and_checksum_corruption"
+  ],
+  "reproduced": true
+}

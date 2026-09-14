@@ -1,3 +1,4 @@
+import * as varietyPresentation from '../Client/app/varieties.js';
 /** Exercise the shipped adventure UI handlers with isolated DOM and socket adapters.
  * Run: node --test Tests/check_adventure_ui.mjs
  */
@@ -28,7 +29,7 @@ function harness(){
  const socket={readyState:1,sent:[],send(data){this.sent.push(JSON.parse(data));},close(){this.readyState=2;}};
  const audioCalls=[];const audio=new Proxy({settings:{}},{get:(target,key)=>key in target?target[key]:(...args)=>audioCalls.push([key,...args])});
  const renderer={cutTrees:{},setCutTrees(cuts){this.cutTrees=cuts||{};},players:new Map(),active:true,resize(){},scene(){},entity(){},resetSession(){},loadMap:async()=>true};
- const context=vm.createContext({Node:Element,document,window:new Element(),GameAudio:class{constructor(){return audio;}},WorldRenderer:class{},mountAudioControls(){},WebSocket:{OPEN:1},setInterval(){},setTimeout(){},clearTimeout(){},performance:{now:()=>0},console});
+ const context=vm.createContext({...varietyPresentation,Node:Element,document,window:new Element(),GameAudio:class{constructor(){return audio;}},WorldRenderer:class{},mountAudioControls(){},WebSocket:{OPEN:1},setInterval(){},setTimeout(){},clearTimeout(){},performance:{now:()=>0},console});
  const script=source.replace(/^import .*?;\n/gm,'').replace(/boot\(\);\s*$/,`globalThis.api={showPokemon,showCollection,showJournal,showDex,showBag,showNpcDialog,showAtlas,canTravelTo,updateAdventureAccess,setupInput,handle,loadMap,closeModal,get state(){return state;},get modal(){return modalKind;},seed(values){({content,state,session,own,ws,renderer}=values);},busy(kind){trade=kind==='trade'?{}:null;activeBattle=kind==='battle'?{}:null;},changeOwner(){session={id:2};}};`);
  vm.runInContext(script,context,{filename:'app.js'});context.api.seed({content,state,session,own,ws:socket,renderer});
  byId('home').value='Kanto';
@@ -142,4 +143,17 @@ test('delayed tree menus and old Cut controls cannot act after a map change',asy
 });
 test('journal shows independent Cut badge requirements for both regions',()=>{
  const h=harness();h.state.adventure.fieldMoves=[{region:'kanto',unlocked:true,leader:'Misty',city:'Cerulean City',badgeName:'Cascade Badge'},{region:'johto',unlocked:false,leader:'Bugsy',city:'Azalea Town',badgeName:'Hive Badge'}];h.app.showJournal();assert.match(h.words(),/CUT UNLOCKED/);assert.match(h.words(),/CUT LOCKED/);assert.match(h.words(),/Defeat Bugsy in Azalea Town/);assert.match(h.words(),/does not replace a partner/);
+});
+
+test('variety collection filter and names distinguish same-species owned partners',()=>{
+ const h=harness();h.content.varietyPolicy={definitions:{ancient:{label:'Ancient',color:'#FFAA55'},mystic:{label:'Mystic',color:'#C49AFF'}}};h.content.species.fr_1.varieties={ancient:{front:'ancient.png'},mystic:{front:'mystic.png'}};
+ for(const v of ['ancient','mystic'])h.state.creatures.push({...h.mon(v),variety:v});h.app.showCollection('storage');assert.match(h.words(),/Ancient Bulbasaur/);assert.match(h.words(),/Mystic Bulbasaur/);
+ const select=h.all().find(n=>n.getAttribute('aria-label')==='Filter Pokémon variety');select.value='mystic';select.dispatch('change');assert.match(h.words(),/Mystic Bulbasaur/);const images=h.all().filter(n=>n.tagName==='IMG');assert.equal(images.length,1);assert.equal(images[0].getAttribute('src'),'assets/mystic.png');assert.equal(h.socket.sent.length,0);
+});
+test('variety summary and evolution preview use the correct target front without replacing identity',()=>{
+ const h=harness(),mon=h.state.creatures[0];mon.variety='shadow';h.content.species.fr_1.varieties={shadow:{front:'shadow-bulbasaur.png'}};h.content.species.fr_2.varieties={shadow:{front:'shadow-ivysaur.png'}};mon.evolutions=[{target:'fr_2',name:'Ivysaur',method:'level'}];h.app.showPokemon(mon);
+ assert.match(h.words(),/Shadow Bulbasaur.*Shadow Ivysaur/);assert.ok(h.all().some(n=>n.getAttribute('src')==='assets/shadow-ivysaur.png'));h.findButton('Evolve into Ivysaur').dispatch('click');assert.deepEqual(h.socket.sent[0],{op:'pokemon.evolve',uid:mon.uid,target:'fr_2'});assert.equal(mon.variety,'shadow');
+});
+test('private dex shows seen versus caught varieties and no undiscovered variety spoilers',()=>{
+ const h=harness();h.state.adventure.dex.varieties={seen:{fr_1:['normal','ancient','shadow']},caught:{fr_1:['normal','ancient']}};h.app.showDex();assert.match(h.words(),/● Ancient/);assert.match(h.words(),/○ Shadow/);assert.doesNotMatch(h.words(),/Mystic|Metallic|Shiny/);assert.equal(h.socket.sent.length,0);
 });

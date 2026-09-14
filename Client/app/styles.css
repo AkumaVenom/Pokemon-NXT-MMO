@@ -26,3 +26,19 @@
 .field-move-row p{flex-basis:100%;margin:0;color:var(--muted,#a5b4c6)}
 .field-move-note{padding:.9rem 1rem;border-left:3px solid var(--accent,#71dcb2);background:#71dcb20a;border-radius:.4rem;color:var(--muted,#a5b4c6);line-height:1.55}
 .cut-tree-button:disabled{opacity:.48;cursor:not-allowed;filter:grayscale(.8);box-shadow:none}
+
+/* Variety identity is cosmetic; bounded images and layout preserve battle usability. */
+.battle-sprite.you{transform:scaleX(-1)}
+.battle-sprite{object-fit:contain;max-width:42%;max-height:86%;image-rendering:pixelated}
+.variety-badge,.dex-variety{display:inline-flex;align-items:center;gap:.25em;color:var(--variety-color,var(--ink));border:1px solid currentColor;border-radius:999px;font-size:.66rem;line-height:1.3;padding:.18rem .48rem;max-width:100%;overflow-wrap:anywhere}
+.variety-badge{align-self:center;background:#0c1827}
+.dex-varieties{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.45rem}
+.dex-variety{opacity:.72;font-size:.6rem}.dex-variety.owned{opacity:1;background:#152539}
+.collection-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(8rem,.5fr);gap:.6rem;align-items:center}
+.collection-controls input,.collection-controls select{min-width:0;width:100%}
+.variety-art-note{border-left:3px solid #e1b65b;padding:.6rem .8rem;color:var(--muted);font-size:.78rem;line-height:1.5}
+.party-name strong{min-width:0;overflow-wrap:anywhere}.party-name>span{white-space:nowrap}
+.combat-card .party-name{gap:.4rem}.combat-card .party-name strong{line-height:1.25}
+@media(max-width:520px){.collection-controls{grid-template-columns:1fr}.combat-card .party-name{flex-wrap:wrap}}
+
+.collection-card .variety-badge,.dex-card .dex-variety{color:var(--variety-color,var(--ink))}

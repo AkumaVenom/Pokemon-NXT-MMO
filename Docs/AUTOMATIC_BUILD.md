@@ -1,12 +1,14 @@
-# Automatic build prerequisites — build tools 1.1.2
+# Automatic build prerequisites — build tools 1.3.4
 
-Date: 2026-09-13. Version 1.1.0 added automatic tool installation; 1.1.1 fixes the reserved-variable error in Go setup. Gameplay remains 0.1.0-alpha and MySQL setup remains 1.1.0.
+Date: 2026-09-14. Gameplay **0.3.5-alpha**; MySQL setup **1.1.0**. Build tools **1.3.4** remove the Windows symlink-privilege requirement from variety publisher test fixtures. All gameplay and content bytes remain unchanged. See `WINDOWS_BUILD_FIX_1.3.4.md`.
+
+The original prerequisite fixes below remain included: 1.1.0 added automatic tool installation; 1.1.1 corrected the Go setup reserved-variable error. These historical versions are not the current build banner.
 
 ## Go setup correction in 1.1.1
 
 The `Get-NxtGo` cache-directory variable and `Test-NxtGo` SDK-directory variable now have distinct project-specific names. Neither assigns PowerShell's read-only `$HOME` (variable names are case-insensitive). This fixes the immediate prerequisite failure and the hidden rejection of complete installed/extracted Go SDKs. Download versions, checksums and verification rules remain the same.
 
-After a 1.1.0 failure, extract the corrected complete source ZIP into a new folder and double-click its `BUILD_ALL.bat`; check the **1.1.2** banner. Compatible Python and verified shared downloads remain reusable. Native Go-discovery regressions are included in the Windows helper suite; actual validation and platform limits are recorded in `AUTO_BUILD_1.1.1_TEST_REPORT.md`.
+After a 1.1.0 failure, extract the corrected complete source ZIP into a new folder and double-click its `BUILD_ALL.bat`; check the **1.3.4** banner. Compatible Python and verified shared downloads remain reusable. Native Go-discovery regressions are included in the Windows helper suite; actual validation and platform limits are recorded in `AUTO_BUILD_1.1.1_TEST_REPORT.md`.
 
 Build tools **1.1.2** retain the Go correction and include the server startup recovery/logging fix. The runtime change is documented in `WORLD_STARTUP_FIX_TEST_REPORT.md`; configured servers may use the small hotfix instead of rebuilding.
 
@@ -66,3 +68,7 @@ The build never installs/provisions MySQL, creates a root password, changes anot
 - Go downloads: https://go.dev/dl/
 - Python venv: https://docs.python.org/3/library/venv.html
 - Preserved requirements: https://pypi.org/project/aiohttp/3.14.3/ and https://pypi.org/project/PyMySQL/1.2.0/
+
+## 0.3.5 source and variety assets
+
+The full 0.3.5 source is supplied in **four mergeable ZIPs**. Extract all four into the same destination before invoking the unchanged `BUILD_ALL.bat` workflow. The source allowlist retains `Server/data/varieties.json`, the publisher/importer, runtime helpers and tests. Converted fronts are supplied; ordinary builds require no RAR, Pillow, original ROM or new art download. The shared pack includes the policy/art bindings and requires a matching Client/Server deployment.

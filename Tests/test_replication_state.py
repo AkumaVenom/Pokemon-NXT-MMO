@@ -173,7 +173,7 @@ class ReplicationStateTests(unittest.IsolatedAsyncioTestCase):
     async def test_stationary_lead_and_shiny_changes_replicate_to_both_clients(self):
         state = copy.deepcopy(self.a.state)
         extra = self.content.new_mon('fr_7', 5, self.a.username)
-        extra['shiny'] = True
+        extra.update(variety='shiny', shiny=True)
         state['creatures'].append(extra)
         state['party'].append(extra['uid'])
         await self.world.commit(self.a, state)

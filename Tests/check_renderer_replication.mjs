@@ -1,3 +1,4 @@
+import * as varietyPresentation from '../Client/app/varieties.js';
 /** Actual renderer state under delayed local-map fetches; no browser pixels simulated. */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -8,8 +9,8 @@ const entity=(id,map='johto_3_0',follower=id===1?'fr_152':'fr_4',x=id)=>({id,use
 const mapData=id=>({id,width:30,height:30,spawn:[10,10],objects:[],image:id+'.png'});
 function harness(){
  const requests=[];
- const context=vm.createContext({Map,performance:{now:()=>100},ResizeObserver:class{observe(){}},Image:class{complete=true;naturalWidth=64;},requestAnimationFrame(){},fetch:url=>new Promise((resolve,reject)=>requests.push({url,resolve,reject})),console});
- vm.runInContext(source.replace('export class WorldRenderer','class WorldRenderer')+'\nglobalThis.Renderer=WorldRenderer;',context);
+ const context=vm.createContext({...varietyPresentation,Map,performance:{now:()=>100},ResizeObserver:class{observe(){}},Image:class{complete=true;naturalWidth=64;},requestAnimationFrame(){},fetch:url=>new Promise((resolve,reject)=>requests.push({url,resolve,reject})),console});
+ vm.runInContext(source.replace(/^import .*?;\n/gm,'').replace('export class WorldRenderer','class WorldRenderer')+'\nglobalThis.Renderer=WorldRenderer;',context);
  const content={objects:{kanto:{0:{image:'trainer.png'}}},species:{fr_152:{icon:'chikorita.png'},fr_4:{icon:'charmander.png'},fr_1:{icon:'bulbasaur.png'}}};
  const r=new context.Renderer({getContext:()=>({}),addEventListener(){}},content,()=>{});
  const resolve=(index,id)=>requests[index].resolve({ok:true,json:async()=>mapData(id)});

@@ -14,6 +14,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'Server'));sys.path.insert(0,str(ROOT/'Tests'))
 from test_replication_network import Peer,PASSWORD,ORIGIN
 from nxt.config import Settings
+from nxt.varieties import Varieties
 from nxt.content import Content
 from nxt.growth import Growth
 from nxt.store import Store
@@ -26,7 +27,7 @@ class AdventureNetworkTests(unittest.IsolatedAsyncioTestCase):
   assert len(cls.base_content.data.get('adventureRom',{}).get('gyms',[]))==16,'Adventure content must be merged into the release world.json before integration tests.'
  async def asyncSetUp(self):
   self.tmp=tempfile.TemporaryDirectory();path=Path(self.tmp.name)/'config.ini';path.write_bytes((ROOT/'Build/config_templates/Server/config.ini').read_bytes());settings=Settings.load(path);settings.config.set('database','backend','sqlite');settings.config.set('security','auth_attempts_per_minute','100')
-  self.settings=dataclasses.replace(settings,encounter_chance=0);self.content=copy.copy(self.base_content);self.content.rng=random.Random(253);self.content.growth=Growth(self.content);self.peers=[];self.session=aiohttp.ClientSession();await self.start_service()
+  self.settings=dataclasses.replace(settings,encounter_chance=0);self.content=copy.copy(self.base_content);self.content.varieties=Varieties(self.content);self.content.rng=random.Random(253);self.content.growth=Growth(self.content);self.peers=[];self.session=aiohttp.ClientSession();await self.start_service()
  async def start_service(self):
   self.db=Store(self.settings);self.db.acquire_lease();self.service=Service(self.settings,self.content,self.db);self.world=self.service.world;app=web.Application();app.router.add_get('/world',self.service.socket);app.router.add_get('/health',self.service.health);self.runner=web.AppRunner(app);await self.runner.setup();site=web.TCPSite(self.runner,'127.0.0.1',0);await site.start();self.base=f'http://127.0.0.1:{site._server.sockets[0].getsockname()[1]}'
  async def stop_service(self):

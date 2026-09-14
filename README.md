@@ -1,6 +1,32 @@
 # Pokemon NXT MMO
 
-## 0.3.4-alpha · Regional encounters and personal HM Cut · Build tools 1.3.3
+## Standard-user Windows build correction · 1.3.4
+
+This source includes the correction for the two variety publisher tests that failed
+with **`WinError 1314: A required privilege is not held by the client`**. The tests now
+use isolated real copies of the small variety-front directory, not symbolic links
+or hard links. Both checks remain active, including exact sprite checksums and
+rejection of unsafe/cross-species asset paths. No administrator session, Developer
+Mode, permission change, dependency downgrade or test bypass is required.
+
+The gameplay version stays **0.3.5-alpha**, and the content pack remains
+**`76fad1c40143e106528d0c53`**. Client/server gameplay, sprites, rarity, followers,
+encounters, Cut and saved accounts are unchanged. The build banner is **1.3.4**.
+See **`Docs/WINDOWS_BUILD_FIX_1.3.4.md`** for repair steps and validation limits.
+
+## 0.3.5-alpha · Pokémon varieties and mirrored front sprites · Build tools 1.3.4
+
+Ancient, Metallic, Shiny, Mystic and Shadow are now persistent cosmetic Pokémon identities. All **251 Kanto/Johto species** have all five supplied variety fronts. The import also binds matching supplied fronts for supported later-generation/Sigma profiles: **3,697 additional fronts** in total, with an exhaustive coverage/provenance audit. Unsupported extra forms are not given invented recolours.
+
+**Every player-side battle Pokémon now uses its horizontally flipped front sprite, including Normal.** The opponent uses its unflipped front. Attack, damage, faint and switch effects retain that orientation, including switches between two varieties of the same species. Back sprites remain in the original asset library for preservation, but are not used for battle presentation.
+
+Normal wild rolls are **90%**; Ancient, Metallic and Mystic are **2.5% each**; Shiny and Shadow are **1.25% each**. These are NXT-specific Vortex-inspired cosmetic rates, not a claim about Vortex's exact numeric odds. The authoritative regional encounter resolver still chooses the species and level first. Variety does not change stats, moves, capture difficulty, map habitats or gym progression.
+
+Variety survives captures, relogging, PC transfers, trades and supported evolutions. Existing Shiny Pokémon are migrated without rerolling, healing or resetting their progress. Followers retain the existing regular icon sheets and gain a bounded, animated colour-coded sparkle effect visible to nearby players. Collection filters, full names, summaries, trade screens, battle portraits and owner-only Pokédex variety records use the same identity.
+
+Read **`Docs/POKEMON_VARIETIES.md`** for exact rates, upgrade steps and supported scope, **`Docs/POKEMON_VARIETIES_TEST_REPORT.md`** for executed checks, and **`Docs/POKEMON_VARIETY_ASSET_AUDIT.json`** for per-profile coverage.
+
+### Preserved 0.3.4 regional encounters and personal Cut
 
 This release replaces starter-area fallback spawns with explicit FireRed/Crystal location and floor tables, including Crystal morning/day/night pools and separate Surf selection. Every one of the 959 maps has an audited encounter decision; 248 contain pools, and places without a verified normal encounter table do not invent one.
 
@@ -18,7 +44,7 @@ The previous update corrected level-up learning across all 876 then-published Po
 
 **Cyndaquil learns Ember at level 12 in both supplied ROMs.** Its summary now shows the complete native level-up list and next move. Open a Pokémon from **P → Party & storage**, then use **Move Reminder** to recover eligible current-species moves. Replacing a move requires your confirmation. See `Docs/LEARNSET_GUIDE.md`, `Docs/LEARNSET_ROM_AUDIT.md` and `Docs/LEARNSET_TEST_REPORT.md`.
 
-**Download both full-source ZIPs, Part 1 and Part 2. Extract both into the same destination so their identically named project folders merge, then run `BUILD_ALL.bat`.** Both parts are required and together contain the entire updated source and all assets. No previous source pack, ROM, FFmpeg or separate audio renderer is needed.
+**Download all FOUR full-source ZIPs, Parts 1–4. Extract every part into the same destination so the identically named `Pokemon_NXT_MMO_v0.3.5-alpha_Source_PokemonVarieties` folders merge, then run `BUILD_ALL.bat`.** These are ordinary mergeable ZIPs, not byte-split volumes: do not concatenate them. All four parts are required and together contain the complete source and assets. No previous pack, original ROM, images.rar, Pillow, FFmpeg or audio renderer is needed for a normal build.
 
 ### Play the adventure
 

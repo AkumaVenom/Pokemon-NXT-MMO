@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'Server'))
 from nxt.combat import Battle
 from nxt.config import Settings
+from nxt.varieties import Varieties
 from nxt.content import Content
 from nxt.growth import Growth
 from nxt.security import RequestError
@@ -46,7 +47,7 @@ class NativeMoveRuntimeTests(unittest.TestCase):
         cls.base = Content(ROOT / 'Server/data/world.json')
 
     def setUp(self):
-        self.c = copy.copy(self.base)
+        self.c = copy.copy(self.base);self.c.varieties=Varieties(self.c)
         self.c.species = dict(self.base.species)
         self.c.growth = Growth(self.c)
         self.c.rng = random.Random(674)
@@ -314,7 +315,7 @@ class DurableLearnsetWorldTests(unittest.IsolatedAsyncioTestCase):
         settings = Settings.load(path)
         settings.config.set('database', 'backend', 'sqlite')
         self.settings = dataclasses.replace(settings, encounter_chance=0)
-        self.c = copy.copy(self.base)
+        self.c = copy.copy(self.base);self.c.varieties=Varieties(self.c)
         self.c.growth = Growth(self.c)
         self.c.rng = random.Random(574)
         self.db = Store(self.settings)
@@ -421,6 +422,9 @@ class DurableLearnsetWorldTests(unittest.IsolatedAsyncioTestCase):
         expected['creatures'][0]['moves'][0]['id'] = 1207
         expected['creatures'][0]['pendingLearn'][0]['move'] = 1234
         expected['creatures'][0]['moveNamespaceVersion'] = 1
+        # The additive variety migration also observes this fixture's replaced species.
+        expected['adventure']['varietyDex']['seen'][key] = ['normal']
+        expected['adventure']['varietyDex']['caught'][key] = ['normal']
         expected['revision'] += 1
         self.player, = await self.cold_restart(self.player)
         self.assertEqual(self.player.state, expected)

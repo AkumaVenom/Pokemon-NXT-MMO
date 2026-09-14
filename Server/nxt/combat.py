@@ -7,6 +7,7 @@ full original ROM battle-script compatibility. See Docs/ALPHA_SCOPE.md.
 from __future__ import annotations
 import copy,math,time,uuid
 from .security import RequestError,require,integer
+from .varieties import variety_key
 # Each entry: super-effective, resisted, immune. Gen III chart, Fairy extension.
 CHART={0:([],[5,8],[7]),1:([0,5,8,15,17],[2,3,6,14,18],[7]),2:([1,6,12],[5,8,13],[]),3:([12,18],[3,4,5,7],[8]),4:([3,5,8,10,13],[6,12],[2]),5:([2,6,10,15],[1,4,8],[]),6:([12,14,17],[1,2,3,7,8,10,18],[]),7:([7,14],[8,17],[0]),8:([5,15,18],[8,10,11,13],[]),10:([6,8,12,15],[5,10,11,16],[]),11:([4,5,10],[11,12,16],[]),12:([4,5,11],[2,3,6,8,10,12,16],[]),13:([2,11],[12,13,16],[4]),14:([1,3],[8,14],[17]),15:([2,4,12,16],[8,10,11,15],[]),16:([16],[8],[18]),17:([7,14],[1,8,17,18],[]),18:([1,16,17],[3,8,10],[])}
 STATUS_MOVES={14,28,39,43,45,46,73,74,77,78,79,81,86,92,97,100,105,106,108,110,111,116,135,150,156,182,208,235,236}
@@ -42,12 +43,16 @@ class Battle:
   Audio never draws RNG or influences battle state and cannot accept client cues.
   """
   event={'id':f'{self.id}:{self.audio_revision}:{len(self.audio_events)}','cue':cue,'source':self.audio_source,**data}
-  if side is not None:event['side']=side
+  if side is not None:
+   event['side']=side
+   mon=self.mon(1-side if cue.startswith('capture_') else side)
+   if event.get('species')==mon['species']:
+    event.update(uid=mon['uid'],variety=variety_key(mon),shiny=variety_key(mon)=='shiny')
   self.audio_events.append(event)
  def reset_audio(self):self.audio_revision+=1;self.audio_events=[]
  def sendout_audio(self,side):
   mon=self.mon(side);self.stages.pop(mon['uid'],None);self.seeded.discard(mon['uid']);self._record_participant();self.audio('sendout',side,species=mon['species'])
-  if mon.get('shiny'):self.audio('shiny',side,species=mon['species'])
+  if variety_key(mon)=='shiny':self.audio('shiny',side,species=mon['species'])
  def audio_view(self,side):
   events=[]
   for original in self.audio_events:
@@ -58,7 +63,7 @@ class Battle:
   return {'revision':self.audio_revision,'events':events}
  def result(self,side):return None if not self.ended else 'caught' if self.caught else 'won' if self.winner==side else 'lost' if self.winner is not None else 'escaped'
  def mon(self,side):return self.rosters[side][self.active[side]]
- def name(self,m):return self.c.species[m['species']]['name']
+ def name(self,m):return self.c.varieties.display_name(m)
  def tiers(self,m):return self.stages.setdefault(m['uid'],[0]*7)
  def usable(self,mon):
   usable=[]

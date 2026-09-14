@@ -1,6 +1,11 @@
 # Building Pokemon NXT MMO from source
 
-Gameplay baseline **0.1.0-alpha** · Build tooling **1.1.2** · MySQL setup **1.1.0** · 2026-09-13
+Gameplay **0.3.5-alpha** · Build tooling **1.3.4** · MySQL setup **1.1.0** · 2026-09-14
+
+The four complete source ZIPs merge into one project. Build tools 1.3.4 remove the
+variety tests' Windows symlink-privilege dependency without skipping validation.
+See `WINDOWS_BUILD_FIX_1.3.4.md`. Existing working configurations and databases
+must be preserved when deploying a new build.
 
 ## Required tools and responsibilities
 

@@ -10,10 +10,12 @@ try:
  from .verify_audio import verify as verify_audio
  from .publish_adventure import assemble as assemble_adventure
  from .publish_encounters import assemble as assemble_encounters
+ from .publish_varieties import assemble as assemble_varieties
 except ImportError:
  from verify_audio import verify as verify_audio
  from publish_adventure import assemble as assemble_adventure
  from publish_encounters import assemble as assemble_encounters
+ from publish_varieties import assemble as assemble_varieties
 ROOT=Path(__file__).resolve().parents[1]
 def write_json(path:Path,value):
  path.parent.mkdir(parents=True,exist_ok=True)
@@ -24,6 +26,7 @@ def write_json(path:Path,value):
 def publish(world:dict,root:Path=ROOT):
  assemble_adventure(world,root)
  assemble_encounters(world,root)
+ assemble_varieties(world,root)
  assets=root/'Client/app/assets'
  if world.get('format')!=1:raise ValueError('Unsupported world format')
  def asset(path):
@@ -60,7 +63,7 @@ def publish(world:dict,root:Path=ROOT):
  world['pack']=hashlib.sha256(json.dumps(world,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()[:24]
  write_json(root/'Server/data/world.json',world)
  for k,m in world['maps'].items():write_json(assets/'world/maps'/f'{k}.json',{a:v for a,v in m.items() if a not in ('encounters','encounterSource','sourceHeader','encounterZones','encounterTerrain','encounterRates','encounterBinding')})
- client={k:world[k] for k in ('version','pack','assetDigest','audio','species','moves','objects','homes','starters','items')}
+ client={k:world[k] for k in ('version','pack','assetDigest','audio','species','moves','objects','homes','starters','items','varietyPolicy')}
  fields=('id','name','region','width','height','mapType','spawn','bank','map','section','playable')
  client['maps']={k:{a:m[a] for a in fields} for k,m in world['maps'].items()}
  write_json(assets/'world/client.json',client)

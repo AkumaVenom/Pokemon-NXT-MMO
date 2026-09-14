@@ -1,5 +1,23 @@
 # Changelog
 
+## Build tools 1.3.4 · Windows variety-build portability correction · 2026-09-14
+
+- Correct the two `test_varieties` publisher fixtures that used directory symlinks and failed with WinError 1314 in an ordinary Windows account. Copy only the supplied variety-front subtree into each disposable fixture; do not require elevation, Developer Mode, hard links, junctions or a permissive filesystem.
+- Keep both idempotence/combat-data-preservation and unsafe-path/checksum-corruption checks enabled. Tighten negative assertions to the expected error, test the actual publisher with both link APIs denied, and verify source-asset isolation, temporary cleanup and missing-file rejection.
+- Align the BAT, Python driver, bootstrap manifest and download user-agent on build revision 1.3.4. Correct the stale BAT gameplay label to 0.3.5-alpha. Preserve dependency/toolchain pins, normal prerequisite discovery, staged builds and stop-on-failure behavior.
+- No gameplay version, content-pack, networking protocol, encounter/variety rate, sprite, audio, configuration, credential, database or saved-progress change. This is a source/build maintenance release of gameplay 0.3.5-alpha, not a new gameplay update.
+- Add a correction to the original variety validation report, refresh build instructions, and provide a small source repair plus four complete source ZIPs with regenerated manifests.
+
+## 0.3.5-alpha · Pokémon varieties and mirrored front sprites · Build tools 1.3.3 · 2026-09-14
+
+- Import 3,697 supplied Ancient/Metallic/Shiny/Mystic/Shadow front sprites with stable catalog bindings and exact source/output checksums; guarantee all five fronts for every Kanto/Johto species. Trim transparent padding and centre original visible pixels without resampling or recolouring. Preserve every original PNG and audio file.
+- Use horizontally flipped front sprites for every player-side battle Pokémon, including Normal; retain that orientation through attack/hit/faint/switch animations. Correct event-time identity handling for different varieties of the same species and owner-side capture events.
+- Roll a cosmetic variety only after the authoritative wild species/level selection: Normal 90%; Ancient/Metallic/Mystic 2.5% each; Shiny/Shadow 1.25% each. Do not alter encounter tables, stats, moves, catch difficulty or trainer/starter generation. Unsupported extra-form art tickets fall back to Normal without redistributing rarity.
+- Persist canonical identity through captures, PC transfers, supported evolutions, trade and relogging. Migrate legacy Shiny flags additively; keep save-before-success and rollback boundaries, ownership, Cut state and selected moves intact.
+- Display full variety names and fronts in collection, summaries, battle, evolution, move reminders and trade. Add collection filtering and private seen/caught variety records. Explain regular-front fallback for an inherited extra-form identity lacking supplied art.
+- Retain native regular follower icons and replicate their variety for five distinct bounded animated sparkle colours, with static reduced-motion markers and no particle accumulation or frame-by-frame network traffic.
+- Add server, UI, rendering, failure-injection and two-account browser regressions; preserve accepted regional encounter/Cut, battle timing, audio and account isolation behavior. Ship complete editable source and supplied assets in four mergeable ZIPs; keep ordinary builds independent of RAR/Pillow/ROM inputs.
+
 ## 0.3.4-alpha · Regional encounters and personal HM Cut · Build tools 1.3.3 · 2026-09-13
 
 - Replace invented starter-area fallback pools with exhaustive, stable-ID FireRed/Crystal bindings across all 959 maps; 248 maps contain ordinary pools. Preserve original ordered slot weights and levels, including Crystal day periods and Surf level probabilities.

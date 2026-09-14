@@ -7,6 +7,7 @@ import asyncio,collections,copy,hashlib,json,logging,math,time,uuid
 from dataclasses import dataclass,field
 from .security import Bucket,RequestError,require,integer
 from .combat import Battle
+from .varieties import variety_key
 from .adventure import Adventure
 from .field_moves import CUT_REQUIREMENTS,cut_allowed,is_cut_tree,region,tree_cleared
 from .encounters import encounter_slots,select_encounter
@@ -50,7 +51,7 @@ class Player:
   self.send('audio',id=key,events=[{'id':key+':0','cue':cue,'source':self.state['map'].split('_',1)[0],**data}])
  def entity(self):
   s=self.state;lead=next((m for m in s['creatures'] if m['uid']==s['party'][0]),None)
-  return {'id':self.id,'username':self.username,'map':s['map'],'x':s['x'],'y':s['y'],'direction':s.get('direction','down'),'appearance':s['appearance'],'follower':lead['species'] if lead else None,'shiny':bool(lead and lead['shiny']),'fx':self.fx,'fy':self.fy,'busy':bool(self.battle or self.trade),'surf':s.get('surf',False)}
+  return {'id':self.id,'username':self.username,'map':s['map'],'x':s['x'],'y':s['y'],'direction':s.get('direction','down'),'appearance':s['appearance'],'follower':lead['species'] if lead else None,'shiny':variety_key(lead)=='shiny','followerVariety':variety_key(lead),'fx':self.fx,'fy':self.fy,'busy':bool(self.battle or self.trade),'surf':s.get('surf',False)}
 class World:
  def __init__(self,content,store,settings):
   self.c=content;self.adventure=Adventure(content);self.db=store;self.s=settings;self.players={};self.invites={};self.trades={};self.battles={};self.lock=asyncio.Lock();self.chat={'general':collections.deque(maxlen=30),'trade':collections.deque(maxlen=30)};self.started=time.monotonic();self.ticks=0;self.last_tick_ms=0;self.max_tick_ms=0;self.extension_hooks=collections.defaultdict(list);self.stopping=False
@@ -63,7 +64,7 @@ class World:
   require(isinstance(home,str) and home in self.c.data['homes'],'Select Kanto or Johto.');require(isinstance(starter,str) and starter in self.c.data['starters'],'Select a valid starter.');require(type(appearance) is int and appearance in (0,7),'Invalid trainer appearance.')
   key=self.c.data['homes'][home];m=self.c.maps[key];mon=self.c.new_mon(starter,5,name)
   state={'format':1,'revision':1,'map':key,'x':m['spawn'][0],'y':m['spawn'][1],'direction':'down','home':home,'appearance':appearance,'money':self.s.int('gameplay','starting_money'),'items':{'pokeball':self.s.int('gameplay','starting_pokeballs'),'potion':self.s.int('gameplay','starting_potions')},'creatures':[mon],'party':[mon['uid']],'surf':False}
-  return self.adventure.migrate(state)
+  return self.c.varieties.migrate(self.adventure.migrate(state))
  def validate_state(self,state):
   require(state.get('format')==1,'This character requires a state migration.')
   mons=state.get('creatures',[]);ids={m['uid'] for m in mons};party=state.get('party',[])
@@ -74,6 +75,7 @@ class World:
   if not (0<=state['x']<m['width'] and 0<=state['y']<m['height']):state['x'],state['y']=m['spawn']
   migrated=self.adventure.migrate(state)
   if hasattr(self.c,'growth'):migrated=self.c.growth.migrate(migrated)
+  migrated=self.c.varieties.migrate(migrated)
   state.clear();state.update(migrated)
  async def join(self,uid,name,state,queue):
   async with self.lock:
@@ -97,7 +99,7 @@ class World:
   s=p.state;p.send('state',ownerId=p.id,money=s['money'],items=s['items'],party=s['party'],creatures=[self.c.public_mon(m) for m in s['creatures']],home=s['home'],revision=s['revision'],adventure=self.adventure.public(s))
  def party(self,p):return [next(m for m in p.state['creatures'] if m['uid']==uid) for uid in p.state['party']]
  async def commit(self,p,state):
-  self.adventure.observe(state,[m['species'] for m in state['creatures']],caught=True);self.adventure.refresh_unlocks(state)
+  self.adventure.observe(state,[m['species'] for m in state['creatures']],caught=True);self.c.varieties.observe(state,state['creatures'],caught=True);self.adventure.refresh_unlocks(state)
   state['revision']=p.state['revision']+1
   try:await asyncio.to_thread(self.db.save_many,[(p.id,state)])
   except Exception as e:log.exception('State commit failed for %s',p.username);raise RequestError('The database could not save this action. Nothing was changed; contact the administrator.') from e
@@ -188,7 +190,7 @@ class World:
    require(bool(slots),'No wild encounters here. Try the grass, a cave floor, or an eligible Surf area on this map.')
    key,level=select_encounter(slots,self.c.rng)
   else:key,level=forced # Internal test/extension hook only; never accepted from a client packet.
-  enemy=self.c.new_mon(key,level);state=copy.deepcopy(p.state);self.adventure.observe(state,[key]);await self.commit(p,state);b=Battle(self.c,'wild',[p.id,None],[p.username,'Wild '+self.c.species[key]['name']],[self.party(p),[enemy]],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0]);self.battles[b.id]=b;p.battle=b.id;p.last_encounter=time.monotonic();p.send('battle',battle=b.view(0))
+  enemy=self.c.new_mon(key,level,variety=self.c.varieties.roll(key));state=copy.deepcopy(p.state);self.adventure.observe(state,[key]);self.c.varieties.observe(state,[enemy]);await self.commit(p,state);b=Battle(self.c,'wild',[p.id,None],[p.username,'Wild '+self.c.varieties.display_name(enemy)],[self.party(p),[enemy]],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0]);self.battles[b.id]=b;p.battle=b.id;p.last_encounter=time.monotonic();p.send('battle',battle=b.view(0))
  async def battle_action(self,p,d):
   require(p.battle in self.battles,'You are not in a battle.');b=self.battles[p.battle];require(d.get('id')==b.id,'That battle has ended.');side=b.players.index(p.id)
   if d.get('action')=='capture':require(len(p.state['creatures'])<self.s.max_owned,'Your collection is full. Make room before capturing.')
@@ -221,7 +223,7 @@ class World:
       b.logs.append('First victory recorded. Your reward and badge progress were saved.' if first else 'Rematch complete. First-victory rewards and EXP are not awarded again.')
      elif not b.caught:state['money']=min(2_000_000_000,state['money']+(120 if b.kind=='trainer' else 25))
      b.rewarded=True
-    self.adventure.observe(state,[m['species'] for m in state['creatures']],caught=True)
+    self.adventure.observe(state,[m['species'] for m in state['creatures']],caught=True);self.c.varieties.observe(state,state['creatures'],caught=True)
     if b.ended and b.winner==1:
      for mon in state['creatures']:
       if mon['uid'] in state['party']:self.c.heal(mon)
@@ -316,7 +318,7 @@ class World:
    state['money']+=gain['money']-off['money'];require(state['money']<=2_000_000_000,'The recipient money balance would exceed the limit.')
    for item,n in off['items'].items():state['items'][item]=state['items'].get(item,0)-n
    for item,n in gain['items'].items():state['items'][item]=state['items'].get(item,0)+n;require(state['items'][item]<=999,'An item stack would exceed 999.')
-   self.adventure.observe(state,[m['species'] for m in state['creatures']],caught=True);state['revision']=p.state['revision']+1
+   self.adventure.observe(state,[m['species'] for m in state['creatures']],caught=True);self.c.varieties.observe(state,state['creatures'],caught=True);state['revision']=p.state['revision']+1
   allids=[m['uid'] for s in (sa,sb) for m in s['creatures']];require(len(allids)==len(set(allids)),'Duplicate ownership detected; exchange blocked.')
   try:await asyncio.to_thread(self.db.trade,t['id'],a.id,sa,b.id,sb,{'offers':t['offers'],'digest':self.trade_digest(t)})
   except Exception as e:log.exception('Trade rolled back %s',t['id']);self.cancel_trade(t,'The database rejected the exchange. Neither side was changed.');return
@@ -363,10 +365,10 @@ class World:
    if action=='battle':
     self.adventure.can_challenge(p.state,trainer);require(any(mon['hp']>0 for mon in self.party(p)),'Your party needs healing.');team=[]
     for member in trainer['team']:
-     enemy=self.c.new_mon(member['species'],member['level'],trainer['name']);iv=max(0,min(255,int(member.get('iv',0))))*31//255;enemy.update(ivs=[iv]*6,nature=0,shiny=False);self.c.heal(enemy);moves=[mid for mid in member.get('moves',[]) if str(mid) in self.c.moves]
+     enemy=self.c.new_mon(member['species'],member['level'],trainer['name'],variety='normal');iv=max(0,min(255,int(member.get('iv',0))))*31//255;enemy.update(ivs=[iv]*6,nature=0,shiny=False);self.c.heal(enemy);moves=[mid for mid in member.get('moves',[]) if str(mid) in self.c.moves]
      if moves:enemy['moves']=[{'id':mid,'pp':self.c.moves[str(mid)]['pp']} for mid in moves[:4]]
      team.append(enemy)
-    require(bool(team),'This trainer team is unavailable.');state=copy.deepcopy(p.state);self.adventure.observe(state,[mon['species'] for mon in team]);await self.commit(p,state)
+    require(bool(team),'This trainer team is unavailable.');state=copy.deepcopy(p.state);self.adventure.observe(state,[mon['species'] for mon in team]);self.c.varieties.observe(state,team);await self.commit(p,state)
     b=Battle(self.c,'trainer',[p.id,None],[p.username,trainer['name']],[self.party(p),team],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0]);b.adventure_trainer=trainer;self.battles[b.id]=b;p.battle=b.id;p.send('battle',battle=b.view(0));return
    require(action in (None,'talk'),'Choose a trainer interaction.');defeated=trainer['id'] in p.state['adventure']['trainers'];gym=self.adventure.gym(trainer);summary=', '.join(f'{self.c.species[t["species"]]["name"]} Lv. {t["level"]}' for t in trainer['team']);message=('Gym challenge. ' if gym else 'Trainer challenge. ')+summary+(' Rematch: no repeat EXP, money or badge rewards.' if defeated else 'Your first victory earns a permanent record and a reward.');p.send('dialog',title=trainer['name'],message=message,actions=['battle'],npc=nid);return
   require(action in (None,'talk'),'This character does not offer that service.')

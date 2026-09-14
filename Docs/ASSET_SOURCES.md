@@ -1,6 +1,14 @@
 # Extracted asset sources and audit
 
-These are the two exact ROM byte revisions used for the graphics, audio and v0.3.0 adventure extraction. The original extraction filenames below remain as provenance. The newly supplied FireRed `(8).gba` and Sigma `(5).gba` inputs have identical SHA-256 hashes. ROMs are not included in either release ZIP. The game loads the resulting PNG/JSON/audio data directly; no ROM is opened at runtime.
+The native baseline graphics, audio and v0.3.0 adventure extraction used the two exact ROM byte revisions below. Version 0.3.5 additionally imports the user-supplied variety fronts documented in the next section. The original extraction filenames below remain as provenance. The newly supplied FireRed `(8).gba` and Sigma `(5).gba` inputs have identical SHA-256 hashes. ROMs are not included in the release ZIPs. The game loads the resulting PNG/JSON/audio data directly; no ROM is opened at runtime.
+
+## Additional user-supplied variety fronts in 0.3.5
+
+The user supplied `images.rar` with Ancient, Metallic, Shiny, Mystic and Shadow artwork. Archive SHA-256: `a4889c97a40c57f9a1c6d75ccdfaf70a9c8f78c72729f393b1f0eb39a5d4c078`. This is input provenance, not a claim about the artwork's original author or distribution license.
+
+`Tools/import_variety_assets.py` matched **3,697** front assets to existing species keys, including **all 1,255** required variety fronts for National Dex 1–251. Source filenames are preserved in `Server/data/varieties.json` and `Docs/POKEMON_VARIETY_ASSET_AUDIT.json`, including explicit alias decisions and unprovided extra-form coverage. The importer reads actual image format rather than trusting filename extensions, converts to PNG, and changes **transparent padding only**: the original visible RGBA pixels are centred without scaling, cropping visible artwork or recolouring. Original file and output PNG SHA-256 values, crop boxes, dimensions and placement offsets are recorded. Supplied fronts already ship in `Client/app/assets/pokemon/varieties/`; ordinary republishing/building requires neither the RAR nor Pillow.
+
+All **11,110 native PNGs** and **2,366 native audio files** from accepted 0.3.4 are retained byte-for-byte. The current game asset PNG total is **14,807**. Regular follower icon sheets are unchanged. Battle presentation intentionally uses front sprites on both sides, mirroring the player's side; the preserved native back files are no longer a battle dependency. Later-generation/Sigma profiles without matching supplied fronts remain explicitly uncovered, not guessed or recoloured. Native Shiny art supplies 122 existing profile fallbacks.
 
 ## Kanto
 

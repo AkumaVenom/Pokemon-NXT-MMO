@@ -7,7 +7,7 @@ export class BattleFX {
  skip(snapshot){this.reset();this.battle=snapshot.id;this.key=String(snapshot.id)+':'+String(snapshot.audio?.revision??snapshot.turn);}
  matches(snapshot){return this.key===String(snapshot?.id)+':'+String(snapshot?.audio?.revision??snapshot?.turn);}
  later(fn,delay){const serial=this.serial;const t=this.setTimer(()=>{this.timers.delete(t);if(serial===this.serial){try{fn();}catch(error){this.fail(error);}}},delay);this.timers.add(t);}
- animate(node,frames,options){if(!node?.animate||this.reducedMotion())return;for(const old of this.animations)if(old.__battleNode===node){old.cancel();this.animations.delete(old);}const a=node.animate(frames,options);a.__battleNode=node;this.animations.add(a);a.onfinish=()=>{if(options.fill!=='forwards')this.animations.delete(a);};}
+ animate(node,frames,options){if(!node?.animate||this.reducedMotion())return;for(const old of this.animations)if(old.__battleNode===node){old.cancel();this.animations.delete(old);}const facing=typeof node.className==='string'&&/(?:^|\s)battle-sprite(?:\s|$)/.test(node.className)&&/(?:^|\s)you(?:\s|$)/.test(node.className);if(facing)frames=frames.map(frame=>({...frame,transform:(frame.transform||'')+' scaleX(-1)'}));const a=node.animate(frames,options);a.__battleNode=node;this.animations.add(a);a.onfinish=()=>{if(options.fill!=='forwards')this.animations.delete(a);};}
  popup(stage,side,lines,tone='normal'){
   if(!lines.length)return;const node=stage.ownerDocument.createElement('div');node.className='battle-float '+side+' '+tone;node.setAttribute('role','status');
   for(const [index,line] of lines.entries()){const text=stage.ownerDocument.createElement(index?'span':'strong');text.textContent=line;node.append(text);}stage.append(node);this.nodes.add(node);
@@ -16,7 +16,7 @@ export class BattleFX {
  }
  event(stage,event,moveName,showSpecies){
   const side=event.side==='you'?'you':'enemy',other=side==='you'?'enemy':'you';let image=stage.querySelector('.battle-sprite.'+side);
-  if(event.species&&['move','hit','sendout'].includes(event.cue))showSpecies?.(image,event,side);
+  if(event.species&&['move','hit','sendout','damage','faint','recover','protected','status','status_clear','stat_up','stat_down'].includes(event.cue))showSpecies?.(image,event,side);
   const text=[];let tone='normal';
   if(event.cue==='move'){
    this.popup(stage,side,[moveName(event.move)],'move-name');
@@ -41,7 +41,7 @@ export class BattleFX {
   const sameBattle=this.battle===snapshot.id,seen=sameBattle?new Set(this.seen):new Set();this.reset();this.onFailure=failed;this.seen=seen;this.battle=snapshot.id;this.key=key;
   const events=(snapshot.audio?.events||[]).filter((event,index)=>{if(!event)return false;const id=event.id!=null?String(snapshot.id)+':'+String(event.id):key+':'+index;if(this.seen.has(id))return false;this.seen.add(id);return true;});if(this.seen.size>512)this.seen=new Set([...this.seen].slice(-256));
   const timeline=planBattleEvents(events);if(!timeline.some(item=>!['battle_start','battle_end'].includes(item.event.cue)))return false;
-  for(const side of ['you','opponent']){const first=events.find(event=>event.side===side&&event.species&&['move','hit','sendout'].includes(event.cue));if(first)showSpecies?.(stage.querySelector('.battle-sprite.'+(side==='you'?'you':'enemy')),first,side==='you'?'you':'enemy');}this.busy=true;for(const item of timeline)this.later(()=>this.event(stage,item.event,moveName,showSpecies),item.at);
+  for(const side of ['you','opponent']){const first=events.find(event=>event.side===side&&event.species&&['move','hit','sendout','damage','faint','recover','protected','status','status_clear','stat_up','stat_down'].includes(event.cue));if(first)showSpecies?.(stage.querySelector('.battle-sprite.'+(side==='you'?'you':'enemy')),first,side==='you'?'you':'enemy');}this.busy=true;for(const item of timeline)this.later(()=>this.event(stage,item.event,moveName,showSpecies),item.at);
   const duration=Math.min(15000,Math.max(...timeline.map(item=>item.at+item.duration))+500);this.later(()=>{this.busy=false;for(const a of this.animations)a.cancel();this.animations.clear();for(const node of this.nodes)node.remove();this.nodes.clear();done();},duration);return true;
  }
 }

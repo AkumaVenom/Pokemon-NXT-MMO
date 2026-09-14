@@ -116,7 +116,7 @@ class AudioEventTests(unittest.IsolatedAsyncioTestCase):
   await self.w.dispatch(self.a,{'op':'party','party':list(self.a.state['party'])});self.assertFalse(self.field_events(self.drain(self.a)))
 
  async def test_battle_initial_source_and_cry_species_are_independent(self):
-  self.w.relocate(self.a,'johto_3_0');self.drain(self.a);self.a.state['creatures'][0]['shiny']=True
+  self.w.relocate(self.a,'johto_3_0');self.drain(self.a);self.a.state['creatures'][0].update(variety='shiny',shiny=True)
   b=await self.wild();packet=next(p['battle'] for p in self.drain(self.a) if p['type']=='battle');events=packet['audio']['events']
   self.assertEqual(packet['source'],'johto');self.assertEqual(self.cues(events),['battle_start','sendout','sendout','shiny'])
   self.assertEqual([e['side'] for e in events if e['cue']=='sendout'],['opponent','you'])

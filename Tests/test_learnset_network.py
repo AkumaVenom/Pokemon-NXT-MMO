@@ -23,6 +23,7 @@ sys.path.insert(0, str(ROOT / 'Server'))
 sys.path.insert(0, str(ROOT / 'Tests'))
 from test_replication_network import Peer, PASSWORD, ORIGIN
 from nxt.config import Settings
+from nxt.varieties import Varieties
 from nxt.content import Content
 from nxt.growth import Growth
 from nxt.store import Store
@@ -42,7 +43,7 @@ class LearnsetNetworkTests(unittest.IsolatedAsyncioTestCase):
         settings.config.set('database', 'backend', 'sqlite')
         settings.config.set('security', 'auth_attempts_per_minute', '100')
         self.settings = dataclasses.replace(settings, encounter_chance=0)
-        self.content = copy.copy(self.base_content)
+        self.content = copy.copy(self.base_content);self.content.varieties=Varieties(self.content)
         self.content.rng = random.Random(311)
         self.content.growth = Growth(self.content)
         self.db = Store(self.settings)

@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'Server'))
+from nxt.varieties import Varieties
 from nxt.content import Content
 from nxt.config import Settings
 from nxt.store import Store
@@ -19,7 +20,7 @@ class AdventureTests(unittest.IsolatedAsyncioTestCase):
  def setUpClass(cls):cls.base=Content(ROOT/'Server/data/world.json')
  async def asyncSetUp(self):
   self.temp=tempfile.TemporaryDirectory();config=Path(self.temp.name)/'config.ini';config.write_text((ROOT/'Build/config_templates/Server/config.ini').read_text());settings=Settings.load(config);settings.config.set('database','backend','sqlite');self.s=dataclasses.replace(settings,encounter_chance=0)
-  self.c=copy.copy(self.base);self.c.data=copy.deepcopy(self.base.data);self.c.maps=self.c.data['maps'];self.c.data['adventure']=json.loads((ROOT/'Server/data/adventure.json').read_text());self.map=self.c.data['homes']['Kanto'];m=self.c.maps[self.map];x,y=m['spawn'];self.x=x;self.y=y
+  self.c=copy.copy(self.base);self.c.varieties=Varieties(self.c);self.c.data=copy.deepcopy(self.base.data);self.c.maps=self.c.data['maps'];self.c.data['adventure']=json.loads((ROOT/'Server/data/adventure.json').read_text());self.map=self.c.data['homes']['Kanto'];m=self.c.maps[self.map];x,y=m['spawn'];self.x=x;self.y=y
   m['objects']=[{'id':220,'x':x,'y':y-1,'graphics':64,'trainerType':0}]+[{'id':n,'x':x,'y':y-1,'graphics':19,'trainerType':1} for n in range(230,246)]
   self.c.data['centers']={self.map:{'nurseNpcIds':[220],'pcNpcIds':[],'nursePcAccess':True,'respawn':[x,y]}}
   trainers={};gyms=[]

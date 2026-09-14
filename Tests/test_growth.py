@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy,json,sys,tempfile,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'Server'))
+from nxt.varieties import Varieties
 from nxt.content import Content
 from nxt.growth import Growth
 from nxt.security import RequestError
@@ -13,7 +14,7 @@ class GrowthTests(unittest.TestCase):
  @classmethod
  def setUpClass(cls):cls.base=Content(ROOT/'Server/data/world.json')
  def setUp(self):
-  self.c=copy.copy(self.base);self.c.data=dict(self.base.data);self.c.species=dict(self.base.species);self.c.items=copy.deepcopy(self.base.items);self.c.growth=Growth(self.c)
+  self.c=copy.copy(self.base);self.c.varieties=Varieties(self.c);self.c.data=dict(self.base.data);self.c.species=dict(self.base.species);self.c.items=copy.deepcopy(self.base.items);self.c.growth=Growth(self.c)
   self.c.data['adventureRom']={'evolutions':{
    'fr_1':[{'method':'level','level':16,'target':'fr_2'}],
    'fr_2':[{'method':'level','level':32,'target':'fr_3'}],
