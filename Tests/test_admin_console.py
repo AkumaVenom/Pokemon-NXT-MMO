@@ -29,7 +29,7 @@ from nxt.admin_registry import COMMANDS, BY_NAME, ALIASES, canonical
 from nxt.config import Settings
 from nxt.content import Content, NATURES
 from nxt.security import RequestError, password_hash, password_verify
-from nxt.store import Store
+from nxt.store import Store, SCHEMA
 from nxt.varieties import VARIETIES
 from nxt.world import World
 
@@ -81,7 +81,7 @@ class ConsoleParsingTests(unittest.TestCase):
         from server import failure_summary
         from nxt.store import WorldSchemaUpgradeBusy
         text=failure_summary(WorldSchemaUpgradeBusy(),'opening database')
-        self.assertIn('Stop the previous world',text);self.assertIn('no schema-2 upgrade',text)
+        self.assertIn('Stop the previous world',text);self.assertIn(f'no schema-{SCHEMA} upgrade',text)
     def test_local_audit_rotation_and_bounded_tail(self):
         with tempfile.TemporaryDirectory() as d:
             path=Path(d)/'audit.jsonl';audit=AuditFile(path)
@@ -622,7 +622,30 @@ class LocalConsoleTests(unittest.IsolatedAsyncioTestCase):
         fresh=Store(self.s)
         try:
             fresh.acquire_lease();self.assertEqual(fresh.load(self.aid),before)
-            with fresh.transaction() as cur:cur.execute('SELECT version FROM nxt_schema');self.assertEqual(cur.fetchone()[0],2)
+            with fresh.transaction() as cur:cur.execute('SELECT version FROM nxt_schema');self.assertEqual(cur.fetchone()[0],SCHEMA)
+        finally:fresh.close()
+
+    async def test_schema_three_upgrade_refuses_live_schema_two_world_lease(self):
+        import sqlite3
+        from nxt.store import WorldSchemaUpgradeBusy
+        await self.w.leave(self.a);await self.w.leave(self.b);before=self.db.load(self.aid);self.db.close()
+        path=self.s.path('database','sqlite_path')
+        with closing(sqlite3.connect(path)) as conn, conn:
+            for table in ('ai_rivals','ai_activity','competitive_profiles','ai_trainers'):conn.execute('DROP TABLE '+table)
+            conn.execute('UPDATE nxt_schema SET version=2 WHERE id=1')
+            conn.execute('INSERT INTO world_leases VALUES(1,?,?)',('schema-two-world',int(time.time())))
+        with self.assertRaises(WorldSchemaUpgradeBusy):Store(self.s)
+        with closing(sqlite3.connect(path)) as conn, conn:
+            self.assertEqual(conn.execute('SELECT version FROM nxt_schema').fetchone()[0],2)
+            self.assertIsNone(conn.execute("SELECT name FROM sqlite_master WHERE name='ai_trainers'").fetchone())
+            self.assertEqual(json.loads(conn.execute('SELECT state_json FROM characters WHERE account_id=?',(self.aid,)).fetchone()[0]),before)
+            conn.execute('UPDATE world_leases SET heartbeat=? WHERE id=1',(int(time.time())-61,))
+        fresh=Store(self.s)
+        try:
+            fresh.acquire_lease();self.assertEqual(fresh.load(self.aid),before)
+            with fresh.transaction() as cur:
+                cur.execute('SELECT version FROM nxt_schema');self.assertEqual(cur.fetchone()[0],SCHEMA)
+                cur.execute("SELECT name FROM sqlite_master WHERE name='ai_trainers'");self.assertIsNotNone(cur.fetchone())
         finally:fresh.close()
 
 if __name__=='__main__':unittest.main()

@@ -11,6 +11,7 @@ from .varieties import variety_key
 from .adventure import Adventure
 from .field_moves import CUT_REQUIREMENTS,cut_allowed,is_cut_tree,region,tree_cleared
 from .encounters import encounter_slots,select_encounter
+from .ai_trainers import AutonomousTrainers
 from .portals import plan_warp,return_stack
 from .async_tasks import complete_before_cancelling
 log=logging.getLogger('nxt.world')
@@ -57,7 +58,7 @@ class Player:
   return {'id':self.id,'username':self.username,'map':s['map'],'x':s['x'],'y':s['y'],'direction':s.get('direction','down'),'appearance':s['appearance'],'follower':lead['species'] if lead else None,'shiny':variety_key(lead)=='shiny','followerVariety':variety_key(lead),'fx':self.fx,'fy':self.fy,'busy':bool(self.battle or self.trade),'surf':s.get('surf',False)}
 class World:
  def __init__(self,content,store,settings):
-  self.c=content;self.adventure=Adventure(content);self.db=store;self.s=settings;self.players={};self.invites={};self.trades={};self.battles={};self.lock=asyncio.Lock();self.chat={'general':collections.deque(maxlen=30),'trade':collections.deque(maxlen=30)};self.started=time.monotonic();self.ticks=0;self.last_tick_ms=0;self.max_tick_ms=0;self.extension_hooks=collections.defaultdict(list);self.stopping=False
+  self.c=content;self.adventure=Adventure(content);self.db=store;self.s=settings;self.players={};self.invites={};self.trades={};self.battles={};self.lock=asyncio.Lock();self.chat={'general':collections.deque(maxlen=30),'trade':collections.deque(maxlen=30)};self.started=time.monotonic();self.ticks=0;self.last_tick_ms=0;self.max_tick_ms=0;self.extension_hooks=collections.defaultdict(list);self.stopping=False;self.autonomous=AutonomousTrainers(self)
  def hook(self,event,callback):self.extension_hooks[event].append(callback)
  def emit(self,event,**context):
   for cb in self.extension_hooks.get(event,[]):
@@ -250,7 +251,9 @@ class World:
    except Exception:
     log.exception('Battle transaction failed; aborting without applying this turn')
     b.ended=True;b.winner=None;b.caught=None;b.logs=['Database save failed. This turn was not applied. The battle has been safely closed.'];newstates={};audio_committed=False;b.reset_audio();b.audio('abort',reason='save_failed')
-  if b.ended and audio_committed:b.audio('battle_end')
+  if b.ended and audio_committed:
+   if getattr(b,'ai_trainer_id',None):await self.autonomous.finish_human_battle(b)
+   b.audio('battle_end')
   for side,pid in enumerate(b.players):
    p=self.players.get(pid)
    if not p:continue
@@ -404,6 +407,8 @@ class World:
     msg={'username':p.username,'playerId':p.id,'text':message.strip(),'time':int(time.time())};self.chat[channel].append(msg)
     for q in self.players.values():q.send('chat',channel=channel,**msg)
    elif op=='invite':await self.invite(p,d)
+   elif op=='ai.dashboard':await self.autonomous.dashboard(p)
+   elif op=='ai.challenge':await self.autonomous.challenge(p,d.get('id'))
    elif op=='invite.answer':await self.answer_invite(p,d)
    elif op=='trade':await self.trade_action(p,d)
    elif op=='battle':await self.battle_action(p,d)
@@ -446,6 +451,10 @@ class World:
    if p.trade in self.trades:self.cancel_trade(self.trades[p.trade],'A trainer disconnected. The uncommitted exchange was cancelled.')
    if p.battle in self.battles:
     b=self.battles.pop(p.battle)
+    # A player disconnecting from an autonomous ranked challenge must release
+    # that bot immediately so it can resume field life instead of waiting for
+    # the engagement safety timeout.
+    self.autonomous.release_engagement(getattr(b,'ai_trainer_id',None))
     for side,pid in enumerate(b.players):
      other=self.players.get(pid)
      if other and other.id!=p.id:b.ended=True;b.winner=side;b.logs=['The other trainer disconnected. The duel is over.'];b.reset_audio();b.audio('battle_end',reason='peer_disconnected');other.battle=None;other.send('battle',battle=b.view(side))
@@ -460,6 +469,14 @@ class World:
    self.players.pop(p.id,None);p.closed=True;self.emit('logout',player=p);log.info('Left %s; online=%d',p.username,len(self.players))
  async def tick(self):
   begin=time.monotonic()
+  # Autonomous simulation is database-authoritative but intentionally runs outside
+  # the gameplay actor lock so a catch-up batch can never stall player movement.
+  await self.autonomous.maybe_tick();await self.autonomous.refresh_snapshot()
+  # High-frequency bot walking is materialized only on maps with human observers.
+  # It remains outside the gameplay actor lock so autonomous pathing/database work
+  # cannot stall human movement, chat, battles or trades.
+  active_maps={p.state['map'] for p in self.players.values() if not p.closed}
+  await self.autonomous.field_tick(active_maps)
   async with self.lock:
    now=time.monotonic()
    for key,v in list(self.invites.items()):
@@ -484,12 +501,18 @@ class World:
        if q.closed or not self.nearby(p,q,r):continue
        e=q.entity();signature=tuple(e.values());seen[q.id]=signature
        if p.seen.get(q.id)!=signature:changed.append(e)
+    for e in self.autonomous.visible(p,r):
+     signature=tuple(e.values());seen[e['id']]=signature
+     if p.seen.get(e['id'])!=signature:changed.append(e)
     gone=[i for i in p.seen if i not in seen]
     if changed or gone or self.ticks%self.s.tick_hz==0:p.send('scene',map=s['map'],players=changed,gone=gone,online=len(self.players))
     p.seen=seen
    self.ticks+=1
   self.last_tick_ms=(time.monotonic()-begin)*1000;self.max_tick_ms=max(self.max_tick_ms,self.last_tick_ms)
  async def save_all(self):
+  # Persist autonomous field positions/party development before the periodic or
+  # shutdown human save. This makes visible bot movement survive every session.
+  await self.autonomous.flush_world()
   async with self.lock:
    sessions={p.id:p for p in self.players.values() if p.state['revision']>p.saved_revision}
    records=[(uid,copy.deepcopy(p.state)) for uid,p in sessions.items()]

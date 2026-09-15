@@ -56,6 +56,10 @@ export class WorldRenderer {
    const moving=d.kind==='player'&&d.e.moving&&now-d.e.at<175;const direction=d.kind==='player'?d.e.direction:'down';let frame=direction==='up'?1:direction==='left'||direction==='right'?2:0;if(moving)frame=(direction==='up'?5:direction==='left'||direction==='right'?7:3)+(Math.floor(now/120)%2);frame=Math.min(frame,spec.frames-1);
    const sw=spec.width*s,sh=spec.height*s,x=Math.round(cx-sw/2),y=Math.round(feet-sh);ctx.fillStyle='#11261f45';ctx.beginPath();ctx.ellipse(cx,feet-2*s,6*s,2*s,0,0,Math.PI*2);ctx.fill();
    ctx.save();if(direction==='right'){ctx.translate(Math.round(cx),0);ctx.scale(-1,1);ctx.drawImage(img,frame*spec.width,0,spec.width,spec.height,-Math.round(sw/2),y,sw,sh);}else ctx.drawImage(img,frame*spec.width,0,spec.width,spec.height,x,y,sw,sh);ctx.restore();
+   // Autonomous trainers visibly pause for their server-resolved wild battles.
+   // The small GBA-style alert bubble uses canvas primitives only, so no new
+   // artwork or scaled UI assets are introduced into the pixel world.
+   if(d.kind==='player'&&d.e.autonomous&&d.e.fieldAction==='wild_battle'){const bs=Math.max(12,5*s),bx=Math.round(cx+sw*.28),by=Math.round(y-bs*.65);ctx.save();ctx.fillStyle='#fff7c7';ctx.strokeStyle='#24372c';ctx.lineWidth=Math.max(2,s);ctx.beginPath();ctx.roundRect(bx-bs/2,by-bs/2,bs,bs,Math.max(2,s));ctx.fill();ctx.stroke();ctx.fillStyle='#263126';ctx.font='bold '+Math.max(10,4*s)+'px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('!',bx,by+1);ctx.restore();}
    this.hits.push({kind:d.kind,id:d.kind==='npc'?d.n.id:d.e.id,map:this.map.id,x,y,w:sw,h:sh});
    if(d.kind==='npc'&&d.n.trainerType){ctx.font='bold '+Math.max(12,s*5)+'px Segoe UI';ctx.textAlign='center';ctx.fillStyle='#fff2b0';ctx.strokeStyle='#263126';ctx.lineWidth=3;ctx.strokeText('!',cx,y-3);ctx.fillText('!',cx,y-3);}
   }

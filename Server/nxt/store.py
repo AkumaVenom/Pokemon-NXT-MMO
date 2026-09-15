@@ -9,7 +9,8 @@ import json,sqlite3,threading,time,uuid
 from contextlib import contextmanager,suppress
 from .security import RequestError
 from .admin_store import AdminStoreMixin
-SCHEMA=2
+from .ai_store import AIStoreMixin
+SCHEMA=3
 LEASE_SECONDS=60
 
 class WorldLeaseBusy(RuntimeError):
@@ -22,9 +23,9 @@ class WorldLeaseBusy(RuntimeError):
 class WorldSchemaUpgradeBusy(RuntimeError):
  """Safe operator guidance; never serialize a driver/configuration payload."""
  def __init__(self):
-  super().__init__('Stop the previous world before upgrading the database schema. A recent world lease is still present; no schema-2 upgrade was applied. After an unclean stop, allow the stale lease to expire, then retry. Keep the pre-upgrade database backup.')
+  super().__init__(f'Stop the previous world before upgrading the database schema. A recent world lease is still present; no schema-{SCHEMA} upgrade was applied. After an unclean stop, allow the stale lease to expire, then retry. Keep the pre-upgrade database backup.')
 
-class Store(AdminStoreMixin):
+class Store(AdminStoreMixin,AIStoreMixin):
  def __init__(self,settings):
   self.s=settings;self.mysql=settings.get('database','backend')=='mysql';self.lock=threading.RLock();self.db=None;self.closed=False
   self.lease_id=str(uuid.uuid4());self.lease_active=False
@@ -73,6 +74,7 @@ class Store(AdminStoreMixin):
     c.execute('SELECT heartbeat FROM world_leases WHERE id=1'+(' FOR UPDATE' if self.mysql else ''));lease=c.fetchone()
     if lease and int(time.time())-lease[0]<LEASE_SECONDS:raise WorldSchemaUpgradeBusy()
    self.migrate_admin(c,suffix,large)
+   self.migrate_ai(c,suffix,large,identity)
    if not row:c.execute(self.sql('INSERT INTO nxt_schema(id,version) VALUES(1,%s)'),(SCHEMA,))
    elif row[0]<SCHEMA:c.execute(self.sql('UPDATE nxt_schema SET version=%s WHERE id=1'),(SCHEMA,))
  def acquire_lease(self):

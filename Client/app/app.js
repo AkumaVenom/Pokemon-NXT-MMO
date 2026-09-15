@@ -3,6 +3,7 @@ import {VARIETY_KEYS,frontSprite,varietyKey,varietyDefinition,pokemonName,eventP
 import {WorldRenderer} from './renderer.js';
 import {GameAudio} from './audio.js';
 import {mountAudioControls} from './audio_controls.js';
+let aiDashboard=null,aiDashboardView='activity';
 const audio=new GameAudio();
 let audioControls=null,audioSavePending=null,audioSaving=false;
 const $=id=>document.getElementById(id);
@@ -76,6 +77,7 @@ function handle(p){
   case 'battle':{const b=p.battle;if(activeBattle?.id===b.id&&Number(b.audio?.revision)<Number(activeBattle.audio?.revision))break;const same=battleFX?.matches(b);if(b.waiting||b.ended||!same){battleSubmitting=false;clearTimeout(battleSubmitTimer);}audio.setBattle(b);activeBattle=b;if($('modal').open)closeModal(true);if(!(same&&battleFX?.busy))renderBattle();break;}
   case 'trade':trade=p.trade;renderTrade();break;
   case 'trade_done':if(trade?.id===p.id){trade=null;if(modalKind==='trade')closeModal(true);}toast(p.message,p.success?'info':'warn');break;
+  case 'ai.dashboard':aiDashboard=p.dashboard;renderAIDashboard();break;
  }
 }
 async function loadMap(p){const serial=++mapSerial;keys.clear();pendingMove=0;if(['npc','collection','pokemon','reminder','atlas'].includes(modalKind))closeModal(true);if(state?.adventure)state.adventure.pcAvailable=false;$('map-loading').classList.remove('hidden');$('map-name').textContent=p.name;$('map-region').textContent=p.region;$('map-source').textContent=p.region+' · Adventure';own=p.entity;audio.setMap(p.id,!!p.entity.surf);
@@ -89,6 +91,45 @@ function updateParty(){if(!state)return;updateAdventureAccess();$('money').textC
  for(let i=0;i<6;i++){const uid=state.party[i],mon=state.creatures.find(m=>m.uid===uid);if(!mon){list.append(h('div',{class:'party-empty'},'Empty party slot'));continue;}
   const ratio=Math.max(0,Math.min(100,100*(mon.exp-mon.levelExp)/Math.max(1,mon.nextExp-mon.levelExp)));const xp=h('div',{class:'xp-fill'});xp.style.width=ratio+'%';
   const card=h('div',{class:'party-card'+(i===0?' lead':''),title:'Click to inspect '+monName(mon),role:'button',tabindex:0,onClick:()=>showPokemon(mon),onKeydown:e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();showPokemon(mon);}}},h('img',{class:'party-icon',src:sprite(mon),alt:monName(mon)}),h('div',{class:'party-info'},h('div',{class:'party-name'},h('strong',{},monName(mon)),h('span',{},'Lv. '+mon.level)),h('div',{class:'party-meta'},h('span',{class:i===0?'lead-label':''},i===0?'FOLLOWING':mon.status||'READY'),h('span',{},mon.hp+' / '+mon.maxHp+' HP')),hpBar(mon),h('div',{class:'xp-track'},xp),(mon.pendingLearn?.length||(mon.evolutions||[]).some(e=>!e.deferred))?h('span',{class:'growth-tag'},'Growth choices ready'):null));list.append(card);
+ }
+}
+function requestAIDashboard(view='activity'){
+ if(!canOpen())return;
+ aiDashboardView=view;send('ai.dashboard');
+ const body=openModal(view==='ladder'?'Ranking ladder':view==='rivals'?'Rivals hub':'AI activity','ai','min(62rem,94vw)');
+ body.append(h('p',{class:'modal-description'},'Loading the persistent autonomous trainer network…'));
+}
+function aiChallengeButton(bot){return button('Battle',()=>{if(send('ai.challenge',{id:bot.id}))closeModal(true);},'primary small');}
+function renderAIDashboard(){
+ if(!aiDashboard||modalKind!=='ai')return;
+ const d=aiDashboard,body=$('modal-body');body.replaceChildren();
+ $('modal-title').textContent=aiDashboardView==='ladder'?'Ranking ladder':aiDashboardView==='rivals'?'Rivals hub':'AI activity';
+ body.append(h('div',{class:'ai-kpis'},
+  h('div',{},h('span',{},'AUTONOMOUS TRAINERS'),h('strong',{},String(d.population))),
+  h('div',{},h('span',{},'YOUR RATING'),h('strong',{},d.human.rating+' · '+d.human.tier)),
+  h('div',{},h('span',{},'YOUR LADDER RANK'),h('strong',{},'#'+d.human.rank)),
+  h('div',{},h('span',{},'TOP AI RATING'),h('strong',{},String(d.topRating)))));
+ const tabs=h('div',{class:'segmented ai-tabs'},
+  button('Activity',()=>{aiDashboardView='activity';renderAIDashboard();},aiDashboardView==='activity'?'selected':''),
+  button('Ladder',()=>{aiDashboardView='ladder';renderAIDashboard();},aiDashboardView==='ladder'?'selected':''),
+  button('Rivals',()=>{aiDashboardView='rivals';renderAIDashboard();},aiDashboardView==='rivals'?'selected':''));
+ body.append(tabs);const list=h('div',{class:'ai-list'});body.append(list);
+ if(aiDashboardView==='activity'){
+  for(const a of d.activity)list.append(h('article',{class:'ai-row'},
+   h('div',{},h('strong',{},a.actor),h('p',{},a.summary),h('small',{},new Date(a.time*1000).toLocaleString())),
+   h('span',{class:'rating-delta '+(a.after>=a.before?'up':'down')},(a.after>=a.before?'+':'')+(a.after-a.before))));
+  if(!d.activity.length)list.append(h('p',{class:'empty-state'},'Autonomous activity will appear as the population begins operating.'));
+ }else if(aiDashboardView==='ladder'){
+  let rank=1;
+  for(const b of d.ladder)list.append(h('article',{class:'ai-row ladder-row'},
+   h('span',{class:'rank-number'},'#'+rank++),
+   h('div',{},h('strong',{},b.username),h('small',{},b.autonomous?b.tier+' · '+b.wins+'W / '+b.losses+'L · '+b.collection+' Pokémon':b.tier+' · '+b.wins+'W / '+b.losses+'L · HUMAN TRAINER')),
+   h('strong',{class:'rating-number'},String(b.rating)),b.autonomous?aiChallengeButton(b):h('span',{class:'ai-human-pill'},'HUMAN')));
+ }else{
+  for(const b of d.rivals)list.append(h('article',{class:'ai-row ladder-row'},
+   h('div',{},h('strong',{},b.username),h('small',{},b.tier+' · '+b.rating+' rating · rivalry '+b.rivalry),h('p',{},b.battles+' battles · You '+b.humanWins+'–'+b.aiWins+' '+b.username)),
+   aiChallengeButton(b)));
+  if(!d.rivals.length)list.append(h('p',{class:'empty-state'},'Battle autonomous trainers to build persistent rivalries.'));
  }
 }
 function renderChat(){const box=$('chat-messages');const nearBottom=box.scrollTop+box.clientHeight>=box.scrollHeight-40;box.replaceChildren();const messages=chats[channel]||[];if(!messages.length)box.append(h('p',{class:'chat-line system'},channel==='general'?'Welcome to General. This channel reaches trainers throughout the world.':'Trade chat is global. Arrange a meeting, then click the trainer to open a secure exchange.'));
@@ -276,7 +317,7 @@ function showNpcDialog(p){
  actions.append(button('Close',()=>closeModal(true),'quiet'));body.append(actions);
 }
 function interact(){if(!renderer.map||!own||renderer.pendingMap||renderer.map.id!==own.map)return;const near=renderer.map.objects.filter(n=>renderer.objectVisible(n)&&Math.max(Math.abs(n.x-own.x),Math.abs(n.y-own.y))<=2).sort((a,b)=>(Math.abs(a.x-own.x)+Math.abs(a.y-own.y))-(Math.abs(b.x-own.x)+Math.abs(b.y-own.y)));if(near.length)send('npc',{npc:near[0].id,map:own.map});else toast('Move closer to a character, then press E.');}
-function picked(hit,x,y){if(!session||$('modal').open||$('battle-dialog').open)return;if(hit.kind==='npc'){if(renderer.pendingMap||renderer.map?.id!==own?.map||hit.map!==own.map||!renderer.objectVisible(renderer.map.objects.find(n=>n.id===hit.id)))return;send('npc',{npc:hit.id,map:own.map});return;}const player=renderer.players.get(hit.id);if(!player||hit.id===session.id)return;const menu=$('context-menu');menu.replaceChildren(h('div',{class:'menu-title'},player.username));menu.append(button('Challenge to a duel',()=>{send('invite',{kind:'challenge',target:player.id});menu.classList.add('hidden');}),button('Trade Pokemon & items',()=>{send('invite',{kind:'trade',target:player.id});menu.classList.add('hidden');}),button('View first partner',()=>{menu.classList.add('hidden');const sp=content.species[player.follower];const body=openModal(player.username+'’s first partner','inspect');if(sp){const partner=followerPokemon(player);body.append(h('article',{class:'collection-card'},h('img',{src:sprite(partner),alt:monName(partner)}),h('strong',{},monName(partner)),varietyBadge(partner),h('span',{},'Follower of '+player.username),h('p',{class:'mini-note'},varietyKey(partner)==='normal'?'Regular field sprite.':'Normal field sprite with '+varietyDefinition(content,partner).label.toLowerCase()+'-coloured sparkles.')));}}),button(mutedNames.has(player.username)?'Unmute chat locally':'Mute chat locally',()=>{if(mutedNames.has(player.username))mutedNames.delete(player.username);else mutedNames.add(player.username);renderChat();menu.classList.add('hidden');},'quiet'));menu.classList.remove('hidden');menu.style.left=Math.min(x,innerWidth-menu.offsetWidth-12)+'px';menu.style.top=Math.min(y,innerHeight-menu.offsetHeight-12)+'px';}
+function picked(hit,x,y){if(!session||$('modal').open||$('battle-dialog').open)return;if(hit.kind==='npc'){if(renderer.pendingMap||renderer.map?.id!==own?.map||hit.map!==own.map||!renderer.objectVisible(renderer.map.objects.find(n=>n.id===hit.id)))return;send('npc',{npc:hit.id,map:own.map});return;}const player=renderer.players.get(hit.id);if(!player||hit.id===session.id)return;const menu=$('context-menu');menu.replaceChildren(h('div',{class:'menu-title'},player.username));if(player.autonomous){menu.append(h('div',{class:'menu-meta'},(player.tier||'Ranked')+' · '+(player.rating||1000)+' rating'),button('Battle autonomous trainer',()=>{send('ai.challenge',{id:player.aiId});menu.classList.add('hidden');},'primary'));}else menu.append(button('Challenge to a duel',()=>{send('invite',{kind:'challenge',target:player.id});menu.classList.add('hidden');}),button('Trade Pokemon & items',()=>{send('invite',{kind:'trade',target:player.id});menu.classList.add('hidden');}));menu.append(button('View first partner',()=>{menu.classList.add('hidden');const sp=content.species[player.follower];const body=openModal(player.username+'’s first partner','inspect');if(sp){const partner=followerPokemon(player);body.append(h('article',{class:'collection-card'},h('img',{src:sprite(partner),alt:monName(partner)}),h('strong',{},monName(partner)),varietyBadge(partner),h('span',{},'Follower of '+player.username),h('p',{class:'mini-note'},varietyKey(partner)==='normal'?'Regular field sprite.':'Normal field sprite with '+varietyDefinition(content,partner).label.toLowerCase()+'-coloured sparkles.')));}}),button(mutedNames.has(player.username)?'Unmute chat locally':'Mute chat locally',()=>{if(mutedNames.has(player.username))mutedNames.delete(player.username);else mutedNames.add(player.username);renderChat();menu.classList.add('hidden');},'quiet'));menu.classList.remove('hidden');menu.style.left=Math.min(x,innerWidth-menu.offsetWidth-12)+'px';menu.style.top=Math.min(y,innerHeight-menu.offsetHeight-12)+'px';}
 function showInvite(p){if(trade||$('battle-dialog').open){send('invite.answer',{id:p.id,accept:false});return;}invite=p;const body=openModal(p.kind==='trade'?'Trade invitation':'Trainer challenge','invite');body.append(h('p',{class:'modal-description'},p.trainer+(p.kind==='trade'?' would like to trade with you.':' challenged you to a friendly duel.')));body.append(h('p',{class:'mini-note'},'Invitation expires after '+p.seconds+' seconds. You must stay nearby.'),h('div',{class:'modal-actions'},button('Decline',()=>{send('invite.answer',{id:p.id,accept:false});invite=null;closeModal(true);},'quiet'),button('Accept invitation',()=>{send('invite.answer',{id:p.id,accept:true});invite=null;closeModal(true);},'primary')));}
 function renderTrade(){if(!trade||!state)return;const t=trade,body=openModal('Trade with '+t.otherName,'trade','min(62rem,94vw)');const both=t.ready.length===2;body.append(h('p',{class:'trade-warning'},both?'Both offers are locked. Check the Pokemon, items and money on BOTH sides before final confirmation. Any offer edit resets both confirmations.':'Nothing moves until both trainers lock their offers and confirm the exact same exchange. You can cancel before the final commit.'));
  const sides=h('div',{class:'trade-grid'});for(const id of [t.you,t.other]){const offer=t.offers[id],box=h('section',{class:'trade-side'},h('h3',{},id===t.you?'Your offer':t.otherName+'’s offer')),detail=h('div',{class:'trade-offer'});for(const mon of offer.pokemon)detail.append(h('div',{class:'offer-mon'},h('img',{src:sprite(mon),alt:monName(mon)}),h('span',{},monName(mon)+' · Lv. '+mon.level)));for(const [key,n] of Object.entries(offer.items))if(n)detail.append(h('p',{class:'offer-item'},content.items[key].name+' × '+n));if(offer.money)detail.append(h('p',{class:'offer-item'},money(offer.money)));if(!offer.pokemon.length&&!Object.values(offer.items).some(Boolean)&&!offer.money)detail.append(h('p',{class:'mini-note'},'No assets offered.'));box.append(detail,h('div',{class:'trade-status'},t.confirmed.includes(id)?'✓ FINAL CONFIRMATION RECEIVED':t.ready.includes(id)?'✓ OFFER LOCKED':'EDITING OFFER'));sides.append(box);}body.append(sides);
@@ -319,7 +360,7 @@ function setupInput(){
  $('home').addEventListener('change',()=>{if(loggingIn)return;registrationSummary();audio.setRegion($('home').value);});
  $('logout').addEventListener('click',logout);$('disconnect-login').addEventListener('click',logout);$('modal-close').addEventListener('click',()=>closeModal());$('modal').addEventListener('cancel',e=>{e.preventDefault();closeModal();});$('battle-dialog').addEventListener('cancel',e=>{e.preventDefault();if(activeBattle?.ended){resetBattlePresentation();activeBattle=null;$('battle-dialog').close();audio.setBattle(null);}});
  $('chat-general').addEventListener('click',()=>changeChannel('general'));$('chat-trade').addEventListener('click',()=>changeChannel('trade'));$('chat-form').addEventListener('submit',e=>{e.preventDefault();const text=$('chat-input').value.trim();if(text&&send('chat',{channel,text}))$('chat-input').value='';});
- for(const [id,fn] of [['atlas-button',showAtlas],['collection-button',showCollection],['bag-button',showBag],['help-button',showHelp],['journal-button',showJournal],['dex-button',showDex],['surf-button',()=>send('surf')],['search-button',()=>send('encounter')],['save-button',()=>send('save')],['unstuck-button',()=>send('unstuck')]])$(id).addEventListener('click',fn);
+ for(const [id,fn] of [['atlas-button',showAtlas],['collection-button',showCollection],['bag-button',showBag],['help-button',showHelp],['journal-button',showJournal],['dex-button',showDex],['ai-activity-button',()=>requestAIDashboard('activity')],['ladder-button',()=>requestAIDashboard('ladder')],['rivals-button',()=>requestAIDashboard('rivals')],['surf-button',()=>send('surf')],['search-button',()=>send('encounter')],['save-button',()=>send('save')],['unstuck-button',()=>send('unstuck')]])$(id).addEventListener('click',fn);
  $('zoom-out').addEventListener('click',()=>renderer.setScale(renderer.scale-1));$('zoom-in').addEventListener('click',()=>renderer.setScale(renderer.scale+1));
  document.addEventListener('click',e=>{if(!e.target.closest('#context-menu')&&e.target!==$('world-canvas'))$('context-menu').classList.add('hidden');});
  const directions={w:'up',arrowup:'up',s:'down',arrowdown:'down',a:'left',arrowleft:'left',d:'right',arrowright:'right'};

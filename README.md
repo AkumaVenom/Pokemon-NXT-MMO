@@ -1,8 +1,12 @@
 # Pokemon NXT MMO
 
-## 0.3.6-alpha · Local administrator console · Build tools 1.4.1
+### 2,000 autonomous trainers — stable living regional population
 
-**Windows build correction (1.4.1):** Explicitly close temporary SQLite probe connections; this fixes the reported `WinError 32` in the schema/lease regression without disabling it or changing the server. See `Docs/WINDOWS_BUILD_FIX_1.4.1.md` and its test report. Gameplay, schema 2 and the content pack remain unchanged.
+The **0.6.1-alpha Autonomous Trainer Population Stability** update fixes the two visible regressions from 0.6.0: mass crowding on one grass patch and rapid remove/re-add flicker that could eventually leave an observed map empty. The database still owns all 2,000 persistent trainers, but each observed map now materializes a **stable bounded cohort** rather than repeatedly selecting the nearest residents. Materialized trainers are authoritatively scattered across real encounter terrain, keep local roaming territories, and ordinary regional travel is protected by dwell-time hysteresis, a per-map departure cadence, and a persistent resident floor. Regional level-aware travel, genuine wild training/capture and the accepted 0.5.1 party-identity contract remain intact. See `Docs/AUTONOMOUS_POPULATION_STABILITY.md`, `Docs/AUTONOMOUS_TRAINERS.md` and `Docs/AUTONOMOUS_REGIONAL_TRAVEL.md`.
+
+## 0.6.1-alpha · Autonomous Trainer Population Stability · Build tools 1.4.1
+
+**Preserved Windows build correction (1.4.1):** the ordinary-user Windows source builder still closes temporary SQLite probe connections correctly, retains CRLF launcher contracts, and keeps the accepted schema-3 migration/lease protections. This gameplay release builds on the corrected BuildFix1 baseline and the accepted 0.5.1 party-identity fix.
 
 Type commands in the **world-server terminal on the host PC**, never in player chat. The console provides **81 canonical commands and 21 aliases** selected/adapted from the supplied proposal for NXT's existing systems. It is not an RCON service, HTTP admin panel or client permission rank. The operating-system account controlling the server process is trusted; Windows elevation is not required.
 
@@ -10,7 +14,7 @@ Use `help`, `who`, `help givepokemon`, `team TrainerName` and `species Pikachu` 
 
 **Chat commands are intentionally excluded**, including announce, broadcast, mute and whisper. Unsupported gameplay systems are not exposed as pretend commands. See **`Docs/LOCAL_ADMIN_CONSOLE.md`** for the complete command reference, configuration, safety model, examples, upgrade and rollback instructions; **`Docs/LOCAL_ADMIN_PROPOSAL_AUDIT.md`** maps every proposal row to its implementation or explicit exclusion. Current executed checks are recorded in **`Docs/LOCAL_ADMIN_TEST_REPORT.md`**.
 
-**Upgrade:** back up the database and configured deployment, stop the old server, then deploy matching rebuilt Client and Server. The first new startup adds schema-2 account-control/audit tables, without resetting accounts or replacing existing credentials. Preserve your configurations and certificates; do not rerun MySQL setup for this update. A schema-1 server cannot downgrade this database; rollback requires restoring the pre-upgrade database backup together with its matching old deployment.
+**Upgrade:** back up the database and configured deployment, stop the old server, then deploy matching rebuilt Client and Server. Schema 3 remains authoritative for autonomous trainers; this update adds no new SQL schema version. Existing accounts, bot identities, bot Pokémon, ratings, rivalries and activity history are preserved. Preserve your configurations and certificates; do not rerun MySQL setup for this update.
 
 The accepted **1.3.4 standard-user Windows build correction is preserved**: the variety publisher tests use isolated real sprite copies, not privileged links. No Developer Mode, elevated console, dependency downgrade or skipped variety checks is needed. Its historical repair guide is `Docs/WINDOWS_BUILD_FIX_1.3.4.md`.
 
@@ -44,7 +48,7 @@ The previous update corrected level-up learning across all 876 then-published Po
 
 **Cyndaquil learns Ember at level 12 in both supplied ROMs.** Its summary now shows the complete native level-up list and next move. Open a Pokémon from **P → Party & storage**, then use **Move Reminder** to recover eligible current-species moves. Replacing a move requires your confirmation. See `Docs/LEARNSET_GUIDE.md`, `Docs/LEARNSET_ROM_AUDIT.md` and `Docs/LEARNSET_TEST_REPORT.md`.
 
-**Download all FOUR full-source ZIPs, Parts 1–4. Extract every part into the same destination so the identically named `Pokemon_NXT_MMO_v0.3.6-alpha_Source_LocalAdminConsole` folders merge, then run `BUILD_ALL.bat`.** These are ordinary mergeable ZIPs, not byte-split volumes: do not concatenate them. All four parts are required and together contain the complete source and assets. No previous pack, original ROM, images.rar, Pillow, FFmpeg or audio renderer is needed for a normal build.
+**Download all FOUR full-source ZIPs, Parts 1–4. Extract every part into the same destination so the identically named `Pokemon_NXT_MMO_v0.6.1-alpha_Source_AutonomousTrainerPopulationStability` folders merge, then run `BUILD_ALL.bat`.** These are ordinary mergeable ZIPs, not byte-split volumes: do not concatenate them. All four parts are required and together contain the complete source and assets. No previous pack, original ROM, images.rar, Pillow, FFmpeg or audio renderer is needed for a normal build.
 
 ### Play the adventure
 

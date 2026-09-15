@@ -1,5 +1,65 @@
 # Changelog
 
+## 0.6.1-alpha · Autonomous Trainer Population Stability · 2026-09-15
+
+- Fix the 0.6.0 crowding regression by separating persistent map residency from live materialization. Observed maps now replicate/move a stable bounded cohort instead of repeatedly choosing the nearest residents from a much larger logical population.
+- Scatter newly materialized cohorts across real walkable encounter terrain with deterministic farthest-spacing and persistent authoritative coordinates. Give each materialized trainer a local roam anchor/radius so normal grass seeking and random walking do not reconverge the whole cohort onto one patch.
+- Fix rapid remove/re-add flicker: cohort membership survives snapshot refreshes, a single legitimate departure preserves every unaffected visible trainer, and the destination cohort is not reshuffled merely because a new resident arrives.
+- Add travel hysteresis. Routine/progression travel requires a minimum map dwell; loss retreat uses a shorter dwell; invalid or genuinely unsafe placements may still escape immediately. Observed maps allow at most one visible departure per configured cadence.
+- Add a persistent resident floor for ordinary travel so an occupied training map cannot be drained to zero by regional simulation. Ordinary elapsed-time travel is deferred while humans observe that map, preventing the background scheduler from racing the field controller.
+- Make destination safety a hard constraint before population balancing. Resident pressure now spreads equivalent safe destinations without ever pushing a low-level trainer into a stronger field solely to reduce crowding.
+- Add one-time `WORLD_LIFE_VERSION=3` / `REGIONAL_TRAVEL_VERSION=2` autonomous rebalance so existing 0.6.0 databases recover from overcrowded/drained placement without resetting human accounts, bot identities, ratings, Pokémon, parties, captures or histories.
+- Add regressions for stable cohort identity, authoritative spatial scatter, one-at-a-time observed departures, map-floor preservation, safe destination selection and continued party/follower identity.
+
+## 0.6.0-alpha · Autonomous Trainer Regional Travel · 2026-09-15
+
+- Replace permanent autonomous-map residency with persistent, region-bound travel. All 2,000 trainers can teleport between legitimate encounter-capable routes, forests, caves and wilderness areas in their home region instead of remaining trapped on their original map forever. Interior/building maps, towns/cities and maps without usable non-Surf training tiles are excluded from the travel catalog.
+- Build destination difficulty directly from the published encounter tables across morning/day/night. Select destinations against the bot's real authoritative party level using weighted encounter pressure, recent-map avoidance, light population spreading and deterministic variation; Kanto bots remain in Kanto and Johto bots remain in Johto/Sigma.
+- Add automatic safety recovery. A bot already on an invalid/wrong-region map or a field whose upper encounter pressure exceeds its current party capability relocates before further autonomous wild training. Repeated wild losses schedule a retreat to an easier map, preventing level-5 trainers from repeatedly feeding into Victory Road/Cerulean Cave encounters.
+- Add progression travel. Bots that have outgrown a field and accumulated successful wild training advance toward harder but still level-safe maps. Routine travel rotates bots through comparable training areas so the overworld population remains dynamic even when no human players are online.
+- Persist travel region, destination history, travel count/timestamps, per-map wild wins/losses and pending retreat/progression in existing bot personality JSON. Field and elapsed-time simulation both execute travel, and AI Activity records the relocation. No SQL schema bump is required.
+- Preserve the 0.5.1 authoritative party-identity contract: destination selection reads the real party, the overworld follower remains `party[0]`, wild and ranked battles use the exact same owned party UIDs, and all additional Pokémon still have to be genuinely captured.
+- Add focused regression coverage for 2,000-bot regional integrity, safe fresh-level placement, prohibited-interior exclusion, routine rotation, forced retreat from endgame maps, persistent loss-triggered retreat metadata, and level-35 advancement from an outgrown starter route into a harder level-safe Kanto field.
+- Validate the complete tree with 604 Python tests (603 passed, one platform skip), Go tests/vet, Windows x64 client/server cross-compilation, launcher security smoke checks and 103/103 Node client/UI tests. Exact Python dependency-pin installation could not be repeated in the offline container; the builder's explicit existing-environment mode was used and that boundary is recorded in the travel test report.
+
+## 0.5.1-alpha · Authoritative Bot Party Identity Fix · 2026-09-15
+
+- Make the persistent ordered autonomous `state.party` UID list the single source of truth for overworld followers, autonomous wild battles and human-vs-bot ranked battles. Ranked challenge rosters now preserve exact UID order instead of scanning collection/storage order, so the Pokémon visibly following a bot is the same individual sent out first in battle.
+- Add fail-closed autonomous party ownership validation and replicate follower UID/level alongside species/variety for identity-level regression coverage. No battle path is allowed to generate or substitute a presentation-only Pokémon.
+- Stop giving newly seeded bots arbitrary extra Pokémon. Fresh bots now start with exactly one level-5 starter, matching normal player creation; every additional Pokémon must come from a real persistent wild capture.
+- Add a one-time, non-guessing legacy cleanup for the deterministic synthetic bootstrap extras from 0.4.0/0.5.0. Only the known positions/species created by that old seed algorithm are removed; genuine later captures and their relative party order are preserved. The migration is versioned in existing personality JSON and requires no schema bump.
+- Add regressions that deliberately make collection order disagree with party order, prove map follower UID/species/level equals the ranked battle lead, prove the complete battle roster matches party UID order, and prove legacy cleanup preserves a genuine captured Pokémon while removing only the old synthetic records.
+
+## 0.5.0-alpha · Autonomous Trainer World Life · 2026-09-15
+
+- Promote the accepted persistent 2,000-trainer competitive population into real server-owned overworld actors. Guarantee at least one resident autonomous trainer on every playable Kanto and Johto/Sigma map, then distribute the remaining population into encounter-capable routes/caves for denser training activity. Preserve existing bot identities, ratings, histories and Pokémon through a one-time world-life placement migration.
+- Restrict autonomous overworld presentation to the supported Red/Leaf trainer sprites with an even deterministic split. Replicate each bot's real first-party Pokémon as its follower and persist field position/direction across sessions.
+- Add authoritative GBA-style field movement using the existing map collision/elevation rules and player tile cadence. Training-oriented bots path toward real encounter terrain, avoid occupied human/bot cells, keep their followers on the previous tile, and use the existing client interpolation/walk-frame renderer for smooth presentation.
+- Replace cosmetic autonomous capture/training progression with genuine local wild encounters driven through the shared Battle engine. Persist HP/PP/item use, captures, EXP/levels, collection growth, bounded supply purchases and automatic party optimisation; expose visible field-battle busy state and record wild development in AI Activity.
+- Extend elapsed-time simulation so encounter-map bots continue genuine wild development while no humans are online, alongside the existing rating-aware AI-v-AI ladder activity. Keep both paths bounded per pass rather than creating 2,000 browser sessions or permanently ticking 2,000 world actors.
+- Keep schema 3: field state and placement metadata fit the existing bot state/personality records. Add batch field-state persistence, save/shutdown flushes, engagement cleanup on challenge failure/disconnect and focused coverage/movement/wild-development regressions. Preserve the BuildFix1 Windows source-build contracts.
+
+## 0.4.0-alpha · Autonomous Trainers source BuildFix1 · 2026-09-15
+
+- Correct the 0.4.0 source-release contract so the all-in-one build completes instead of stopping in the regression stage: align the local-admin audit gameplay version with `0.4.0-alpha`, make schema-upgrade assertions follow the authoritative schema constant, and retain explicit live-lease protection for the schema-2 to schema-3 migration.
+- Restore required Windows CRLF bytes in `BUILD_ALL.bat` without weakening any bootstrap behavior or prerequisite checks.
+- Add a dedicated schema-3 live-lease regression and update the SQLite fixture-lifetime source guard so every managed test connection remains explicitly closed.
+- Republish the bundled client/server content metadata after the gameplay-version advance so both sides identify `0.4.0-alpha` and content pack `7c70a87caf1495540f4c8e1c`. No map, sprite, audio, encounter, battle or save data is changed by this correction.
+- Validate the corrected staged-clean source through the complete seven-stage release builder: 97 Python files compile, 601 Python tests pass (one Windows-only PowerShell execution test skipped on Linux), Go tests/vet and Windows x64 cross-compilation pass, 103 Node client tests pass, launcher smoke passes, and all generated release ZIPs verify.
+
+## 0.4.0-alpha · Persistent Autonomous Trainer Network
+
+- Added 2,000 persistent server-authoritative autonomous trainers.
+- Added autonomous rating-aware battles, Elo movement, tiers, W/L histories, recent-opponent suppression and elapsed-time catch-up simulation.
+- Added persistent bot Pokemon collections, captures, training growth, storage and automatic party optimization.
+- Added player-initiated ranked human-vs-bot battles, persistent human ratings and persistent rival histories.
+- Added bounded shared-world bot materialization with each bot's first party Pokemon replicated as its follower.
+- Added AI Activity, a combined human + autonomous Ranking Ladder, and Rivals Hub screens to the right gameplay panel; AI rows expose direct ranked battle actions.
+- Advanced storage schema to 3 with indexed AI trainer, activity, competitive profile and rivalry tables plus 45-day activity retention.
+- Kept autonomous catch-up outside the gameplay actor lock while preserving database lease/transaction authority.
+- Preserved existing adventure, human trading, friendly human duels, spatial replication, save revisions and admin-console behavior.
+
+
 ## Build tools 1.4.1 · Windows console-build database-handle correction · 2026-09-14
 
 - Fix the single reported v0.3.6 Windows build blocker: raw SQLite probe connections in the schema/lease test were committed but not explicitly closed, leaving the temporary database locked during cleanup (`WinError 32`). Close all four unit-fixture connection sites and all three supplementary process-fixture sites with `contextlib.closing`, retaining the inner transaction context.

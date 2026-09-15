@@ -104,7 +104,7 @@ class SQLiteFixtureLifetimeTests(unittest.TestCase):
         self.assertIn(name, REQUIRED_SOURCE)
         self.assertTrue(is_source_file(Path(name)))
         for relative, expected in (
-                ('Tests/test_admin_console.py', 4),
+                ('Tests/test_admin_console.py', 6),
                 ('Tests/check_admin_console_process.py', 3)):
             tree = ast.parse((ROOT / relative).read_text(encoding='utf-8'))
             managed = 0

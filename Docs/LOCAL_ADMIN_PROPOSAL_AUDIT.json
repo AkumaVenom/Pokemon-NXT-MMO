@@ -1,7 +1,7 @@
 {
   "source": "Pokemon_MMO_Complete_Server_Command_Proposal(2).docx",
   "sourceSha256": "6cefbab30768d724b5c7022c2a5cd58c33242f6b3fc630cadbe0809657f54e9b",
-  "gameplay": "0.3.6-alpha",
+  "gameplay": "0.6.1-alpha",
   "buildTools": "1.4.1",
   "proposalRows": 148,
   "canonicalCommands": 81,
