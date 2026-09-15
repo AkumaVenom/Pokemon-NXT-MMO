@@ -373,5 +373,86 @@ class AutonomousWorldLifeTests(unittest.TestCase):
         asyncio.run(exercise())
 
 
+    def test_background_wild_progression_does_not_require_humans_or_map_observers(self):
+        async def exercise():
+            with tempfile.TemporaryDirectory() as tmp:
+                cfg = Path(tmp) / 'config.ini'
+                cfg.write_text(TEMPLATE.read_text(encoding='utf-8'), encoding='utf-8')
+                settings = Settings.load(cfg)
+                settings.config.set('database', 'backend', 'sqlite')
+                old_rng = self.content.rng
+                self.content.rng = random.Random(16092026)
+                db = Store(settings)
+                db.acquire_lease()
+                try:
+                    world = World(self.content, db, settings)
+                    await world.autonomous.initialize()
+                    ai = world.autonomous
+                    now = int(time.time())
+
+                    # Make exactly one bot due and prove it performs a real wild
+                    # battle with nobody logged in and no active maps whatsoever.
+                    for b in ai.snapshot:
+                        b['personality']['nextBackgroundFieldAt'] = now + 3600
+                    target = ai.snapshot[0]
+                    target['personality']['nextBackgroundFieldAt'] = now - 1
+                    ai.last_background_field = 0
+                    before_revision = target['state']['revision']
+                    before_actions = int(target['personality'].get('backgroundWildBattles', 0))
+                    processed = await ai.background_field_tick(set())
+                    self.assertEqual(processed, 1)
+                    self.assertGreater(target['state']['revision'], before_revision)
+                    self.assertEqual(target['personality']['backgroundWildBattles'], before_actions + 1)
+                    self.assertGreater(target['personality']['nextBackgroundFieldAt'], now - 1)
+                    persisted = await asyncio.to_thread(db.ai_get, target['id'])
+                    self.assertEqual(persisted['state']['revision'], target['state']['revision'])
+                    self.assertEqual(persisted['personality']['backgroundWildBattles'], before_actions + 1)
+
+                    # Observation of some OTHER map must not affect this bot's field
+                    # progression. Only bots actually materialized for presentation
+                    # are excluded from the background scheduler.
+                    other_map = next(m['id'] for m in self.content.maps.values()
+                                     if ai._travel_map_allowed(m) and m['id'] != target['state']['map'])
+                    for b in ai.snapshot:
+                        b['personality']['nextBackgroundFieldAt'] = now + 3600
+                    target = ai.by_id[target['id']]
+                    target['personality']['nextBackgroundFieldAt'] = now - 1
+                    ai.last_background_field = 0
+                    before = target['state']['revision']
+                    processed = await ai.background_field_tick({other_map})
+                    self.assertEqual(processed, 1)
+                    self.assertGreater(target['state']['revision'], before)
+
+                    # On an observed map, non-materialized residents still progress
+                    # off-screen, while the stable visible cohort is left to the live
+                    # field loop so the same trainer is never simulated twice.
+                    active_map = target['state']['map']
+                    cohort = ai._materialized_bots(active_map)
+                    cohort_ids = {b['id'] for b in cohort}
+                    hidden = next((b for b in ai.by_map[active_map] if b['id'] not in cohort_ids), None)
+                    if hidden is not None:
+                        for b in ai.snapshot:
+                            b['personality']['nextBackgroundFieldAt'] = now + 3600
+                        hidden['personality']['nextBackgroundFieldAt'] = now - 1
+                        ai.last_background_field = 0
+                        before = hidden['state']['revision']
+                        processed = await ai.background_field_tick({active_map})
+                        self.assertEqual(processed, 1)
+                        self.assertGreater(hidden['state']['revision'], before)
+
+                    visible = cohort[0]
+                    for b in ai.snapshot:
+                        b['personality']['nextBackgroundFieldAt'] = now + 3600
+                    visible['personality']['nextBackgroundFieldAt'] = now - 1
+                    ai.last_background_field = 0
+                    processed = await ai.background_field_tick({active_map})
+                    self.assertEqual(processed, 0)
+                finally:
+                    self.content.rng = old_rng
+                    db.close()
+
+        asyncio.run(exercise())
+
+
 if __name__ == '__main__':
     unittest.main()

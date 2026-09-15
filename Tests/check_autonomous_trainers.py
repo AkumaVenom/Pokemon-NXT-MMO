@@ -3,10 +3,11 @@ from pathlib import Path
 import sys
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'Server'))
-from nxt.ai_trainers import PARTY_IDENTITY_VERSION,REGIONAL_TRAVEL_VERSION,WORLD_LIFE_VERSION,elo,tier_for
+from nxt.ai_trainers import BACKGROUND_FIELD_VERSION,PARTY_IDENTITY_VERSION,REGIONAL_TRAVEL_VERSION,WORLD_LIFE_VERSION,elo,tier_for
 assert WORLD_LIFE_VERSION >= 3
 assert PARTY_IDENTITY_VERSION >= 1
 assert REGIONAL_TRAVEL_VERSION >= 2
+assert BACKGROUND_FIELD_VERSION >= 1
 assert tier_for(1000)=='Bronze'
 assert tier_for(1100)=='Silver'
 assert tier_for(2100)=='Champion'
@@ -17,8 +18,9 @@ store=(ROOT/'Server/nxt/store.py').read_text(encoding='utf-8')
 client=(ROOT/'Client/app/app.js').read_text(encoding='utf-8')
 renderer=(ROOT/'Client/app/renderer.js').read_text(encoding='utf-8')
 config=(ROOT/'Build/config_templates/Server/config.ini').read_text(encoding='utf-8')
-assert "ai.dashboard" in world and "ai.challenge" in world and 'field_tick' in world
+assert "ai.dashboard" in world and "ai.challenge" in world and 'field_tick' in world and 'background_field_tick' in world
 assert '_simulate_wild_battle' in ai and '_travel_reason' in ai and '_select_travel_map' in ai and 'field_step_ms' in config
+assert 'nextBackgroundFieldAt' in ai and 'background_field_interval_seconds' in config and 'background_field_batch' in config
 assert 'travel_min_seconds' in config and 'travel_safe_level_margin' in config and "'kind': 'travel'" in ai
 assert 'map_resident_floor' in config and 'active_map_departure_seconds' in config and 'materialized_spacing_tiles' in config
 assert '_materialized_bots' in ai and '_ensure_materialized_spacing' in ai and '_resident_floor' in ai

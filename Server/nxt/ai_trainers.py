@@ -25,6 +25,7 @@ TIERS = ((0, 'Bronze'), (1100, 'Silver'), (1300, 'Gold'),
 WORLD_LIFE_VERSION = 3
 PARTY_IDENTITY_VERSION = 1
 REGIONAL_TRAVEL_VERSION = 2
+BACKGROUND_FIELD_VERSION = 1
 TRAVEL_MAP_TYPES = frozenset((3, 4))
 TRAVEL_OUTDOOR_WORDS = ('route ', 'forest', 'national park', 'ruins of alph')
 DIRECTIONS = (
@@ -66,6 +67,8 @@ class AutonomousTrainers:
         self.s = world.s
         self.lock = asyncio.Lock()
         self.last_simulation = 0.0
+        self.last_background_field = 0.0
+        self.background_cursor = 0
         self.last_persist = 0.0
         self.snapshot = []
         self.snapshot_at = 0.0
@@ -94,7 +97,14 @@ class AutonomousTrainers:
         self.field_wild_cooldown = max(2.0, self._cfg_float('field_wild_cooldown_seconds', 7.0))
         self.field_wild_chance = min(1.0, max(0.0, self._cfg_float('field_wild_step_chance', 0.22)))
         self.field_wild_per_tick = max(1, self._cfg('field_wild_battles_per_tick', 2))
-        self.offline_wild_share = min(1.0, max(0.0, self._cfg_float('offline_wild_activity_share', 0.58)))
+        # Off-screen field life has its own scheduler. It must never depend on a
+        # human observing the map or on the ranked queue winning a probabilistic
+        # branch. Only materialized bots are excluded to avoid double-simulating
+        # a trainer that is already performing visible field actions.
+        self.background_field_interval = max(.5, self._cfg_float('background_field_interval_seconds', 2.0))
+        self.background_field_batch = max(1, self._cfg('background_field_batch', 16))
+        self.background_field_min_gap = max(15, self._cfg('background_field_min_gap_seconds', 45))
+        self.background_field_max_catchup = max(1, self._cfg('background_field_max_catchup_actions', 6))
         self.travel_min_seconds = max(60, self._cfg('travel_min_seconds', 180))
         self.travel_max_seconds = max(self.travel_min_seconds, self._cfg('travel_max_seconds', 540))
         self.travel_loss_retreats = max(1, self._cfg('travel_loss_retreats', 2))
@@ -153,6 +163,7 @@ class AutonomousTrainers:
             await self._refresh_snapshot_locked(force=True)
             await self._ensure_party_identity_locked()
             await self._ensure_world_distribution_locked()
+            await self._ensure_background_field_schedule_locked()
             await self._refresh_snapshot_locked(force=True)
 
     # ------------------------------------------------------------------
@@ -219,6 +230,125 @@ class AutonomousTrainers:
             updates.append(bot)
         for start in range(0, len(updates), 200):
             await asyncio.to_thread(self.db.ai_rebalance_world, updates[start:start + 200])
+
+    # ------------------------------------------------------------------
+    # Persistent off-screen field schedule
+    # ------------------------------------------------------------------
+
+    def _background_cadence(self, bot):
+        # Personality activity already expresses how frequently this trainer acts.
+        # Keep field life frequent enough to be observable over time while retaining
+        # per-trainer variation and avoiding a 2,000-bot thundering herd.
+        activity = max(self.background_field_min_gap, int(bot.get('personality', {}).get('activity', 120) or 120))
+        return activity + (int(bot['id']) * 11) % 31
+
+    async def _ensure_background_field_schedule_locked(self):
+        """Add a persistent, staggered field clock to existing and new bots.
+
+        This deliberately lives in personality JSON rather than next_action_at: the
+        latter belongs to ranked/competitive activity. Separating the clocks means
+        wild training continues even when no human is online and cannot be starved by
+        repeated ranked actions.
+        """
+        now = int(time.time())
+        updates = []
+        spread = max(60, min(300, self.population // max(1, self.background_field_batch) * max(1, int(self.background_field_interval))))
+        for bot in self.snapshot:
+            personality = bot.setdefault('personality', {})
+            if int(personality.get('backgroundFieldVersion', 0) or 0) >= BACKGROUND_FIELD_VERSION:
+                continue
+            personality['backgroundFieldVersion'] = BACKGROUND_FIELD_VERSION
+            personality['nextBackgroundFieldAt'] = now + ((bot['id'] * 37) % spread)
+            personality['lastBackgroundFieldAt'] = 0
+            personality['backgroundWildBattles'] = int(personality.get('backgroundWildBattles', 0) or 0)
+            updates.append(bot)
+        for start in range(0, len(updates), 200):
+            await asyncio.to_thread(self.db.ai_rebalance_world, updates[start:start + 200])
+
+    def _advance_background_due(self, bot, now):
+        personality = bot['personality']
+        cadence = self._background_cadence(bot)
+        due = int(personality.get('nextBackgroundFieldAt', now) or now)
+        # Preserve bounded elapsed-time catch-up after downtime. At most the
+        # configured number of historical field actions remain queued so a long
+        # outage cannot monopolize the server on restart.
+        oldest = now - cadence * max(0, self.background_field_max_catchup - 1)
+        due = max(due, oldest)
+        personality['lastBackgroundFieldAt'] = now
+        personality['nextBackgroundFieldAt'] = due + cadence
+        personality['backgroundWildBattles'] = int(personality.get('backgroundWildBattles', 0) or 0) + 1
+
+    async def _background_field_action_locked(self, bot, now):
+        if self.engaged.get(bot['id'], 0) > time.monotonic():
+            return False
+        reason = self._travel_reason(bot, now)
+        if reason:
+            travel = self._relocate_bot(bot, reason, now)
+            if reason in ('repair', 'unsafe') and not travel:
+                bot['personality']['nextBackgroundFieldAt'] = now + self.background_field_min_gap
+                await asyncio.to_thread(self.db.ai_rebalance_world, [bot])
+                return False
+        if not self._place_on_training_tile(bot):
+            # A malformed/temporarily unsuitable field should not spin every tick.
+            bot['personality']['nextBackgroundFieldAt'] = now + self.background_field_min_gap
+            await asyncio.to_thread(self.db.ai_rebalance_world, [bot])
+            return False
+        result = self._simulate_wild_battle(bot)
+        if not result:
+            bot['personality']['nextBackgroundFieldAt'] = now + self.background_field_min_gap
+            await asyncio.to_thread(self.db.ai_rebalance_world, [bot])
+            return False
+        self._advance_background_due(bot, now)
+        # Persist every field result, but keep the public activity table bounded:
+        # captures, level-ups and losses are always noteworthy; routine wins are
+        # sampled deterministically instead of producing millions of feed rows.
+        action_count = int(bot['personality'].get('backgroundWildBattles', 0) or 0)
+        notable = (result['result'] in ('capture', 'loss') or bool(result.get('levels'))
+                   or (bot['id'] * 17 + action_count) % 20 == 0)
+        await asyncio.to_thread(self.db.ai_commit_field, bot, {
+            'kind': 'wild', 'opponent': 0, 'result': result['result'], 'summary': result['summary']}, notable)
+        self.dirty.discard(bot['id'])
+        return True
+
+    async def background_field_tick(self, active_maps):
+        """Progress off-screen trainers even when there are zero connected humans.
+
+        `active_maps` affects presentation only. A bot is skipped solely when it is
+        part of the currently materialized cohort on an observed map, because that
+        exact trainer is already eligible for visible field simulation. Other bots
+        on the same map continue background training normally.
+        """
+        if time.monotonic() - self.last_background_field < self.background_field_interval:
+            return 0
+        async with self.lock:
+            if time.monotonic() - self.last_background_field < self.background_field_interval:
+                return 0
+            self.last_background_field = time.monotonic()
+            now = int(time.time())
+            materialized = set()
+            for map_id in active_maps:
+                materialized.update(bot['id'] for bot in self._materialized_bots(map_id))
+            bots = self.snapshot
+            if not bots:
+                return 0
+            processed = 0
+            inspected = 0
+            total = len(bots)
+            while inspected < total and processed < self.background_field_batch:
+                index = self.background_cursor % total
+                self.background_cursor = (self.background_cursor + 1) % total
+                inspected += 1
+                bot = bots[index]
+                if bot['id'] in materialized:
+                    continue
+                due = int(bot.get('personality', {}).get('nextBackgroundFieldAt', 0) or 0)
+                if due > now:
+                    continue
+                if await self._background_field_action_locked(bot, now):
+                    processed += 1
+            if processed:
+                await self._refresh_snapshot_locked(force=True)
+            return processed
 
     # ------------------------------------------------------------------
     # Population placement and snapshot indexes
@@ -1252,32 +1382,10 @@ class AutonomousTrainers:
             if not a or a['next_action_at'] > now:
                 continue
 
-            reason = self._travel_reason(a, now)
-            active_maps = {p.state['map'] for p in self.w.players.values() if not p.closed}
-            if a['state'].get('map') in active_maps and reason not in ('repair', 'unsafe'):
-                reason = None
-            if reason:
-                travel = self._relocate_bot(a, reason, now)
-                if travel:
-                    a['next_action_at'] = now + 30 + (a['id'] % 30)
-                    await asyncio.to_thread(self.db.ai_commit_field, a, {
-                        'kind': 'travel', 'opponent': 0, 'result': 'relocate',
-                        'summary': travel['summary']})
-                    changed = True
-                    continue
-
-            # Encounter maps spend much of their elapsed time doing genuine wild
-            # battles, so captured Pokemon and levels are products of field play.
-            if (self._map_has_training(self.c.maps.get(a['state'].get('map'), {}))
-                    and self.c.rng.random() < self.offline_wild_share
-                    and self._place_on_training_tile(a)):
-                wild = self._simulate_wild_battle(a)
-                if wild:
-                    a['next_action_at'] = self._next(a, now)
-                    await asyncio.to_thread(self.db.ai_commit_field, a, {
-                        'kind': 'wild', 'opponent': 0, 'result': wild['result'], 'summary': wild['summary']})
-                    changed = True
-                    continue
+            # Competitive activity is intentionally separate from field life.
+            # Regional travel, wild battles, captures and Pokemon development are
+            # driven by background_field_tick/field_tick and cannot be starved by
+            # this ranked queue.
 
             recent = set(await asyncio.to_thread(self.db.ai_recent_opponents, a['id'], now - 21600, 8))
             candidates = await asyncio.to_thread(self.db.ai_candidates, a['id'], a['rating'], 24)

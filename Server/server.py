@@ -13,7 +13,7 @@ from nxt.async_tasks import complete_before_cancelling
 from nxt.security import RequestError,require,credentials,password_hash,password_verify,Bucket
 from nxt.tls import TLSConfigurationError,load_server_tls
 def reject_json_constant(value):raise ValueError('Non-finite JSON number')
-VERSION='0.6.1-alpha'; ROOT=Path(__file__).resolve().parent
+VERSION='0.6.2-alpha'; ROOT=Path(__file__).resolve().parent
 log=logging.getLogger('nxt')
 _UNLOADED_TLS=object()
 class WorldStartupError(RuntimeError):

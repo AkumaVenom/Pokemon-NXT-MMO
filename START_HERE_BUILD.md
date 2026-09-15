@@ -1,9 +1,9 @@
 # Pokemon NXT MMO — automatic all-in-one source build
 
 
-**Download all FOUR source ZIPs:** `Pokemon_NXT_MMO_v0.6.1-alpha_Source_AutonomousTrainerPopulationStability_Part1.zip`, `Part2.zip`, `Part3.zip` and `Part4.zip` (all share the same prefix). Extract each ordinary ZIP into the same destination, merging the identically named `Pokemon_NXT_MMO_v0.6.1-alpha_Source_AutonomousTrainerPopulationStability` folders. Do not concatenate the ZIP files. Run `BUILD_ALL.bat` only after all four parts are extracted. The four parts contain the complete source and assets; no earlier source pack or optional patch is required.
+**Download all FOUR source ZIPs:** `Pokemon_NXT_MMO_v0.6.2-alpha_Source_OfflineAutonomousFieldSimulation_Part1.zip`, `Part2.zip`, `Part3.zip` and `Part4.zip` (all share the same prefix). Extract each ordinary ZIP into the same destination, merging the identically named `Pokemon_NXT_MMO_v0.6.2-alpha_Source_OfflineAutonomousFieldSimulation` folders. Do not concatenate the ZIP files. Run `BUILD_ALL.bat` only after all four parts are extracted. The four parts contain the complete source and assets; no earlier source pack or optional patch is required.
 
-Gameplay **0.6.1-alpha** · Build tools **1.4.1** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
+Gameplay **0.6.2-alpha** · Build tools **1.4.1** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
 
 The full source includes the extracted FireRed and Sigma music, sound effects and cries. `BUILD_ALL.bat` verifies and packages these files; it does not extract them again. **No ROM, FFmpeg or C++ audio-renderer build is needed for a normal build.**
 
@@ -11,7 +11,9 @@ The full source includes the extracted FireRed and Sigma music, sound effects an
 
 **Windows build correction (1.4.1):** Explicitly close temporary SQLite probe connections; this fixes the reported `WinError 32` in the schema/lease regression without disabling it or changing the server. See `Docs/WINDOWS_BUILD_FIX_1.4.1.md` and its test report. That historical repair remains preserved; current gameplay uses schema 3 and the 0.6.1 content pack.
 
-## Autonomous population stability · 0.6.1-alpha
+## Autonomous off-screen field simulation · 0.6.2-alpha
+
+The 2,000 autonomous trainers now have a dedicated persistent field scheduler. They battle/capture wild Pokémon and gain EXP even with **zero connected players**; observing a map is only required for visible walking/rendering, never for simulation.
 
 The 2,000 persistent trainers retain 0.6.0 region-aware level progression, but observed maps now use a stable bounded materialized cohort. Bots are scattered across real encounter terrain instead of piling into one grass patch; local roam anchors keep that spacing useful over time. Normal travel uses dwell-time hysteresis, preserves a resident floor and allows at most one visible departure from an observed map per configured cadence, preventing flicker and empty-map drain. Unsafe placements can still escape immediately. The accepted 0.5.1 authoritative-party identity is preserved exactly. See `Docs/AUTONOMOUS_POPULATION_STABILITY.md` and `Docs/AUTONOMOUS_REGIONAL_TRAVEL.md`.
 
@@ -19,7 +21,7 @@ Start the built world server as usual, then type `help` in its interactive termi
 
 Back up the existing database before this update. Schema 3 remains authoritative and this gameplay update requires no new schema bump. Existing human accounts, autonomous identities, Pokémon, ratings, rivalries and histories are upgraded in place.
 
-The earlier **build-tools 1.3.4 Windows symlink-privilege correction remains included**. Its isolated sprite-copy tests stay active. Current gameplay is **0.6.1-alpha**, build tools **1.4.1**, with a newly published matching content pack. Historical repair instructions are in `Docs/WINDOWS_BUILD_FIX_1.3.4.md`; do not apply that old repair over this complete release.
+The earlier **build-tools 1.3.4 Windows symlink-privilege correction remains included**. Its isolated sprite-copy tests stay active. Current gameplay is **0.6.2-alpha**, build tools **1.4.1**, with a newly published matching content pack. Historical repair instructions are in `Docs/WINDOWS_BUILD_FIX_1.3.4.md`; do not apply that old repair over this complete release.
 
 ## Varieties and regional encounter/Cut updates
 

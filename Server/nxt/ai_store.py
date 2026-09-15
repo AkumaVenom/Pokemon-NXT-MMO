@@ -57,13 +57,14 @@ class AIStoreMixin:
    self.fence(c)
    for bot in records:
     c.execute(self.sql('UPDATE ai_trainers SET state_json=%s,updated_at=%s WHERE id=%s'),(json.dumps(bot['state'],separators=(',',':')),now,bot['id']))
- def ai_commit_field(self,bot,event):
+ def ai_commit_field(self,bot,event,record_activity=True):
   now=int(time.time())
   with self.transaction() as c:
    self.fence(c)
    c.execute(self.sql('UPDATE ai_trainers SET state_json=%s,personality_json=%s,next_action_at=%s,last_action_at=%s,updated_at=%s WHERE id=%s'),(json.dumps(bot['state'],separators=(',',':')),json.dumps(bot['personality'],separators=(',',':')),bot['next_action_at'],now,now,bot['id']))
-   c.execute(self.sql('INSERT INTO ai_activity(actor_ai_id,opponent_kind,opponent_id,result,summary,rating_before,rating_after,created_at) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)'),(bot['id'],event.get('kind','wild'),int(event.get('opponent',0)),event.get('result','training')[:16],event.get('summary','Autonomous field training.')[:255],bot['rating'],bot['rating'],now))
-   c.execute(self.sql('DELETE FROM ai_activity WHERE created_at<%s'),(now-3888000,))
+   if record_activity:
+    c.execute(self.sql('INSERT INTO ai_activity(actor_ai_id,opponent_kind,opponent_id,result,summary,rating_before,rating_after,created_at) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)'),(bot['id'],event.get('kind','wild'),int(event.get('opponent',0)),event.get('result','training')[:16],event.get('summary','Autonomous field training.')[:255],bot['rating'],bot['rating'],now))
+    c.execute(self.sql('DELETE FROM ai_activity WHERE created_at<%s'),(now-3888000,))
  def competitive_profile(self,account_id):
   now=int(time.time())
   with self.transaction() as c:

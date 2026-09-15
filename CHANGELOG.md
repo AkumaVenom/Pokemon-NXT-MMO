@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.2-alpha · Autonomous Off-Screen Field Simulation · 2026-09-16
+
+- Fix autonomous wild progression so it is completely independent of human presence. Bots now have a dedicated persistent background field clock separate from ranked `next_action_at`; wild battles, captures, EXP/levels, party development and level-aware regional travel continue when zero humans are logged in and when no player is observing the bot's map.
+- Keep presentation and simulation separate. Only the stable materialized cohort on an observed map is excluded from background field work because those exact bots are already eligible for visible walking/wild actions; non-materialized residents on the same map continue progressing off-screen.
+- Remove the probabilistic wild-training branch from the competitive queue. Ranked matchmaking can no longer starve field progression, and field progression can no longer consume a ranked action slot.
+- Add a persistent staggered `nextBackgroundFieldAt` schedule in autonomous personality JSON, with bounded catch-up after server downtime. Long outages can recover a limited number of missed field actions without causing an unbounded restart spike.
+- Background actions use the same authoritative party UIDs, real encounter tables and shared Battle engine as visible field battles. Captures, EXP, levels, HP/PP/items, travel metadata and AI Activity are committed transactionally to the existing autonomous trainer records.
+- Add regression coverage proving a bot gains persistent wild-battle progression with no connected humans, still progresses when a human observes a different map, non-materialized residents progress on an observed map, and a materialized bot is not double-simulated by the background scheduler.
+
 ## 0.6.1-alpha · Autonomous Trainer Population Stability · 2026-09-15
 
 - Fix the 0.6.0 crowding regression by separating persistent map residency from live materialization. Observed maps now replicate/move a stable bounded cohort instead of repeatedly choosing the nearest residents from a much larger logical population.

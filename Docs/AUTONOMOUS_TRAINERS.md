@@ -1,4 +1,4 @@
-# Autonomous Trainer World Life — 0.6.1-alpha
+# Autonomous Trainer World Life — 0.6.2-alpha
 
 Pokemon NXT MMO maintains a persistent population of **2,000 autonomous trainers**. They are server-owned simulation actors rather than login accounts, so they cannot authenticate or collide with human credentials. The ranked ladder/rivals system, visible world actors and authoritative party identity remain in place; 0.6.0 introduced region-aware travel and progression; 0.6.1 stabilizes the visible map population so travel cannot cause crowding, rapid cohort churn or empty observed maps.
 
@@ -93,7 +93,10 @@ field_battle_display_seconds = 2.8
 field_wild_cooldown_seconds = 7
 field_wild_step_chance = 0.22
 field_wild_battles_per_tick = 2
-offline_wild_activity_share = 0.58
+background_field_interval_seconds = 2
+background_field_batch = 16
+background_field_min_gap_seconds = 45
+background_field_max_catchup_actions = 6
 travel_min_seconds = 180
 travel_max_seconds = 540
 travel_loss_retreats = 2
@@ -111,3 +114,8 @@ materialized_roam_radius_tiles = 9
 The travel interval controls routine rotation only. Invalid/unsafe repair may bypass ordinary dwell because leaving a dangerous field is a safety operation. Retreat/progression/routine movement uses hysteresis and map-presence protection. On observed maps, elapsed-time simulation defers ordinary travel to the field controller so the two schedulers cannot race each other. Competitive/offline simulation and field work intentionally remain outside the main gameplay actor lock. Database mutations remain world-lease fenced and transaction protected.
 
 For the current materialization/travel stability contract see `Docs/AUTONOMOUS_POPULATION_STABILITY.md`. The underlying regional progression design remains documented in `Docs/AUTONOMOUS_REGIONAL_TRAVEL.md`.
+
+
+## Off-screen field simulation (0.6.2-alpha)
+
+Wild progression is not tied to a connected player, an observed map, or the competitive queue. The world service runs a separate bounded field scheduler for every non-materialized autonomous trainer. It uses the trainer's real persistent party, real map encounter table and the shared Battle engine, then commits captures, EXP/levels, supplies and travel state to storage. A connected client only changes presentation: the currently materialized cohort is handled by the visible field loop so the same bot is never progressed twice.

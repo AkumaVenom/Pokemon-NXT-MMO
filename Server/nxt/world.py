@@ -472,10 +472,15 @@ class World:
   # Autonomous simulation is database-authoritative but intentionally runs outside
   # the gameplay actor lock so a catch-up batch can never stall player movement.
   await self.autonomous.maybe_tick();await self.autonomous.refresh_snapshot()
+  # Persistent wild training/captures are independent of observation. This
+  # background scheduler progresses every non-materialized bot even when there are
+  # zero connected humans; active maps only decide which cohort gets visible
+  # high-frequency movement instead of background simulation.
+  active_maps={p.state['map'] for p in self.players.values() if not p.closed}
+  await self.autonomous.background_field_tick(active_maps)
   # High-frequency bot walking is materialized only on maps with human observers.
   # It remains outside the gameplay actor lock so autonomous pathing/database work
   # cannot stall human movement, chat, battles or trades.
-  active_maps={p.state['map'] for p in self.players.values() if not p.closed}
   await self.autonomous.field_tick(active_maps)
   async with self.lock:
    now=time.monotonic()
