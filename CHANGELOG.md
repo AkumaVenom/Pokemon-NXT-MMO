@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.6.6-alpha hotfix · Interior Return & Goldenrod Elevator Hardening · 2026-09-17
+
+- Fix Pokémon Center return ownership after using an internal upstairs/downstairs link. A shared lower Center now keeps its original per-character exterior return instead of incorrectly treating the upstairs room as a new building entrance; leaving the Center therefore returns outside instead of bouncing back upstairs and trapping the player.
+- Normalize legacy duplicate `warpReturns` for the same shared room by keeping the first valid owner return. Characters affected by the earlier Center loop can therefore leave through the correct saved building entrance after updating, without a database wipe or manual save edit.
+- Fix the Goldenrod Department Store elevator (`johto_34_27`). Its raw Sigma warp points at bank/map `0/0` because the ROM script chooses the destination at runtime; NXT previously interpreted that placeholder as the real `johto_0_0` Battle Frontier map. The reviewed elevator exit is now an owner-only dynamic return to the exact floor and doorway the player entered from, covering 1F–6F and the basement connection without ever routing the elevator exit to Battle Frontier.
+- Keep the fix bounded to portal ownership/metadata. No NPC dialogue, trainer/Gym Leader preview, Sudowoodo progression, Cut state, autonomous trainer simulation, combat, database schema or account data is removed or reset.
+- Expand `Tests/test_interior_access.py` to 19 focused regressions, including a full Cherrygrove Center upstairs/downstairs/exit sequence and all seven Goldenrod Department Store elevator entry maps.
+
+## 0.6.6-alpha · Johto Sigma NPC Dialogue Restoration · 2026-09-17
+
+- Corrected the source-build release metadata after native Windows validation exposed a stale `0.6.5-alpha` value in `Docs/LOCAL_ADMIN_PROPOSAL_AUDIT.json`. The audit now matches gameplay `0.6.6-alpha`, the top-level `BUILD_ALL.bat` banner identifies the Johto/Sigma dialogue release correctly, and the release-alignment regression now checks that banner so this class of packaging mismatch fails before distribution. This is a build/package metadata correction only; gameplay, saves, schema, content and bot behavior are unchanged.
+- Added a hash-locked, bounded static GBA dialogue extractor for the reviewed **Pokemon Ultra Shiny Gold Sigma Completo 1.5.0** source. It never executes ROM native code or original event logic.
+- Published **2,158 validated Johto / Sigma NPC talk literals across 534 maps**, with per-entry source script/text/command/object provenance and a complete 4,429-visible-object audit.
+- Preserved the existing trainer and Gym Leader preview/challenge UI by excluding all 881 resolved trainer bindings plus trainer-type source objects from dialogue replacement.
+- Preserved Nurse Joy, Pokémon Center storage and Poké Mart server-authoritative services while allowing their validated ROM greetings to appear in the interaction dialog.
+- Preserved Cut and the v0.6.5 Route 36 Sudowoodo story object as dedicated interactions; dialogue content cannot bypass badges, Key Items, battle outcomes or personal persistence.
+- Added owner-context rendering for supported player/party text tokens and conservative readable fallbacks for source string variables whose native ROM state is not safely reconstructable.
+- Added publish-time provenance, source-object, dynamic-token and trainer/story exclusion validation; Kanto is explicitly outside this Sigma dialogue layer.
+- Added multiline web-dialog rendering with preserved GBA text/page breaks.
+- Added `JOHTO_SIGMA_NPC_DIALOGUE.md`, a dedicated regression suite and executed test report. Normal builds use bundled validated dialogue data and do not require or distribute the ROM.
+- No database schema bump, account reset or player-save migration. The accepted v0.6.4 bot-performance architecture and v0.6.5 owner-only Route 36 progression remain intact.
+
 ## 0.6.5-alpha · Route 36 Sudowoodo Story Gate · 2026-09-17
 
 - Convert the existing odd-tree object on Johto Route 36 (`johto_2_23`, object 3 at 24,11) into a server-authoritative per-character story obstacle. The exact tile is solid for an uncleared character even though the shared extracted collision tile is passable; completion never mutates shared map data or another account's world state.

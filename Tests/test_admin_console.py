@@ -71,6 +71,7 @@ class ConsoleParsingTests(unittest.TestCase):
         data=json.loads((ROOT/'Server/data/world.json').read_text())
         self.assertEqual(data['version'],VERSION);self.assertEqual(__version__,VERSION)
         self.assertIn(VERSION,(ROOT/'Client/app/index.html').read_text())
+        self.assertIn(f'Gameplay {VERSION}',(ROOT/'BUILD_ALL.bat').read_text())
         audit=json.loads((ROOT/'Docs/LOCAL_ADMIN_PROPOSAL_AUDIT.json').read_text())
         self.assertEqual(audit['gameplay'],VERSION);self.assertEqual(audit['canonicalCommands'],len(COMMANDS))
         self.assertEqual(audit['aliases'],len(ALIASES));self.assertEqual(len(audit['rows']),148)

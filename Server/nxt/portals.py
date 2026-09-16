@@ -18,13 +18,19 @@ def _point(m,x,y):
 
 def return_stack(content,state):
  """Drop malformed/obsolete saved entries; never accept client portal state."""
- result=[]
+ result=[];owned=set()
  raw=state.get('warpReturns',[])
  if not isinstance(raw,list):return result
  for entry in raw[-MAX_RETURN_DEPTH:]:
   if not isinstance(entry,dict):continue
   inner=content.maps.get(entry.get('inside'));outer=content.maps.get(entry.get('outside'))
   if inner is None or outer is None or not _point(outer,entry.get('x'),entry.get('y')):continue
+  # Older builds could accidentally push the same shared room twice after an
+  # internal upstairs/downstairs transition. Keep the first valid owner return
+  # so an already-affected save exits to its real building entrance instead of
+  # looping back into another interior room.
+  if inner['id'] in owned:continue
+  owned.add(inner['id'])
   result.append({k:copy.deepcopy(entry[k]) for k in ('inside','outside','x','y')})
  return result
 
@@ -58,9 +64,17 @@ never trigger a portal, even if their destination record looks valid.
                  if stack[i]['inside']==m['id'] and stack[i]['outside']==target['id']),None)
   if matching is not None:stack=stack[:matching]
   if target['id']!=m['id'] and any(e.get('access',{}).get('dynamic') for e in target['warps']):
-   if _point(m,state['x'],state['y']):
-    stack.append({'inside':target['id'],'outside':m['id'],'x':state['x'],'y':state['y']})
-    stack=stack[-MAX_RETURN_DEPTH:]
-   else:return None
+   # A shared room owns one return context for the whole interior visit.
+   # Internal stairs/rooms can lead back into that same shared room; treating
+   # those links as a fresh building entrance overwrites the real exterior
+   # return and traps the player in an interior loop (for example a Pokemon
+   # Center upstairs -> downstairs transition).  Preserve the existing owner
+   # context until its dynamic exit actually consumes it.
+   owns_context=any(entry['inside']==target['id'] for entry in stack)
+   if not owns_context:
+    if _point(m,state['x'],state['y']):
+     stack.append({'inside':target['id'],'outside':m['id'],'x':state['x'],'y':state['y']})
+     stack=stack[-MAX_RETURN_DEPTH:]
+    else:return None
   return {'map':target['id'],'x':point[0],'y':point[1],'warpReturns':stack}
  return None

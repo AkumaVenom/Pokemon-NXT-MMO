@@ -20,6 +20,21 @@ FACING = {0x60:(0,1), 0x62:(-1,0), 0x63:(1,0), 0x64:(0,1),
 WATER = frozenset(range(16,28))
 SOLID_OBJECTS = frozenset((95,96,97))
 
+# Script-selected return portals whose raw destination bytes are placeholders.
+# These are reviewed individually rather than treating every 0/0 destination as
+# dynamic. Goldenrod Department Store's elevator exit is a classic example:
+# the ROM script selects the floor before the warp runs, while the raw event
+# itself points at bank/map 0/0. NXT does not execute that script, so the safe
+# MMO contract is to return the owner to the exact floor/door they entered from.
+SCRIPT_DYNAMIC_RETURNS = {
+    ('johto_34_27', 0): {
+        'target': 'johto_0_0',
+        'targetIndex': 0,
+        'kind': 'elevator-return',
+        'evidence': 'Goldenrod Department Store elevator uses a script-selected destination; raw 0/0 is a placeholder, not Battle Frontier.',
+    },
+}
+
 
 def dump(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -180,6 +195,12 @@ def audit(world, roms, assets):
                 behavior=m['behavior'][y*m['width']+x]
                 if behavior not in ENTRY:why='not-a-warp-metatile'
                 elif m['collision'][y*m['width']+x]!=0 and behavior!=0x69:why='solid-non-door-tile'
+                elif (special := SCRIPT_DYNAMIC_RETURNS.get((key,warp['index']))) is not None:
+                    if warp['target'] != special['target'] or warp['targetIndex'] != special['targetIndex']:
+                        why='reviewed-dynamic-return-source-changed'
+                    else:
+                        rules[str(warp['index'])]={'directions':list(ENTRY[behavior]),'dynamic':True,'kind':special['kind']}
+                        dynamic.append([key,warp['index']]);active['dynamic']+=1
                 elif warp['target'].endswith('_127_127') and warp['targetIndex']==127:
                     rules[str(warp['index'])]={'directions':list(ENTRY[behavior]),'dynamic':True,'kind':'return'};dynamic.append([key,warp['index']]);active['dynamic']+=1
                 else:
@@ -199,7 +220,8 @@ def audit(world, roms, assets):
     report={'format':1,'sources':{tag:{'sha256':hashlib.sha256(r.b).hexdigest(),'size':len(r.b)} for tag,r in roms.items()},
             'mapCount':len(maps),'recoveredMaps':sorted(recovered),'eventUpdates':event_updates,'rules':changes,
             'counts':dict(active),'inactive':inactive,'unresolvedMaps':failed,'reciprocalRepairs':reciprocal_repairs,
-            'semantics':'Warp event targetIndex is zero-based. Only matching warp-behavior tiles trigger; normal floor records are inert. Dynamic returns belong to the entering player.'}
+            'scriptDynamicReturns':[{'map':key,'index':index,**copy.deepcopy(meta)} for (key,index),meta in SCRIPT_DYNAMIC_RETURNS.items()],
+            'semantics':'Warp event targetIndex is zero-based. Only matching warp-behavior tiles trigger; normal floor records are inert. Dynamic returns belong to the entering player; reviewed script-selected placeholder returns never use their raw placeholder map as a real destination.'}
     return report,recovered
 
 

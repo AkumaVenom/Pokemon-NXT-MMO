@@ -5,7 +5,7 @@ echo.
 echo ================================================================
 echo   POKEMON NXT MMO - AUTOMATIC ALL-IN-ONE SOURCE BUILD 1.4.1
 echo   Missing Go + Python + build packages are installed automatically
-echo   Gameplay 0.6.5-alpha - Route 36 Sudowoodo story gate
+echo   Gameplay 0.6.6-alpha - Johto Sigma NPC dialogue restoration
 echo ================================================================
 echo.
 echo Extract the entire package first. An internet connection is needed

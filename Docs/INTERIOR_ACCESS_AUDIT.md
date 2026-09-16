@@ -17,8 +17,8 @@ The other three New Bark Town doors retain their native destinations: **(13,4) �
 | Maps retained from the working source | 859 |
 | Referenced Sigma maps recovered from the supplied ROM | 100 |
 | Total native maps | 959 |
-| Validated static warp triggers | 3,726 |
-| Validated dynamic return triggers | 87 |
+| Validated static warp triggers | 3,725 |
+| Validated dynamic return triggers | 88 |
 | Solid animated doors enabled through validated entrance logic | 577 |
 | Ordinary floor or other non-warp events left inert | 1,189 |
 | Pokémon Center building doors tested by actual movement in both directions | 60 |
@@ -39,6 +39,10 @@ Invalid coordinates, invalid target indices, absent target maps, unplayable layo
 Arrival positions use the actual target event or its immediately adjacent standable tile. There is no fallback to a distant room or arbitrary map spawn. Native room walls retain their collision except for the explicitly documented gym adaptations below.
 
 Shared interiors with dynamic exits keep a bounded **warpReturns** stack in each account's server-side state. Two trainers entering the same Cherrygrove Center through different doors return to their respective entrances. The destination and return context are committed together before the server publishes the map change. Saving, logout and relog preserve this context. A failed database commit leaves the player at the source and sends no destination map packet.
+
+The v0.6.6 portal hotfix also enforces **one owner return per shared interior**. Internal stairs may lead back into the same shared lower room, but they do not push another return entry or replace the real exterior doorway. `return_stack()` also collapses duplicate entries from older affected saves by keeping the first valid owner return, so an already-looped Pokémon Center visit can exit normally after updating.
+
+Goldenrod Department Store's elevator is a reviewed script-selected return. The raw Sigma exit event on **johto_34_27 warp 0** targets `johto_0_0`, but that `0/0` value is a runtime-script placeholder rather than the Battle Frontier destination. Because NXT intentionally does not execute the original elevator script, the safe MMO behavior is an owner-only dynamic return to the exact floor/doorway used to enter the lift. The seven validated sources are `johto_34_21` through `johto_34_26` plus `johto_34_28`. This exception is recorded in `interior_repairs.json`; other `0/0` records are not generalized or silently rewritten.
 
 ## Explicit MMO gym navigation adaptations
 
@@ -72,8 +76,8 @@ Content publication applies `repair_interiors.apply(world, root)` to recover map
 
 ## Verification
 
-`Tests/test_interior_access.py`: **16 tests passed using the pinned build environment**. Evidence: `Docs/evidence/interior_access_0.3.0_tests.txt`.
+`Tests/test_interior_access.py`: **19 focused tests** now cover the original portal suite plus the Center internal-return and Goldenrod elevator regressions. The hotfix test evidence is recorded in `Docs/evidence/interior_portal_hotfix_0.6.6_tests.txt`.
 
-The tests cover all 60 registered Center building entrances with real `World.move` commands and SQLite commits, all 16 gym leaders reached from native exterior doors, Leaf's front step/downstairs/upstairs/return route, different accounts returning through different shared Center entrances after relog, save-failure rollback, inert dummy floor events, source image preservation, and containment of the declared navigation edits.
+The tests cover all 60 registered Center building entrances with real `World.move` commands and SQLite commits, all 16 gym leaders reached from native exterior doors, Leaf's front step/downstairs/upstairs/return route, different accounts returning through different shared Center entrances after relog, a Center upstairs/downstairs round trip that must still exit outdoors, all seven Goldenrod Department Store elevator entry maps returning to their own floor rather than Battle Frontier, save-failure rollback, inert dummy floor events, source image preservation, and containment of the declared navigation edits.
 
 These checks validate game logic, native content and persistence on the test runtime. They do not claim Windows graphics-driver, live MySQL, router or large-player-count validation.

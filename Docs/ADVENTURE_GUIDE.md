@@ -149,8 +149,12 @@ The server owns badge requirements, NPC range, PC range, reward eligibility, ite
 
 ## Scope of this update
 
+### Johto / Sigma NPC talk text
+
+Version 0.6.6 publishes **2,158 audited static NPC talk literals** from the reviewed Sigma ROM. Ordinary Johto / Sigma NPC clicks use those strings when a safe source binding exists. Trainer and Gym Leader clicks deliberately keep NXT's existing team-preview/battle UI, while Nurse Joy, Poké Mart, Cut and Route 36 story services retain their server-authoritative actions. This does not execute original ROM quest flags, native specials, choices or cutscenes; unvalidated objects keep the previous fallback. Full extraction and provenance rules are documented in `JOHTO_SIGMA_NPC_DIALOGUE.md`.
+
 This is a FireRed-style multiplayer adventure layer using the supplied regions and ROM-derived content. It includes sixteen mapped Gym Leader challenges, persistent badges and goals, trainer teams, Pokémon Center care, PC storage, discoveries and supported Pokémon growth.
 
-It is **not a complete interpreter for FireRed or Ultra Shiny Gold Sigma**. Original story cutscenes, every scripted door or puzzle, full NPC event execution, original trainer sight AI, complete abilities and move effects, every evolution condition, breeding and a full Pokémon League campaign are not all implemented. Authored MMO rewards and unlocks are separate from the original story scripts. Region art, sound and extracted identity data do not imply those missing scripts are executing.
+It is **not a complete interpreter for FireRed or Ultra Shiny Gold Sigma**. Original story cutscenes, every scripted door or puzzle, full stateful NPC event execution, original trainer sight AI, complete abilities and move effects, every evolution condition, breeding and a full Pokémon League campaign are not all implemented. Authored MMO rewards and unlocks are separate from the original story scripts. Region art, sound and extracted identity data do not imply those missing scripts are executing.
 
 Use this release's validation report for the exact automated checks and platform limits. A configured maximum population is not a measured production concurrency guarantee.

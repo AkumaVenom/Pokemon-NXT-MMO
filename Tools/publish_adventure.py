@@ -76,7 +76,7 @@ def assemble(world: dict, root: Path) -> None:
             raise ValueError('Additive species identity conflict: ' + key)
         world['species'].setdefault(key, copy.deepcopy(profile))
     apply_learnsets(world, root)
-    world['version'] = '0.6.5-alpha'
+    world['version'] = '0.6.6-alpha'
     validate(world)
     extend_audio(world, root)
 

@@ -1,0 +1,43 @@
+test_all_active_portals_have_safe_native_arrivals (Tests.test_interior_access.InteriorMetadataTests.test_all_active_portals_have_safe_native_arrivals) ... ok
+test_all_ordinary_floor_events_remain_inert (Tests.test_interior_access.InteriorMetadataTests.test_all_ordinary_floor_events_remain_inert) ... ok
+test_goldenrod_department_store_elevator_placeholder_is_owner_return (Tests.test_interior_access.InteriorMetadataTests.test_goldenrod_department_store_elevator_placeholder_is_owner_return) ... ok
+test_gym_navigation_changes_only_declared_cells_and_boulders (Tests.test_interior_access.InteriorMetadataTests.test_gym_navigation_changes_only_declared_cells_and_boulders) ... ok
+test_leaf_frontstep_does_not_enter_battle_frontier (Tests.test_interior_access.InteriorMetadataTests.test_leaf_frontstep_does_not_enter_battle_frontier) ... ok
+test_new_bark_four_buildings_are_correct_native_interiors (Tests.test_interior_access.InteriorMetadataTests.test_new_bark_four_buildings_are_correct_native_interiors) ... ok
+test_open_gate_graphics_change_only_audited_tiles_keep_original_images (Tests.test_interior_access.InteriorMetadataTests.test_open_gate_graphics_change_only_audited_tiles_keep_original_images) ... ok
+test_recovered_leaf_upstairs_and_chuck_gym_keep_native_assets (Tests.test_interior_access.InteriorMetadataTests.test_recovered_leaf_upstairs_and_chuck_gym_keep_native_assets) ... ok
+test_saved_return_validation_drops_corrupt_records (Tests.test_interior_access.InteriorMetadataTests.test_saved_return_validation_drops_corrupt_records) ... ok
+test_source_collision_arrays_are_not_globally_opened (Tests.test_interior_access.InteriorMetadataTests.test_source_collision_arrays_are_not_globally_opened) ... ok
+test_adjacent_wall_and_incorrect_door_approach_do_not_bypass_collision (Tests.test_interior_access.InteriorMovementTests.test_adjacent_wall_and_incorrect_door_approach_do_not_bypass_collision) ... ok
+test_all_sixteen_native_gym_doors_reach_the_correct_leader_by_walking (Tests.test_interior_access.InteriorMovementTests.test_all_sixteen_native_gym_doors_reach_the_correct_leader_by_walking) ... ok
+test_both_regions_center_enter_and_exit_from_real_front_step (Tests.test_interior_access.InteriorMovementTests.test_both_regions_center_enter_and_exit_from_real_front_step) ... ok
+test_center_upstairs_does_not_replace_real_building_return (Tests.test_interior_access.InteriorMovementTests.test_center_upstairs_does_not_replace_real_building_return) ... ok
+test_every_registered_center_building_door_round_trips_by_walking (Tests.test_interior_access.InteriorMovementTests.test_every_registered_center_building_door_round_trips_by_walking) ... ok
+test_failed_portal_save_does_not_move_or_publish_destination (Tests.test_interior_access.InteriorMovementTests.test_failed_portal_save_does_not_move_or_publish_destination) ... State commit failed for DoorTester
+Traceback (most recent call last):
+  File "/mnt/data/work_v066_portal_hotfix/Pokemon_NXT_MMO_v0.6.6-alpha_Source_JohtoSigmaNpcDialogue_InteriorPortalHotfix/Server/nxt/world.py", line 117, in commit
+    try:await asyncio.to_thread(self.db.save_many,[(p.id,state)])
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/usr/lib/python3.13/unittest/mock.py", line 1169, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/unittest/mock.py", line 1173, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/unittest/mock.py", line 1228, in _execute_mock_call
+    raise effect
+OSError: disk unavailable
+ok
+test_goldenrod_department_store_elevator_returns_to_entering_floor (Tests.test_interior_access.InteriorMovementTests.test_goldenrod_department_store_elevator_returns_to_entering_floor) ... ok
+test_outside_walk_leaf_home_upstairs_and_back (Tests.test_interior_access.InteriorMovementTests.test_outside_walk_leaf_home_upstairs_and_back) ... ok
+test_two_accounts_shared_center_returns_stay_independent_after_relogin (Tests.test_interior_access.InteriorMovementTests.test_two_accounts_shared_center_returns_stay_independent_after_relogin) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 5.979s
+
+OK

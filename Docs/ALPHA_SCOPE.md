@@ -1,6 +1,6 @@
 # Alpha scope and acceptance boundaries
 
-Gameplay **0.3.4-alpha: Regional encounters and personal HM Cut**, built on the supplied **0.3.3-alpha BattleScreenFix** source. The accepted starter-selection, account-login, owner replication and progressive saving fixes remain part of this release. Startup, automatic prerequisites and online TLS setup are preserved.
+Gameplay **0.6.6-alpha: Johto Sigma NPC Dialogue Restoration**, preserving the accepted autonomous-performance, Route 36 story, regional encounter/Cut and battle-screen baselines. The accepted starter-selection, account-login, owner replication and progressive saving fixes remain part of this release. Startup, automatic prerequisites and online TLS setup are preserved.
 
 ## Implemented slice
 
@@ -20,6 +20,8 @@ Music, effects and cries now play through the client sound mixer. The original 8
 
 The published pack contains **959 layouts: 425 FireRed and 534 Sigma**, including 100 Sigma maps recovered from referenced native connections/warps that the older importer missed. The source content currently records 951 maps with a safe entry tile. This does not prove every square or every original story-controlled passage is playable. Static maps, object frames, collisions and native connection metadata are assets/data; original event scripts are a separate executable system that this release does not run. Portal triggers now distinguish actual warp-behavior tiles from inert floor records, and dynamic return destinations belong to the entering player. Invisible source NPC placeholders are omitted and visible duplicate IDs are normalized consistently before service and trainer binding.
 
+The Johto / Sigma dialogue layer publishes **2,158 validated static talk literals** from the reviewed Sigma ROM. Trainer and Gym Leader bindings are excluded so NXT keeps its party-preview challenge UI, and authored Cut/Sudowoodo objects keep their dedicated interaction logic. This is static presentation extraction: ROM flags, choices, native specials, cutscenes and complete quest-state execution are not run. Objects without a validated literal retain the existing NXT fallback. See `JOHTO_SIGMA_NPC_DIALOGUE.md`.
+
 FireRed's extracted set contains its additional areas, not only mainland Kanto. Sigma repurposes and adds areas, so its whole set is labeled Johto / Sigma, not asserted to be a clean Johto-only map list. The atlas deliberately exposes stable source map IDs for testing. Duplicate names, unused variants, unusual interior assets and hack-specific graphical inconsistencies may remain.
 
 Normal encounters now use 124 FireRed table records and 78 Crystal location/floor tables. Every one of the 959 maps has an explicit binding or intentional no-pool decision; 248 maps have pools. The earlier low-level fallback has been removed. Crystal time-of-day and method-specific slot/level distributions are implemented, but the MMO's configured encounter cadence remains. Johto retains Sigma geometry, with explicit floor zones and no invented tables for unsupported extras. Fishing, headbutt, contest, swarms, roaming/fixed legendary events and original story gates are not added. See `REGIONAL_ENCOUNTERS_AND_CUT.md` and `ENCOUNTER_CUT_AUDIT.json`.
@@ -28,7 +30,7 @@ Cut now unlocks automatically at Misty/Cascade for Kanto and Bugsy/Hive for Joht
 
 ## Explicitly not implemented
 
-Original FireRed/Sigma story execution or a complete original campaign; original dialogue/quest scripts and Elite Four story sequencing; arbitrary script-controlled doors/bridges/cutscenes; animated environment tiles; full original battle visual effects; full move/ability/held-item mechanics; unsupported evolution methods, breeding, eggs and EV training; fishing/rock-smash progression; original trainer line-of-sight AI; autonomous account-like trainer bots; guilds, auctions, mail, friend lists, cross-shard travel or account recovery. The implemented sixteen-gym badge journey and journal objectives are specifically an MMO adventure layer.
+Original FireRed/Sigma story execution or a complete original campaign; complete stateful dialogue/quest-script execution and Elite Four story sequencing; arbitrary script-controlled doors/bridges/cutscenes; animated environment tiles; full original battle visual effects; full move/ability/held-item mechanics; unsupported evolution methods, breeding, eggs and EV training; fishing/rock-smash progression; original trainer line-of-sight AI; guilds, auctions, mail, friend lists, cross-shard travel or account recovery. The implemented sixteen-gym badge journey and journal objectives are specifically an MMO adventure layer.
 
 No complete directional overworld follower set was established. This alpha animates each available lead species using its extracted two-frame party icon, including fallback presentation for tiny/atypical forms. Follower position and species are server-replicated, but this is not four-direction HGSS-style follower animation. Shiny follower colors are not promised; battle front/back shiny art is available.
 

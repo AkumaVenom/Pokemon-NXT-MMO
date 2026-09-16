@@ -9,11 +9,13 @@ from pathlib import Path
 try:
  from .verify_audio import verify as verify_audio
  from .publish_adventure import assemble as assemble_adventure
+ from .publish_dialogue import assemble as assemble_dialogue
  from .publish_encounters import assemble as assemble_encounters
  from .publish_varieties import assemble as assemble_varieties
 except ImportError:
  from verify_audio import verify as verify_audio
  from publish_adventure import assemble as assemble_adventure
+ from publish_dialogue import assemble as assemble_dialogue
  from publish_encounters import assemble as assemble_encounters
  from publish_varieties import assemble as assemble_varieties
 ROOT=Path(__file__).resolve().parents[1]
@@ -25,6 +27,7 @@ def write_json(path:Path,value):
  finally:tmp.unlink(missing_ok=True)
 def publish(world:dict,root:Path=ROOT):
  assemble_adventure(world,root)
+ assemble_dialogue(world,root)
  assemble_encounters(world,root)
  assemble_varieties(world,root)
  assets=root/'Client/app/assets'

@@ -69,7 +69,13 @@ class InteriorMetadataTests(unittest.TestCase):
      self.assertTrue(0<=warp['x']<m['width'] and 0<=warp['y']<m['height'])
      behavior=m['behavior'][warp['y']*m['width']+warp['x']]
      self.assertIn(behavior,ENTRY)
-     if access.get('dynamic'):self.assertTrue(warp['target'].endswith('_127_127'));continue
+     if access.get('dynamic'):
+      if warp['target'].endswith('_127_127'):
+       self.assertEqual(warp['targetIndex'],127)
+      else:
+       self.assertEqual((key,warp['index'],warp['target'],warp['targetIndex'],access.get('kind')),
+                        ('johto_34_27',0,'johto_0_0',0,'elevator-return'))
+      continue
      target=self.content.maps[warp['target']]
      self.assertTrue(0<=warp['targetIndex']<len(target['warps']))
      self.assertTrue(standable(target,*access['arrival']))
@@ -105,9 +111,16 @@ class InteriorMetadataTests(unittest.TestCase):
    self.assertIn('sourceHeader',m);self.assertIn('musicId',m)
   self.assertEqual(len(self.content.maps['johto_7_1']['warps']),147)
   self.assertEqual(self.content.maps['johto_1_58']['warps'][10]['target'],'johto_1_58')
+ def test_goldenrod_department_store_elevator_placeholder_is_owner_return(self):
+  elevator=self.content.maps['johto_34_27'];warp=elevator['warps'][0]
+  self.assertEqual((warp['target'],warp['targetIndex']),('johto_0_0',0))
+  self.assertEqual(warp['access'],{'directions':['down'],'dynamic':True,'kind':'elevator-return'})
+  reviewed=[e for e in self.report.get('scriptDynamicReturns',[]) if e.get('map')=='johto_34_27' and e.get('index')==0]
+  self.assertEqual(len(reviewed),1);self.assertIn('placeholder',reviewed[0]['evidence'])
  def test_saved_return_validation_drops_corrupt_records(self):
   m=self.content.maps['johto_3_0'];base={'inside':'johto_32_0','outside':m['id'],'x':17,'y':10}
-  state={'warpReturns':[base,dict(base,x=-1),dict(base,inside='missing'),dict(base,x=True),None]}
+  duplicate=dict(base,outside='johto_32_1',x=2,y=6)
+  state={'warpReturns':[base,duplicate,dict(base,x=-1),dict(base,inside='missing'),dict(base,x=True),None]}
   self.assertEqual(return_stack(self.content,state),[base])
  def test_gym_navigation_changes_only_declared_cells_and_boulders(self):
   original=copy.deepcopy(self.data);changed=apply_navigation(copy.deepcopy(original));nav=json.loads((ROOT/'Server/data/interior_navigation.json').read_text())
@@ -180,6 +193,44 @@ class InteriorMovementTests(unittest.IsolatedAsyncioTestCase):
     self.locate(p,region+'_3_1',26,27);await self.step(p,'up')
     self.assertEqual((p.state['map'],p.state['x'],p.state['y']),(region+'_5_4',7,7))
     await self.step(p,'down');self.assertEqual((p.state['map'],p.state['x'],p.state['y']),(region+'_3_1',26,27))
+ async def test_center_upstairs_does_not_replace_real_building_return(self):
+  p=self.player
+  # Enter Cherrygrove's shared Center through a real exterior door so the
+  # account owns one dynamic return to that exact entrance.
+  self.locate(p,'johto_3_47',43,6);p.state['warpReturns']=[];await self.step(p,'up')
+  self.assertEqual((p.state['map'],p.state['x'],p.state['y']),('johto_32_0',28,7))
+  expected=copy.deepcopy(p.state['warpReturns']);self.assertEqual(len(expected),1)
+  self.assertEqual((expected[0]['inside'],expected[0]['outside'],expected[0]['x'],expected[0]['y']),
+                   ('johto_32_0','johto_3_47',43,6))
+  # Use the Center's internal staircase and come back downstairs. The lower
+  # shared room must keep the original exterior context instead of treating
+  # the upstairs room as a new building entrance.
+  self.locate(p,'johto_32_0',22,7);await self.step(p,'up');self.assertEqual(p.state['map'],'johto_32_1')
+  await self.step(p,'right');await self.step(p,'left');self.assertEqual(p.state['map'],'johto_32_0')
+  self.assertEqual(p.state['warpReturns'],expected)
+  # Leaving downstairs now returns outside once; it cannot bounce upstairs.
+  self.locate(p,'johto_32_0',28,7);await self.step(p,'down')
+  self.assertEqual((p.state['map'],p.state['x'],p.state['y']),('johto_3_47',43,6))
+  self.assertEqual(p.state['warpReturns'],[])
+ async def test_goldenrod_department_store_elevator_returns_to_entering_floor(self):
+  p=self.player;elevator='johto_34_27';sources=[]
+  for key,m in self.content.maps.items():
+   for warp in m['warps']:
+    if warp.get('target')==elevator and warp.get('access',{}).get('directions')==['up']:
+     sources.append((key,warp))
+  self.assertEqual({key for key,_ in sources},{'johto_34_21','johto_34_22','johto_34_23','johto_34_24','johto_34_25','johto_34_26','johto_34_28'})
+  for key,warp in sources:
+   with self.subTest(floor=key):
+    self.locate(p,key,warp['x'],warp['y']+1);p.state['warpReturns']=[]
+    await self.step(p,'up')
+    self.assertEqual((p.state['map'],p.state['x'],p.state['y']),(elevator,2,4))
+    self.assertEqual(len(p.state['warpReturns']),1)
+    self.assertEqual((p.state['warpReturns'][0]['inside'],p.state['warpReturns'][0]['outside']), (elevator,key))
+    await self.step(p,'down')
+    self.assertEqual((p.state['map'],p.state['x'],p.state['y']),(key,warp['x'],warp['y']+1))
+    self.assertEqual(p.state['warpReturns'],[])
+    self.assertNotEqual(p.state['map'],'johto_0_0')
+    self.packets(p)
  async def test_two_accounts_shared_center_returns_stay_independent_after_relogin(self):
   p=self.player;state=self.world.initial('OtherDoor','Johto','fr_152',7);uid=self.db.create('OtherDoor','test',state)
   q=await self.world.join(uid,'OtherDoor',state,asyncio.Queue(maxsize=10000))

@@ -1,11 +1,19 @@
 # Pokemon NXT MMO — automatic all-in-one source build
 
 
-**Download all FOUR source ZIPs:** `Pokemon_NXT_MMO_v0.6.5-alpha_Source_Route36SudowoodoStory_Part1.zip`, `Part2.zip`, `Part3.zip` and `Part4.zip` (all share the same prefix). Extract each ordinary ZIP into the same destination, merging the identically named `Pokemon_NXT_MMO_v0.6.5-alpha_Source_Route36SudowoodoStory` folders. Do not concatenate the ZIP files. Run `BUILD_ALL.bat` only after all four parts are extracted. The four parts contain the complete source and assets; no earlier source pack or optional patch is required.
+**Download all FOUR source ZIPs:** `Pokemon_NXT_MMO_v0.6.6-alpha_Source_JohtoSigmaNpcDialogue_Part1.zip`, `Part2.zip`, `Part3.zip` and `Part4.zip` (all share the same prefix). Extract each ordinary ZIP into the same destination, merging the identically named `Pokemon_NXT_MMO_v0.6.6-alpha_Source_JohtoSigmaNpcDialogue` folders. Do not concatenate the ZIP files. Run `BUILD_ALL.bat` only after all four parts are extracted. The four parts contain the complete source and assets; no earlier source pack or optional patch is required.
 
-Gameplay **0.6.5-alpha** · Build tools **1.4.1** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
+Gameplay **0.6.6-alpha** · Build tools **1.4.1** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
 
 The full source includes the extracted FireRed and Sigma music, sound effects and cries. `BUILD_ALL.bat` verifies and packages these files; it does not extract them again. **No ROM, FFmpeg or C++ audio-renderer build is needed for a normal build.**
+
+## Johto / Sigma NPC dialogue restoration · 0.6.6-alpha
+
+**Corrected source bundle:** native Windows build validation found one stale 0.6.5 release-audit value in the first 0.6.6 source package. This corrected bundle aligns the admin proposal audit and `BUILD_ALL.bat` banner with 0.6.6 and adds a regression for the banner. No gameplay/content/save/schema behavior changed.
+
+Ordinary Johto / Sigma NPC clicks now display **2,158 validated static talk literals** recovered from the exact reviewed Sigma ROM, covering all safe bindings discovered across the 534-map source set. Trainers and Gym Leaders remain on NXT's existing party-preview/challenge UI; Nurse Joy and Poké Mart services keep their authoritative actions; Cut and the Route 36 Sudowoodo story object remain dedicated interactions. The extractor never executes ROM code and objects without a safely established literal keep the existing fallback.
+
+The ROM is **not required for a normal build and is not included in these ZIPs**. The bundled `Server/data/johto_dialogue.json` is verified and published into the world pack automatically. No database schema or save migration is added by 0.6.6. See `Docs/JOHTO_SIGMA_NPC_DIALOGUE.md` and its test report.
 
 ## Route 36 Sudowoodo story gate · 0.6.5-alpha
 
@@ -17,7 +25,7 @@ This release is built directly on the accepted 0.6.4 long-uptime autonomous-perf
 
 ## Windows build repair · 1.4.1
 
-**Windows build correction (1.4.1):** Explicitly close temporary SQLite probe connections; this fixes the reported `WinError 32` in the schema/lease regression without disabling it or changing the server. See `Docs/WINDOWS_BUILD_FIX_1.4.1.md` and its test report. That historical repair remains preserved; current gameplay uses schema 3 and the 0.6.5 content pack.
+**Windows build correction (1.4.1):** Explicitly close temporary SQLite probe connections; this fixes the reported `WinError 32` in the schema/lease regression without disabling it or changing the server. See `Docs/WINDOWS_BUILD_FIX_1.4.1.md` and its test report. That historical repair remains preserved; current gameplay uses schema 3 and the current 0.6.6 content pack.
 
 ## Autonomous trainer performance hardening · 0.6.4-alpha
 
@@ -29,13 +37,13 @@ Start the built world server as usual, then type `help` in its interactive termi
 
 Back up the existing database before this update. Schema 3 remains authoritative and this gameplay update requires no new schema bump. Existing human accounts, autonomous identities, Pokémon, ratings, rivalries and histories are upgraded in place.
 
-The earlier **build-tools 1.3.4 Windows symlink-privilege correction remains included**. Its isolated sprite-copy tests stay active. Current gameplay is **0.6.5-alpha**, build tools **1.4.1**, with a newly published matching content pack. Historical repair instructions are in `Docs/WINDOWS_BUILD_FIX_1.3.4.md`; do not apply that old repair over this complete release.
+The earlier **build-tools 1.3.4 Windows symlink-privilege correction remains included**. Its isolated sprite-copy tests stay active. Current gameplay is **0.6.6-alpha**, build tools **1.4.1**, with a newly published matching content pack. Historical repair instructions are in `Docs/WINDOWS_BUILD_FIX_1.3.4.md`; do not apply that old repair over this complete release.
 
 ## Varieties and regional encounter/Cut updates
 
 Version 0.3.5 adds five persistent cosmetic varieties, server-controlled rarity, collection/dex presentation and replicated follower sparkles. All player-side battle Pokémon use horizontally flipped front sprites. Read `Docs/POKEMON_VARIETIES.md` and its test report for the full 251-species coverage and additional-form limits. The supplied converted fronts are already included; no images.rar, Pillow, image converter, new art download or back-sprite collection is needed for a normal build.
 
-The accepted 0.3.4 FireRed/Crystal encounter resolver and independent regional Cut licenses remain: Misty/Cascade for Kanto and Bugsy/Hive for Johto. Personal tree clearing remains saved per character. See `Docs/REGIONAL_ENCOUNTERS_AND_CUT.md`. Old release guides describe their historical package counts; this 0.3.6 source is supplied in **four** parts.
+The accepted 0.3.4 FireRed/Crystal encounter resolver and independent regional Cut licenses remain: Misty/Cascade for Kanto and Bugsy/Hive for Johto. Personal tree clearing remains saved per character. See `Docs/REGIONAL_ENCOUNTERS_AND_CUT.md`. Old release guides describe their historical package counts; this 0.6.6 source is supplied in **four** parts.
 
 ## Battle screen correction
 

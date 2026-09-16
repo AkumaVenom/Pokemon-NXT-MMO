@@ -15,6 +15,7 @@ from .encounters import encounter_slots,select_encounter
 from .ai_trainers import AutonomousTrainers
 from .portals import plan_warp,return_stack
 from .async_tasks import complete_before_cancelling
+from .dialogue import render as render_npc_dialogue
 log=logging.getLogger('nxt.world')
 DIRECTIONS={'down':(0,1,1),'up':(0,-1,2),'left':(-1,0,3),'right':(1,0,4)}
 WATER={16,17,18,19,21,26,27}
@@ -402,14 +403,14 @@ class World:
   require(d.get('map',m['id'])==m['id'],'That interaction belongs to another map. Click the object again.')
   if is_cut_tree(o):await self.cut_tree(p,d,o);return
   if o.get('storyEvent'):await self.story_object(p,d,o);return
-  center=self.c.data.get('centers',{}).get(m['id'],{});trainer=self.adventure.by_npc.get((m['id'],nid))
+  center=self.c.data.get('centers',{}).get(m['id'],{});trainer=self.adventure.by_npc.get((m['id'],nid));rom_message=render_npc_dialogue(self.c,p.state,p.username,m['id'],nid)
   if nid in center.get('nurseNpcIds',[]):
    if action=='heal':await self.heal(p,npc=nid);return
    require(action in (None,'talk','pc'),'Choose a Pokemon Center service.');actions=['heal']
    if self.adventure.pc_available(p.state):actions.append('pc')
-   p.send('dialog',title='Nurse Joy',message='Welcome to the Pokemon Center! May I restore your Pokemon to full health? You can also manage your party and storage here.',actions=actions,npc=nid);return
+   p.send('dialog',title='Nurse Joy',message=rom_message or 'Welcome to the Pokemon Center! May I restore your Pokemon to full health? You can also manage your party and storage here.',actions=actions,npc=nid);return
   if nid in center.get('pcNpcIds',[]):
-   require(action in (None,'talk','pc'),'Choose the storage service.');p.send('dialog',title='Pokemon Storage PC',message='Deposit and withdraw your Pokemon. Keep one healthy partner with you.',actions=['pc'],npc=nid);return
+   require(action in (None,'talk','pc'),'Choose the storage service.');p.send('dialog',title='Pokemon Storage PC',message=rom_message or 'Deposit and withdraw your Pokemon. Keep one healthy partner with you.',actions=['pc'],npc=nid);return
   if trainer:
    if action=='battle':
     self.adventure.can_challenge(p.state,trainer);require(any(mon['hp']>0 for mon in self.party(p)),'Your party needs healing.');team=[]
@@ -421,8 +422,8 @@ class World:
     b=Battle(self.c,'trainer',[p.id,None],[p.username,trainer['name']],[self.party(p),team],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0]);b.adventure_trainer=trainer;self.battles[b.id]=b;p.battle=b.id;p.send('battle',battle=b.view(0));return
    require(action in (None,'talk'),'Choose a trainer interaction.');defeated=trainer['id'] in p.state['adventure']['trainers'];gym=self.adventure.gym(trainer);summary=', '.join(f'{self.c.species[t["species"]]["name"]} Lv. {t["level"]}' for t in trainer['team']);message=('Gym challenge. ' if gym else 'Trainer challenge. ')+summary+(' Rematch: no repeat EXP, money or badge rewards.' if defeated else 'Your first victory earns a permanent record and a reward.');p.send('dialog',title=trainer['name'],message=message,actions=['battle'],npc=nid);return
   require(action in (None,'talk'),'This character does not offer that service.')
-  if o['graphics']==68:p.send('dialog',title='Poke Mart',message='Welcome! Purchase supplies for your adventure from the Bag panel.',actions=['shop'],npc=nid)
-  else:p.send('dialog',title=m['name'],message='Explore the region, discover Pokemon, and challenge local trainers. Your Adventure Journal tracks your next goals. Original story scripts are not executed by this MMO.',actions=[],npc=nid)
+  if o['graphics']==68:p.send('dialog',title='Poke Mart',message=rom_message or 'Welcome! Purchase supplies for your adventure from the Bag panel.',actions=['shop'],npc=nid)
+  else:p.send('dialog',title=m['name'],message=rom_message or 'Explore the region, discover Pokemon, and challenge local trainers. Your Adventure Journal tracks your next goals. Original story scripts are not executed by this MMO.',actions=[],npc=nid)
  async def heal(self,p,npc=None):
   self.free(p);self.adventure.require_nurse(p.state,npc);s=copy.deepcopy(p.state)
   for mon in s['creatures']:
