@@ -25,7 +25,7 @@ function harness(){
  const state={type:'state',ownerId:1,revision:1,money:3000,party:[mon.uid],creatures:[mon],items:{},adventure:{unlocks:[]}};
  const session={id:1,username:'Akumavenom'},own={id:1,map:'johto_3_0',x:5,y:5};
  const socket={readyState:1,sent:[],send(data){this.sent.push(JSON.parse(data));},close(){this.readyState=2;}};
- const audio=new Proxy({settings:{}},{get:(target,k)=>k in target?target[k]:()=>{}}),renderer={setCutTrees(){},objectVisible(){return true;},players:new Map(),resetSession(){},resize(){},scene(){},loadMap:async()=>true};
+ const audio=new Proxy({settings:{}},{get:(target,k)=>k in target?target[k]:()=>{}}),renderer={setCutTrees(){},setStoryEvents(){},objectVisible(){return true;},players:new Map(),resetSession(){},resize(){},scene(){},loadMap:async()=>true};
  const context=vm.createContext({...varietyPresentation,Node:Element,document,window:new Element(),GameAudio:class{constructor(){return audio;}},WorldRenderer:class{},mountAudioControls(){},WebSocket:{OPEN:1},setInterval(){},setTimeout(){},clearTimeout(){},performance:{now:()=>0},console});
  vm.runInContext(source.replace(/^import .*?;\n/gm,'').replace(/boot\(\);\s*$/,`globalThis.api={showPokemon,showMoveReminder,handle,closeModal,loadMap,get state(){return state;},get modal(){return modalKind;},seed(values){({content,state,session,own,ws,renderer}=values);},busy(kind){trade=kind==='trade'?{}:null;activeBattle=kind==='battle'?{}:null;invite=kind==='invite'?{}:null;},changeSession(id){session=id===null?null:{id};}};`),context,{filename:'app.js'});
  context.api.seed({content,state,session,own,ws:socket,renderer});

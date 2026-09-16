@@ -80,3 +80,7 @@ test('cuts survive an in-flight map load and the next frame excludes both sprite
 test('a fresh authoritative snapshot replaces rather than merges private flags',()=>{
  const {r}=harness();r.setCutTrees({'kanto_3_19':[7,true,'8',-1,256]});assert.equal(r.cutTrees.get('kanto_3_19').size,1);r.setCutTrees({});assert.equal(r.cutTrees.size,0);r.setCutTrees(null);assert.equal(r.cutTrees.size,0);
 });
+
+test('owner story completion hides only its authored Sudowoodo object and resets cleanly',()=>{
+ const {r}=harness(),tree={id:3,graphics:98,storyEvent:'johto_sudowoodo'},other={id:4,graphics:98};r.map={...mapData('johto_2_23'),objects:[tree,other]};r.hits=[{kind:'npc',id:3,map:r.map.id},{kind:'npc',id:4,map:r.map.id}];r.setStoryEvents(['johto_sudowoodo',7,null]);assert.equal(r.objectVisible(tree),false);assert.equal(r.objectVisible(other),true);assert.deepEqual(r.hits.map(h=>h.id),[4]);r.setStoryEvents([]);assert.equal(r.objectVisible(tree),true);r.setStoryEvents(['johto_sudowoodo']);r.resetSession();assert.equal(r.storyEvents.size,0);assert.equal(r.objectVisible(tree),true);
+});

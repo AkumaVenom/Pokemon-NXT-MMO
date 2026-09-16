@@ -7,6 +7,7 @@ from __future__ import annotations
 import copy,time
 from .security import require
 from .field_moves import migrate_cuts,public_field_moves
+from .story_events import migrate as migrate_story,public as public_story_events,refresh_rewards as refresh_story_rewards
 
 class Adventure:
  def __init__(self,content):
@@ -22,7 +23,7 @@ class Adventure:
   for k,v in defaults.items():a.setdefault(k,copy.deepcopy(v))
   require(a.get('format')==1,'This adventure save needs a newer server.')
   self.observe(state,[m['species'] for m in state['creatures']],caught=True)
-  self.visit(state,state['map']);self.refresh_unlocks(state);migrate_cuts(state,self.c.maps);return state
+  self.visit(state,state['map']);self.refresh_unlocks(state);migrate_cuts(state,self.c.maps);migrate_story(state,self.c);return state
  def observe(self,state,species,caught=False):
   a=state['adventure']
   for key in species:
@@ -60,6 +61,7 @@ class Adventure:
   a=state['adventure']
   for rule in self.rules.get('unlocks',[]):
    if all(b in a['badges'] for b in rule.get('badges',[])) and len(a['badges'])>=rule.get('badgeCount',0) and rule['id'] not in a['unlocks']:a['unlocks'].append(rule['id'])
+  refresh_story_rewards(state,self.c)
  def goal_current(self,state,goal):
   a=state['adventure'];metric=goal['metric']
   if metric=='caught':return len(a['caught'])
@@ -96,4 +98,4 @@ class Adventure:
   goals=[]
   for goal in self.rules.get('goals',[]):
    current=self.goal_current(state,goal);goals.append({'id':goal['id'],'title':goal['title'],'description':goal['description'],'current':min(current,goal['target']),'target':goal['target'],'complete':current>=goal['target'],'claimed':goal['id'] in a['claimed'],'reward':goal.get('reward',{})})
-  return {'fieldMoves':public_field_moves(state),'cutTrees':copy.deepcopy(a.get('cutTrees',{})),'regions':regions,'goals':goals,'trainers':{'defeated':sorted(a['trainers']),'count':len(a['trainers'])},'dex':{'seen':sorted(a['seen']),'caught':sorted(a['caught']),'varieties':copy.deepcopy(a.get('varietyDex',{'seen':{},'caught':{}}))},'visited':list(a['visited']),'unlocks':list(a['unlocks']),'pcAvailable':self.pc_available(state),'stored':len(state['creatures'])-len(state['party'])}
+  return {'fieldMoves':public_field_moves(state),'cutTrees':copy.deepcopy(a.get('cutTrees',{})),'storyEvents':list(a.get('storyEvents',[])),'story':public_story_events(state,self.c),'regions':regions,'goals':goals,'trainers':{'defeated':sorted(a['trainers']),'count':len(a['trainers'])},'dex':{'seen':sorted(a['seen']),'caught':sorted(a['caught']),'varieties':copy.deepcopy(a.get('varietyDex',{'seen':{},'caught':{}}))},'visited':list(a['visited']),'unlocks':list(a['unlocks']),'pcAvailable':self.pc_available(state),'stored':len(state['creatures'])-len(state['party'])}

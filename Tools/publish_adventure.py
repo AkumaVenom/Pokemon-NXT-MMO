@@ -43,6 +43,23 @@ def assemble(world: dict, root: Path) -> None:
     world['adventureRom'] = {k: copy.deepcopy(v) for k, v in native.items()
                              if k not in ('normalizedObjects', 'speciesOverrides')}
     world['adventure'] = read(root, 'adventure')
+    for key, item in world['adventure'].get('keyItems', {}).items():
+        required = {'name', 'price', 'keyItem', 'buyable', 'tradable', 'description'}
+        if set(item) != required or item['price'] != 0 or item['keyItem'] is not True or item['buyable'] is not False or item['tradable'] is not False:
+            raise ValueError('Invalid story key item: ' + key)
+        if key in world['items'] and world['items'][key] != item:
+            raise ValueError('Story key item conflicts with an existing item: ' + key)
+        world['items'][key] = copy.deepcopy(item)
+    for event in world['adventure'].get('storyEvents', []):
+        m = world['maps'].get(event.get('map'))
+        if not m:
+            raise ValueError('Story event has no map: ' + str(event.get('id')))
+        obj = next((o for o in m.get('objects', []) if o.get('id') == event.get('npc')), None)
+        if not obj or obj.get('graphics') != event.get('graphics'):
+            raise ValueError('Story event object binding mismatch: ' + str(event.get('id')))
+        if 'storyEvent' in obj and obj['storyEvent'] != event['id']:
+            raise ValueError('Story object already has another event: ' + m['id'])
+        obj['storyEvent'] = event['id']
     for key, fields in native.get('speciesOverrides', {}).items():
         if key not in world['species'] or set(fields) - {'learnset', 'learnsetSource', 'learnsetProvenance'}:
             raise ValueError('Invalid ROM species override: ' + key)
@@ -59,7 +76,7 @@ def assemble(world: dict, root: Path) -> None:
             raise ValueError('Additive species identity conflict: ' + key)
         world['species'].setdefault(key, copy.deepcopy(profile))
     apply_learnsets(world, root)
-    world['version'] = '0.6.4-alpha'
+    world['version'] = '0.6.5-alpha'
     validate(world)
     extend_audio(world, root)
 
@@ -90,6 +107,24 @@ def validate(world: dict) -> None:
         trainer = native['trainers'].get(gym['trainer'])
         if not trainer or (trainer['map'], trainer['npc']) != (gym['map'], gym['npc']):
             raise ValueError('Gym leader binding mismatch: ' + gym['name'])
+    story = world.get('adventure', {}).get('storyEvents', [])
+    ids = [event.get('id') for event in story]
+    if len(ids) != len(set(ids)) or any(not isinstance(event_id, str) or not event_id for event_id in ids):
+        raise ValueError('Story event ids must be unique non-empty strings')
+    badges = world.get('adventure', {}).get('badgeNames', {})
+    for event in story:
+        m = maps.get(event.get('map'));obj = next((o for o in (m or {}).get('objects', []) if o.get('id') == event.get('npc')), None)
+        if not obj or obj.get('graphics') != event.get('graphics') or obj.get('storyEvent') != event['id']:
+            raise ValueError('Invalid published story object: ' + event['id'])
+        if event.get('species') not in species or not 1 <= event.get('level', 0) <= 100:
+            raise ValueError('Invalid story encounter Pokemon: ' + event['id'])
+        if event.get('requiredBadge') not in badges:
+            raise ValueError('Invalid story badge requirement: ' + event['id'])
+        item = world['items'].get(event.get('requiredItem'))
+        if not item or not item.get('keyItem') or item.get('buyable', True) or item.get('tradable', True):
+            raise ValueError('Invalid story key-item binding: ' + event['id'])
+        if any(str(move) not in moves for move in event.get('moves', [])) or len(event.get('moves', [])) > 4:
+            raise ValueError('Invalid story encounter moves: ' + event['id'])
     for key, choices in native['evolutions'].items():
         if key not in species:
             raise ValueError('Unknown evolving species: ' + key)

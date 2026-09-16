@@ -1,12 +1,14 @@
 # Pokemon NXT MMO
 
-### 2,000 autonomous trainers — persistent progression without long-uptime I/O collapse
+### Route 36 Sudowoodo story gate — personal collision, SquirtBottle and persistent battle clear
 
-The **0.6.4-alpha Autonomous Trainer Performance Hardening** update fixes the severe long-uptime bot stalls and MySQL disk spikes that could appear as autonomous collections grew. The single leased world now keeps its already-authoritative 2,000-bot population in memory instead of repeatedly re-reading and JSON-decoding the entire population on the live tick path. Ranked simulation, off-screen field progression and visible bot field outcomes retain the same gameplay, cadence, capture/evolution/travel behavior and persistence, but use bounded cohort reads plus batched transactional writes. No bots, maps, battles, captures, travel, evolution, AI Activity, ranking or player-facing systems were removed. See `Docs/AUTONOMOUS_PERFORMANCE.md`, `Docs/AUTONOMOUS_PERFORMANCE_TEST_REPORT.md`, `Docs/AUTONOMOUS_TRAINERS.md` and the preserved 0.6.3 evolution documentation.
+The **0.6.5-alpha Route 36 Sudowoodo Story** update turns the existing odd-tree sprite on Johto Route 36 into an authoritative per-character story obstacle. Before it is cleared, the exact authored tile is solid even though the shared ROM collision tile is passable. Defeating Whitney grants the saved **SquirtBottle** Key Item; clicking the odd tree and choosing **Use SquirtBottle** starts the authored **Lv. 20 Sudowoodo** encounter. Defeating or capturing Sudowoodo saves the event as cleared and removes that tree/collision only for that character. Running, losing, disconnecting before a successful save, or another player's completion cannot open your path.
 
-## 0.6.4-alpha · Autonomous Trainer Performance Hardening · Build tools 1.4.1
+This update is additive to the accepted **0.6.4-alpha Autonomous Trainer Performance Hardening** baseline. The 2,000-bot population, in-memory authority, batched persistence, ranked/off-screen simulation, captures, travel and bot evolution remain unchanged. The movement hot path evaluates environmental blockers in one bounded object pass so the new story collision does not reintroduce whole-object-list scan amplification for human or autonomous movement. See `Docs/ROUTE36_SUDOWOODO.md` and `Docs/ROUTE36_SUDOWOODO_TEST_REPORT.md` for the progression, security/persistence contract and executed validation.
 
-**Preserved Windows build correction (1.4.1):** the ordinary-user Windows source builder still closes temporary SQLite probe connections correctly, retains CRLF launcher contracts, and keeps the accepted schema-3 migration/lease protections. This gameplay release builds on the corrected BuildFix1 baseline and the accepted 0.5.1 party-identity fix.
+## 0.6.5-alpha · Route 36 Sudowoodo Story · Build tools 1.4.1
+
+**Preserved Windows/build and performance corrections:** the ordinary-user Windows source builder still closes temporary SQLite probe connections correctly, retains CRLF launcher contracts and schema-3 lease protection. The accepted 0.6.4 autonomous-performance architecture remains intact; this release adds no SQL schema bump and requires no bot or player reset.
 
 Type commands in the **world-server terminal on the host PC**, never in player chat. The console provides **81 canonical commands and 21 aliases** selected/adapted from the supplied proposal for NXT's existing systems. It is not an RCON service, HTTP admin panel or client permission rank. The operating-system account controlling the server process is trusted; Windows elevation is not required.
 
@@ -14,7 +16,7 @@ Use `help`, `who`, `help givepokemon`, `team TrainerName` and `species Pikachu` 
 
 **Chat commands are intentionally excluded**, including announce, broadcast, mute and whisper. Unsupported gameplay systems are not exposed as pretend commands. See **`Docs/LOCAL_ADMIN_CONSOLE.md`** for the complete command reference, configuration, safety model, examples, upgrade and rollback instructions; **`Docs/LOCAL_ADMIN_PROPOSAL_AUDIT.md`** maps every proposal row to its implementation or explicit exclusion. Current executed checks are recorded in **`Docs/LOCAL_ADMIN_TEST_REPORT.md`**.
 
-**Upgrade:** back up the database and configured deployment, stop the old server, then deploy matching rebuilt Client and Server. Schema 3 remains authoritative for autonomous trainers; this update adds no new SQL schema version. The performance migration adds an idempotent composite activity index during normal startup; no database reset or MySQL reconfiguration is required. Existing accounts, bot identities, bot Pokémon, ratings, rivalries and activity history are preserved. Preserve your configurations and certificates; do not rerun MySQL setup for this update.
+**Upgrade:** back up the database and configured deployment, stop the old server, then deploy matching rebuilt Client and Server. Schema 3 remains authoritative; this update adds no new SQL schema version. The preserved 0.6.4 performance migration keeps its idempotent activity index, and 0.6.5 adds only character-save story/key-item fields. Existing Plain Badge owners receive the SquirtBottle additively when their save is validated; accounts without the badge are unchanged until they defeat Whitney. Existing accounts, autonomous identities, bot Pokémon, ratings, rivalries and activity history are preserved. Preserve your configurations and certificates; do not rerun MySQL setup for this update.
 
 The accepted **1.3.4 standard-user Windows build correction is preserved**: the variety publisher tests use isolated real sprite copies, not privileged links. No Developer Mode, elevated console, dependency downgrade or skipped variety checks is needed. Its historical repair guide is `Docs/WINDOWS_BUILD_FIX_1.3.4.md`.
 
@@ -48,7 +50,7 @@ The previous update corrected level-up learning across all 876 then-published Po
 
 **Cyndaquil learns Ember at level 12 in both supplied ROMs.** Its summary now shows the complete native level-up list and next move. Open a Pokémon from **P → Party & storage**, then use **Move Reminder** to recover eligible current-species moves. Replacing a move requires your confirmation. See `Docs/LEARNSET_GUIDE.md`, `Docs/LEARNSET_ROM_AUDIT.md` and `Docs/LEARNSET_TEST_REPORT.md`.
 
-**Download all FOUR full-source ZIPs, Parts 1–4. Extract every part into the same destination so the identically named `Pokemon_NXT_MMO_v0.6.4-alpha_Source_AutonomousTrainerPerformance` folders merge, then run `BUILD_ALL.bat`.** These are ordinary mergeable ZIPs, not byte-split volumes: do not concatenate them. All four parts are required and together contain the complete source and assets. No previous pack, original ROM, images.rar, Pillow, FFmpeg or audio renderer is needed for a normal build.
+**Download all FOUR full-source ZIPs, Parts 1–4. Extract every part into the same destination so the identically named `Pokemon_NXT_MMO_v0.6.5-alpha_Source_Route36SudowoodoStory` folders merge, then run `BUILD_ALL.bat`.** These are ordinary mergeable ZIPs, not byte-split volumes: do not concatenate them. All four parts are required and together contain the complete source and assets. No previous pack, original ROM, images.rar, Pillow, FFmpeg or audio renderer is needed for a normal build.
 
 ### Play the adventure
 

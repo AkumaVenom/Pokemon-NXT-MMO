@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.5-alpha · Route 36 Sudowoodo Story Gate · 2026-09-17
+
+- Convert the existing odd-tree object on Johto Route 36 (`johto_2_23`, object 3 at 24,11) into a server-authoritative per-character story obstacle. The exact tile is solid for an uncleared character even though the shared extracted collision tile is passable; completion never mutates shared map data or another account's world state.
+- Add the saved SquirtBottle Key Item and award it once Whitney's Plain Badge (`johto_3`) is recorded. Existing qualifying characters are repaired additively on login. The Key Item is unique, non-buyable, non-tradable and not consumed. This MMO adaptation awards it directly from the badge because the full original Flower Shop/Floria event scripts are not executed.
+- Add the Route 36 object menu with a locked/readied **Use SquirtBottle** action and strict server checks for current map, authored object identity, proximity, badge, Key Item, healthy party and uncleared status. Forged remote/stale/replay packets cannot start or clear the event.
+- Start a normal authoritative wild battle against **Lv. 20 normal Sudowoodo** with the authored Crystal-era moves Rock Throw, Mimic, Flail and Low Kick. Normal capture, EXP, battle presentation and persistence remain in use; the SquirtBottle is not consumed.
+- Clear the path only after the player's successful defeat or capture result is committed. Running, losing or save failure keeps the story gate blocked. Completion is saved in `adventure.storyEvents`, survives relogging and hides/removes collision only for that owner.
+- Extend the Adventure Journal, Bag, interaction dialog, renderer and player help for personal story-state/Key Item presentation. Preserve Cut behavior and all other map/NPC interactions.
+- Preserve the accepted 0.6.4 autonomous performance architecture. Environmental movement checks now evaluate Cut/story blockers in one bounded object pass, preventing the new story gate from multiplying object-list scans in the human/autonomous pathing hot path. Schema remains 3; no account, bot or database reset is required.
+- Add dedicated server, persistence, failure-injection, forged-packet, client-dialog/journal and renderer-isolation regressions plus publisher/build-source enforcement and release documentation.
+
 ## 0.6.4-alpha · Autonomous Trainer Performance Hardening · 2026-09-16
 
 - Fix the severe long-uptime autonomous-trainer stalls/MySQL disk amplification without removing or reducing any bot functionality. The world lease now makes the already-loaded in-memory 2,000-trainer population the authoritative runtime image; the 10 Hz world path no longer periodically SELECTs and JSON-decodes the complete population. Explicit `force=True` reconciliation remains for startup, migrations, tests and recovery.

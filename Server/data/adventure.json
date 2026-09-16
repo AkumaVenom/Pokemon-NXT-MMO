@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "description": "Authored MMO objectives, one-time rewards and travel licenses; trainer teams and regional art are ROM-derived.",
+  "description": "Authored MMO objectives, one-time rewards, travel licences and owner-only story events; trainer teams and regional art are ROM-derived.",
   "badgeNames": {
     "kanto_1": "Boulder Badge",
     "kanto_2": "Cascade Badge",
@@ -203,6 +203,42 @@
         "johto_2"
       ],
       "title": "Cut — Johto / Hive Badge"
+    }
+  ],
+  "keyItems": {
+    "squirtbottle": {
+      "name": "SquirtBottle",
+      "price": 0,
+      "keyItem": true,
+      "buyable": false,
+      "tradable": false,
+      "description": "A bottle used for watering plants. It reacts to the odd tree on Route 36."
+    }
+  },
+  "storyEvents": [
+    {
+      "id": "johto_sudowoodo",
+      "title": "The odd tree on Route 36",
+      "map": "johto_2_23",
+      "npc": 3,
+      "graphics": 98,
+      "species": "fr_185",
+      "level": 20,
+      "variety": "normal",
+      "requiredBadge": "johto_3",
+      "requiredBadgeName": "Plain Badge",
+      "leader": "Whitney",
+      "city": "Goldenrod City",
+      "requiredItem": "squirtbottle",
+      "itemName": "SquirtBottle",
+      "awardItemOnBadge": true,
+      "description": "A strange tree blocks Route 36. Water it with the SquirtBottle and it attacks.",
+      "moves": [
+        88,
+        102,
+        175,
+        67
+      ]
     }
   ]
 }

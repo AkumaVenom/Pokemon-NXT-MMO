@@ -2,7 +2,7 @@
 import {drawFollowerSparkles} from './varieties.js';
 export class WorldRenderer {
  constructor(canvas,content,onPick){
-  this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.content=content;this.onPick=onPick;this.images=new Map();this.players=new Map();this.cutTrees=new Map();this.map=null;this.pendingMap=null;this.selfId=null;this.scale=3;this.manualScale=0;this.hits=[];this.generation=0;this.cam={x:0,y:0};this.frames=0;this.lastFps=performance.now();this.fps=0;this.active=false;this.motionPreference=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)');
+  this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.content=content;this.onPick=onPick;this.images=new Map();this.players=new Map();this.cutTrees=new Map();this.storyEvents=new Set();this.map=null;this.pendingMap=null;this.selfId=null;this.scale=3;this.manualScale=0;this.hits=[];this.generation=0;this.cam={x:0,y:0};this.frames=0;this.lastFps=performance.now();this.fps=0;this.active=false;this.motionPreference=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)');
   this.resizeObserver=new ResizeObserver(()=>this.resize());this.resizeObserver.observe(canvas);
   canvas.addEventListener('click',e=>{const r=canvas.getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;const candidates=this.hits.filter(h=>x>=h.x&&x<=h.x+h.w&&y>=h.y&&y<=h.y+h.h);const hit=candidates.find(h=>h.kind==='player'&&h.id!==this.selfId)||candidates.find(h=>h.kind==='npc');if(hit)this.onPick(hit,e.clientX,e.clientY);});
   canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;canvas.style.cursor=this.hits.some(h=>x>=h.x&&x<=h.x+h.w&&y>=h.y&&y<=h.y+h.h&&!(h.kind==='player'&&h.id===this.selfId))?'pointer':'default';});
@@ -11,17 +11,20 @@ export class WorldRenderer {
  resize(){const r=this.canvas.getBoundingClientRect();if(!r.width||!r.height)return;this.width=r.width;this.height=r.height;this.dpr=Math.min(window.devicePixelRatio||1,4);this.rootFont=parseFloat(getComputedStyle(document.documentElement).fontSize);this.canvas.width=Math.round(r.width*this.dpr);this.canvas.height=Math.round(r.height*this.dpr);this.scale=this.manualScale||Math.max(2,Math.min(6,Math.floor(r.height/195)));}
  setScale(scale){this.manualScale=Math.max(1,Math.min(8,scale));this.resize();}
  image(path){if(!path)return null;if(!this.images.has(path)){const image=new Image();image.src='assets/'+path;this.images.set(path,image);}const img=this.images.get(path);return img.complete&&img.naturalWidth?img:null;}
- resetSession(){++this.generation;this.pendingMap=null;this.players.clear();this.cutTrees.clear();this.map=null;this.selfId=null;this.hits=[];this.active=false;}
+ resetSession(){++this.generation;this.pendingMap=null;this.players.clear();this.cutTrees.clear();this.storyEvents.clear();this.map=null;this.selfId=null;this.hits=[];this.active=false;}
  // Owner snapshots replace this private set; shared map JSON is never mutated.
  setCutTrees(cuts){
   const next=new Map();
   if(cuts&&typeof cuts==='object'&&!Array.isArray(cuts))for(const [map,ids] of Object.entries(cuts)){
    if(Array.isArray(ids))next.set(map,new Set(ids.filter(id=>Number.isSafeInteger(id)&&id>=0&&id<=255)));
   }
-  this.cutTrees=next;
-  this.hits=this.hits.filter(hit=>hit.kind!=='npc'||!this.map||this.objectVisible(this.map.objects.find(n=>n.id===hit.id),hit.map||this.map.id));
+  this.cutTrees=next;this.pruneHiddenObjectHits();
  }
- objectVisible(obj,mapId=this.map?.id){return !!obj&&!(obj.graphics===95&&this.cutTrees.get(mapId)?.has(obj.id));}
+ setStoryEvents(events){
+  this.storyEvents=new Set(Array.isArray(events)?events.filter(id=>typeof id==='string'&&id.length<=80):[]);this.pruneHiddenObjectHits();
+ }
+ pruneHiddenObjectHits(){this.hits=this.hits.filter(hit=>hit.kind!=='npc'||!this.map||this.objectVisible(this.map.objects.find(n=>n.id===hit.id),hit.map||this.map.id));}
+ objectVisible(obj,mapId=this.map?.id){return !!obj&&!(obj.graphics===95&&this.cutTrees.get(mapId)?.has(obj.id))&&!(obj.storyEvent&&this.storyEvents.has(obj.storyEvent));}
  async loadMap(id,initialEntity=null){
   const serial=++this.generation,pending={id,entities:new Map()};this.pendingMap=pending;this.players.clear();this.hits=[];
   if(initialEntity?.map===id)pending.entities.set(initialEntity.id,{...initialEntity});

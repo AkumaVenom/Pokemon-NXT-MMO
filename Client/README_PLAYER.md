@@ -13,6 +13,13 @@ This is a private networking/exploration alpha, not the complete original FireRe
 The Windows executable is an unsigned, cross-built development binary; native Windows execution still requires acceptance testing. Follow your normal security review policy. The alpha's LAN plaintext mode is not encrypted; use isolated testing and unique passwords, or the administrator's correctly configured direct TLS server. The extracted art remains third-party material; this package does not grant public redistribution rights.
 
 
+## Route 36 odd tree and SquirtBottle (0.6.5)
+
+The odd tree on Johto Route 36 is now a personal story obstacle. Until you clear it, its exact tile is solid for your character even if another trainer has already cleared theirs. Defeat Whitney in Goldenrod City to earn the Plain Badge; NXT then saves the SquirtBottle in your Key Items. Approach the odd tree, click it (or press E), and choose **Use SquirtBottle**. This starts a Lv. 20 Sudowoodo battle.
+
+Defeat or capture Sudowoodo to save the Route 36 path as permanently clear for that character. Running away or losing does not clear it. The SquirtBottle is not consumed, cannot be bought or traded, and existing characters who already have the Plain Badge receive it automatically after their save is validated. The Adventure Journal shows whether this event is locked, ready or cleared.
+
+
 ## Regional wild Pokémon and Cut (0.3.4)
 
 Wild Pokémon follow the current map's FireRed/Crystal ordinary encounter table, not a universal starter-area list. Crystal locations change with the server's morning/day/night period. Surf encounters are separate from grass/caves; an encounter-free location does not invent a fallback.

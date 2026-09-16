@@ -1,15 +1,23 @@
 # Pokemon NXT MMO — automatic all-in-one source build
 
 
-**Download all FOUR source ZIPs:** `Pokemon_NXT_MMO_v0.6.4-alpha_Source_AutonomousTrainerPerformance_Part1.zip`, `Part2.zip`, `Part3.zip` and `Part4.zip` (all share the same prefix). Extract each ordinary ZIP into the same destination, merging the identically named `Pokemon_NXT_MMO_v0.6.4-alpha_Source_AutonomousTrainerPerformance` folders. Do not concatenate the ZIP files. Run `BUILD_ALL.bat` only after all four parts are extracted. The four parts contain the complete source and assets; no earlier source pack or optional patch is required.
+**Download all FOUR source ZIPs:** `Pokemon_NXT_MMO_v0.6.5-alpha_Source_Route36SudowoodoStory_Part1.zip`, `Part2.zip`, `Part3.zip` and `Part4.zip` (all share the same prefix). Extract each ordinary ZIP into the same destination, merging the identically named `Pokemon_NXT_MMO_v0.6.5-alpha_Source_Route36SudowoodoStory` folders. Do not concatenate the ZIP files. Run `BUILD_ALL.bat` only after all four parts are extracted. The four parts contain the complete source and assets; no earlier source pack or optional patch is required.
 
-Gameplay **0.6.4-alpha** · Build tools **1.4.1** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
+Gameplay **0.6.5-alpha** · Build tools **1.4.1** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
 
 The full source includes the extracted FireRed and Sigma music, sound effects and cries. `BUILD_ALL.bat` verifies and packages these files; it does not extract them again. **No ROM, FFmpeg or C++ audio-renderer build is needed for a normal build.**
 
+## Route 36 Sudowoodo story gate · 0.6.5-alpha
+
+Johto Route 36 now has an authoritative personal story blocker on the existing odd-tree object. The tile remains blocked for each character until that character has earned Whitney's Plain Badge, received the saved SquirtBottle Key Item, used it on the nearby odd tree, and then defeated or captured the resulting Lv. 20 Sudowoodo. A successful battle persists `johto_sudowoodo` before the client is told the path is clear; running, losing or a failed database commit leaves the blocker intact. Another account's completion never changes your collision or sprite visibility.
+
+NXT grants the SquirtBottle immediately when the Plain Badge is first recorded, because the MMO does not execute the original games' full Flower Shop/Floria event-script chain. Existing characters that already own the Plain Badge receive the Key Item additively on their next validated login. The SquirtBottle is unique, non-buyable, non-tradable and not consumed by the encounter. No database reset or schema change is required.
+
+This release is built directly on the accepted 0.6.4 long-uptime autonomous-performance baseline. No bot count, bot behavior, battles, captures, evolution, travel, ranking or persistence feature has been removed or slowed. See `Docs/ROUTE36_SUDOWOODO.md` and its executed test report.
+
 ## Windows build repair · 1.4.1
 
-**Windows build correction (1.4.1):** Explicitly close temporary SQLite probe connections; this fixes the reported `WinError 32` in the schema/lease regression without disabling it or changing the server. See `Docs/WINDOWS_BUILD_FIX_1.4.1.md` and its test report. That historical repair remains preserved; current gameplay uses schema 3 and the 0.6.4 content pack.
+**Windows build correction (1.4.1):** Explicitly close temporary SQLite probe connections; this fixes the reported `WinError 32` in the schema/lease regression without disabling it or changing the server. See `Docs/WINDOWS_BUILD_FIX_1.4.1.md` and its test report. That historical repair remains preserved; current gameplay uses schema 3 and the 0.6.5 content pack.
 
 ## Autonomous trainer performance hardening · 0.6.4-alpha
 
@@ -21,7 +29,7 @@ Start the built world server as usual, then type `help` in its interactive termi
 
 Back up the existing database before this update. Schema 3 remains authoritative and this gameplay update requires no new schema bump. Existing human accounts, autonomous identities, Pokémon, ratings, rivalries and histories are upgraded in place.
 
-The earlier **build-tools 1.3.4 Windows symlink-privilege correction remains included**. Its isolated sprite-copy tests stay active. Current gameplay is **0.6.4-alpha**, build tools **1.4.1**, with a newly published matching content pack. Historical repair instructions are in `Docs/WINDOWS_BUILD_FIX_1.3.4.md`; do not apply that old repair over this complete release.
+The earlier **build-tools 1.3.4 Windows symlink-privilege correction remains included**. Its isolated sprite-copy tests stay active. Current gameplay is **0.6.5-alpha**, build tools **1.4.1**, with a newly published matching content pack. Historical repair instructions are in `Docs/WINDOWS_BUILD_FIX_1.3.4.md`; do not apply that old repair over this complete release.
 
 ## Varieties and regional encounter/Cut updates
 

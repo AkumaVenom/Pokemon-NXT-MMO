@@ -10,6 +10,7 @@ from .combat import Battle
 from .varieties import variety_key
 from .adventure import Adventure
 from .field_moves import CUT_REQUIREMENTS,cut_allowed,is_cut_tree,region,tree_cleared
+from .story_events import cleared as story_cleared,for_object as story_for_object,mark_cleared as mark_story_cleared
 from .encounters import encounter_slots,select_encounter
 from .ai_trainers import AutonomousTrainers
 from .portals import plan_warp,return_stack
@@ -121,15 +122,24 @@ class World:
   integer(uid,1,2**53-1,'Trainer ID');q=self.players.get(uid);require(q is not None and not q.closed and q.id!=p.id,'That trainer is not available.');require(self.nearby(p,q),'Move closer to that trainer.');return q
  def walkable(self,m,x,y,surf=False,from_elevation=None,state=None):
   if not(0<=x<m['width'] and 0<=y<m['height']):return False
-  j=y*m['width']+x
-  # A cut overrides ONLY its exact occupied tile, never the shared grid.
-  cleared=any(o['x']==x and o['y']==y and tree_cleared(state,m['id'],o) for o in m['objects'])
-  if (m['collision'][j]!=0 and not cleared) or (m['behavior'][j] in WATER and not surf):return False
+  j=y*m['width']+x;object_blocked=False;collision_override=False
+  # Evaluate environmental objects in one bounded pass. This is a hot path for
+  # human movement and autonomous trainer pathing, so adding story gates must
+  # not multiply whole-object-list scans. Clear state remains owner-only and
+  # never mutates the shared map/collision data.
+  for o in m['objects']:
+   if o['x']!=x or o['y']!=y:continue
+   if o['graphics'] in (95,96,97):
+    if tree_cleared(state,m['id'],o):collision_override=True
+    else:object_blocked=True
+   event_id=o.get('storyEvent')
+   if event_id:
+    if story_cleared(state,event_id):collision_override=True
+    else:object_blocked=True
+  if (m['collision'][j]!=0 and not collision_override) or (m['behavior'][j] in WATER and not surf):return False
   elevation=m['elevation'][j]
   if from_elevation is not None and elevation not in (0,15) and from_elevation not in (0,15) and elevation!=from_elevation:return False
-  # Solid environmental objects. Story-dependent NPC flags are not executed in alpha.
-  if any(o['x']==x and o['y']==y and o['graphics'] in (95,96,97) and not tree_cleared(state,m['id'],o) for o in m['objects']):return False
-  return True
+  return not object_blocked
  def follower_anchor(self,p):
   m=self.c.maps[p.state['map']];x,y=p.state['x'],p.state['y'];p.fx=x;p.fy=y
   for dx,dy in ((-1,0),(1,0),(0,1),(0,-1)):
@@ -228,10 +238,16 @@ class World:
        gained=self.c.gain_xp(mon,exp);b.logs.append(f'{self.c.species[mon["species"]]["name"]} gained {exp} EXP.'+(f' Level {mon["level"]}!' if gained else ''));b.audio('experience',0,species=mon['species'],amount=exp)
        if gained:b.audio('level_up',0,species=mon['species'],level=mon['level'],gained=gained)
     if b.ended and b.winner==0 and not b.rewarded:
-     if trainer:
-      previous_unlocks=set(state['adventure']['unlocks']);first=self.adventure.victory(state,trainer)
+     story_event=getattr(b,'story_event',None)
+     if story_event:
+      if not story_cleared(state,story_event):mark_story_cleared(state,story_event)
+      b.logs.append('Sudowoodo no longer blocks Route 36. This path is permanently clear for your character.')
+     elif trainer:
+      previous_unlocks=set(state['adventure']['unlocks']);before_items=copy.deepcopy(state['items']);first=self.adventure.victory(state,trainer)
       for unlocked in set(state['adventure']['unlocks'])-previous_unlocks:
        if unlocked in ('cut_kanto','cut_johto'):b.logs.append('Cut unlocked for '+unlocked[4:].title()+'! Click a small HM tree to clear your own path.')
+      for item,count in state['items'].items():
+       if count>before_items.get(item,0) and self.c.items.get(item,{}).get('keyItem'):b.logs.append('Received '+self.c.items[item]['name']+'! It was placed in your Key Items and saved to this character.')
       b.logs.append('First victory recorded. Your reward and badge progress were saved.' if first else 'Rematch complete. First-victory rewards and EXP are not awarded again.')
      elif not b.caught:state['money']=min(2_000_000_000,state['money']+(120 if b.kind=='trainer' else 25))
      b.rewarded=True
@@ -298,7 +314,7 @@ class World:
   owned={m['uid'] for m in p.state['creatures']};require(all(i in owned for i in ids),'You no longer own an offered Pokemon.');require(money<=p.state['money'],'You do not have that much money.');require(isinstance(items,dict) and len(items)<=len(self.c.items),'Invalid item offer.')
   clean={}
   for k,n in items.items():
-   require(k in self.c.items,'Unknown trade item.');integer(n,0,999,'Item quantity');require(n<=p.state['items'].get(k,0),'You do not own that many items.')
+   require(k in self.c.items,'Unknown trade item.');require(self.c.items[k].get('tradable',True),'Key Items cannot be traded.');integer(n,0,999,'Item quantity');require(n<=p.state['items'].get(k,0),'You do not own that many items.')
    if n:clean[k]=n
   return {'pokemon':ids,'items':clean,'money':money}
  async def trade_action(self,p,d):
@@ -365,11 +381,27 @@ class World:
    'This small tree can be cut. Use Cut to clear this path for your character.' if allowed else
    'Cut is locked in '+region(key).title()+'. Defeat '+rule['leader']+' in '+rule['city']+' and earn the '+rule['badgeName']+' to unlock it automatically.')
   p.send('dialog',title='Small HM tree',message=message,actions=['cut'],disabledActions=[] if allowed and not cleared else ['cut'],npc=o['id'],map=key,fieldMove={'move':'Cut','unlocked':allowed,'cleared':cleared,**rule})
+ async def story_object(self,p,d,o):
+  """Resolve an owner-only authored map story object after identity/proximity checks."""
+  m=self.c.maps[p.state['map']];event=story_for_object(self.c,m['id'],o);require(event is not None,'That story event is unavailable.');action=d.get('action');done=story_cleared(p.state,event['id']);badge=event.get('requiredBadge');item=event.get('requiredItem');badge_earned=not badge or badge in p.state['adventure']['badges'];item_owned=not item or p.state['items'].get(item,0)>0
+  if action=='squirtbottle':
+   require(d.get('map')==m['id'],'That story menu belongs to another map. Click the odd tree again.');require(not done,'This route is already clear for your character.');require(badge_earned,'Defeat '+event['leader']+' in '+event['city']+' and earn the '+event['requiredBadgeName']+' first.');require(item_owned,'You need the '+event['itemName']+' before this tree will react.');require(any(mon['hp']>0 for mon in self.party(p)),'Your party needs healing.')
+   enemy=self.c.new_mon(event['species'],event['level'],variety=event.get('variety','normal'))
+   if event.get('moves'):enemy['moves']=[{'id':mid,'pp':self.c.moves[str(mid)]['pp']} for mid in event['moves']]
+   state=copy.deepcopy(p.state);self.adventure.observe(state,[enemy['species']]);self.c.varieties.observe(state,[enemy]);await self.commit(p,state)
+   b=Battle(self.c,'wild',[p.id,None],[p.username,'Wild '+self.c.varieties.display_name(enemy)],[self.party(p),[enemy]],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0]);b.story_event=event['id'];b.story_map=m['id'];b.story_npc=o['id'];self.battles[b.id]=b;p.battle=b.id;p.last_encounter=time.monotonic();p.send('battle',battle=b.view(0));return
+  require(action in (None,'talk'),'This object only supports its story interaction.')
+  if done:message='The strange tree is gone. Route 36 is permanently clear for your character.'
+  elif not badge_earned:message='This odd tree will not budge. Defeat '+event['leader']+' in '+event['city']+' and earn the '+event['requiredBadgeName']+' before dealing with it.'
+  elif not item_owned:message='The odd tree looks like it dislikes water. You need the '+event['itemName']+' to make it react.'
+  else:message='The odd tree squirms when you get close. Use the '+event['itemName']+'?'
+  p.send('dialog',title='Odd tree',message=message,actions=['squirtbottle'],disabledActions=[] if not done and badge_earned and item_owned else ['squirtbottle'],npc=o['id'],map=m['id'],storyEvent={'id':event['id'],'cleared':done,'ready':not done and badge_earned and item_owned,'badgeEarned':badge_earned,'itemOwned':item_owned,'requiredBadgeName':event.get('requiredBadgeName'),'leader':event.get('leader'),'city':event.get('city'),'itemName':event.get('itemName')})
  async def npc(self,p,d):
   self.free(p);m=self.c.maps[p.state['map']];nid=integer(d.get('npc'),0,255,'NPC ID');o=next((o for o in m['objects'] if o['id']==nid),None);require(o is not None,'That NPC is not available.');action=d.get('action')
   require(max(abs(p.state['x']-o['x']),abs(p.state['y']-o['y']))<=2,'Move closer to speak to this character.')
   require(d.get('map',m['id'])==m['id'],'That interaction belongs to another map. Click the object again.')
   if is_cut_tree(o):await self.cut_tree(p,d,o);return
+  if o.get('storyEvent'):await self.story_object(p,d,o);return
   center=self.c.data.get('centers',{}).get(m['id'],{});trainer=self.adventure.by_npc.get((m['id'],nid))
   if nid in center.get('nurseNpcIds',[]):
    if action=='heal':await self.heal(p,npc=nid);return
@@ -431,7 +463,7 @@ class World:
     self.free(p);ids=d.get('party');require(isinstance(ids,list) and 1<=len(ids)<=6 and all(isinstance(i,str) for i in ids) and len(ids)==len(set(ids)),'A party must contain 1-6 distinct Pokemon.');require(all(i in {m['uid'] for m in p.state['creatures']} for i in ids),'That Pokemon is not yours.');old_party=list(p.state['party']);require(set(ids)==set(old_party) or self.adventure.pc_available(p.state),'Visit a Pokemon Center PC to deposit or withdraw Pokemon.');require(any(m['hp']>0 for m in p.state['creatures'] if m['uid'] in ids),'Keep at least one healthy Pokemon in your party.');s=copy.deepcopy(p.state);s['party']=list(ids);await self.commit(p,s)
     if ids!=old_party:p.audio('party_changed',species=self.party(p)[0]['species'],leadChanged=ids[0]!=old_party[0])
    elif op=='buy':
-    self.free(p);require(self.s.flag('world','allow_alpha_atlas') or any(o['graphics']==68 and max(abs(p.state['x']-o['x']),abs(p.state['y']-o['y']))<=2 for o in self.c.maps[p.state['map']]['objects']),'Visit a Poke Mart.');item=d.get('item');require(item in self.c.items,'Unknown item.');count=integer(d.get('quantity'),1,99,'Quantity');cost=self.c.items[item]['price']*count;require(p.state['money']>=cost,'You do not have enough money.');require(p.state['items'].get(item,0)+count<=999,'This stack would exceed 999.');s=copy.deepcopy(p.state);s['money']-=cost;s['items'][item]=s['items'].get(item,0)+count;await self.commit(p,s);p.audio('purchase',item=item,quantity=count)
+    self.free(p);require(self.s.flag('world','allow_alpha_atlas') or any(o['graphics']==68 and max(abs(p.state['x']-o['x']),abs(p.state['y']-o['y']))<=2 for o in self.c.maps[p.state['map']]['objects']),'Visit a Poke Mart.');item=d.get('item');require(item in self.c.items,'Unknown item.');require(self.c.items[item].get('buyable',True),'That Key Item is not sold in Poke Marts.');count=integer(d.get('quantity'),1,99,'Quantity');cost=self.c.items[item]['price']*count;require(p.state['money']>=cost,'You do not have enough money.');require(p.state['items'].get(item,0)+count<=999,'This stack would exceed 999.');s=copy.deepcopy(p.state);s['money']-=cost;s['items'][item]=s['items'].get(item,0)+count;await self.commit(p,s);p.audio('purchase',item=item,quantity=count)
    elif op=='use':
     self.free(p);item=d.get('item');uid=d.get('uid');require(item in self.c.items and 'heal' in self.c.items[item],'Select a healing item.');require(p.state['items'].get(item,0)>0,'You have none of that item.');s=copy.deepcopy(p.state);mon=next((m for m in s['creatures'] if m['uid']==uid),None);require(mon is not None and 0<mon['hp']<self.c.stats(mon)[0],'Select an injured, non-fainted Pokemon.');mon['hp']=min(self.c.stats(mon)[0],mon['hp']+self.c.items[item]['heal']);s['items'][item]-=1;await self.commit(p,s);p.audio('item',item=item,species=mon['species'])
    elif op=='travel':
