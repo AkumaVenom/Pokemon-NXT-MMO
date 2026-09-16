@@ -1,10 +1,12 @@
 """Persistent autonomous trainers with competitive and visible overworld life.
 
-The database owns the full 2,000-trainer population. Trainers remain bound to
-their home region but dynamically relocate between real outdoor/cave encounter
-maps chosen for their current party strength. Only a stable bounded cohort on maps with connected humans
-runs high-frequency field movement; all other trainers continue through bounded
-elapsed-time simulation, including regional travel and genuine wild battles.
+Durable storage owns persistence while the leased world process owns the
+authoritative in-memory runtime image of the full 2,000-trainer population.
+Trainers remain bound to their home region but dynamically relocate between real
+outdoor/cave encounter maps chosen for their current party strength. Only a
+stable bounded cohort on maps with connected humans runs high-frequency field
+movement; all other trainers continue through bounded elapsed-time simulation,
+including regional travel and genuine wild battles.
 """
 from __future__ import annotations
 
@@ -26,6 +28,7 @@ WORLD_LIFE_VERSION = 3
 PARTY_IDENTITY_VERSION = 1
 REGIONAL_TRAVEL_VERSION = 2
 BACKGROUND_FIELD_VERSION = 1
+AUTONOMOUS_LEVEL_EVOLUTION_VERSION = 1
 TRAVEL_MAP_TYPES = frozenset((3, 4))
 TRAVEL_OUTDOOR_WORDS = ('route ', 'forest', 'national park', 'ruins of alph')
 DIRECTIONS = (
@@ -155,6 +158,7 @@ class AutonomousTrainers:
                             'activity': 45 + (i * 19) % 180,
                             'partyIdentityVersion': PARTY_IDENTITY_VERSION,
                             'legacySyntheticPokemonRemoved': 0,
+                            'levelEvolutionVersion': AUTONOMOUS_LEVEL_EVOLUTION_VERSION,
                         },
                         'next_action_at': now + (i % 90),
                     })
@@ -162,6 +166,7 @@ class AutonomousTrainers:
                     await asyncio.to_thread(self.db.ai_seed, records[start:start + 200])
             await self._refresh_snapshot_locked(force=True)
             await self._ensure_party_identity_locked()
+            await self._ensure_autonomous_level_evolution_locked()
             await self._ensure_world_distribution_locked()
             await self._ensure_background_field_schedule_locked()
             await self._refresh_snapshot_locked(force=True)
@@ -278,45 +283,60 @@ class AutonomousTrainers:
         personality['nextBackgroundFieldAt'] = due + cadence
         personality['backgroundWildBattles'] = int(personality.get('backgroundWildBattles', 0) or 0) + 1
 
-    async def _background_field_action_locked(self, bot, now):
+    def _background_field_action_locked(self, bot, now):
+        """Advance one due off-screen trainer entirely in memory.
+
+        Persistence is intentionally deferred to ``background_field_tick`` so a
+        16-bot scheduler pass becomes one MySQL transaction instead of sixteen
+        independent commits.  The caller still persists every authoritative
+        state/personality change; only public activity-feed rows are sampled.
+        """
         if self.engaged.get(bot['id'], 0) > time.monotonic():
-            return False
+            return None
         reason = self._travel_reason(bot, now)
         if reason:
             travel = self._relocate_bot(bot, reason, now)
             if reason in ('repair', 'unsafe') and not travel:
                 bot['personality']['nextBackgroundFieldAt'] = now + self.background_field_min_gap
-                await asyncio.to_thread(self.db.ai_rebalance_world, [bot])
-                return False
+                return {'processed': False, 'rebalance': True}
         if not self._place_on_training_tile(bot):
             # A malformed/temporarily unsuitable field should not spin every tick.
             bot['personality']['nextBackgroundFieldAt'] = now + self.background_field_min_gap
-            await asyncio.to_thread(self.db.ai_rebalance_world, [bot])
-            return False
+            return {'processed': False, 'rebalance': True}
         result = self._simulate_wild_battle(bot)
         if not result:
             bot['personality']['nextBackgroundFieldAt'] = now + self.background_field_min_gap
-            await asyncio.to_thread(self.db.ai_rebalance_world, [bot])
-            return False
+            return {'processed': False, 'rebalance': True}
         self._advance_background_due(bot, now)
         # Persist every field result, but keep the public activity table bounded:
         # captures, level-ups and losses are always noteworthy; routine wins are
         # sampled deterministically instead of producing millions of feed rows.
         action_count = int(bot['personality'].get('backgroundWildBattles', 0) or 0)
         notable = (result['result'] in ('capture', 'loss') or bool(result.get('levels'))
-                   or (bot['id'] * 17 + action_count) % 20 == 0)
-        await asyncio.to_thread(self.db.ai_commit_field, bot, {
-            'kind': 'wild', 'opponent': 0, 'result': result['result'], 'summary': result['summary']}, notable)
-        self.dirty.discard(bot['id'])
-        return True
+                   or bool(result.get('evolutions')) or (bot['id'] * 17 + action_count) % 20 == 0)
+        return {
+            'processed': True,
+            'record': {
+                'bot': bot,
+                'event': {'kind': 'wild', 'opponent': 0, 'result': result['result'],
+                          'summary': result['summary']},
+                'record_activity': notable,
+            },
+        }
 
     async def background_field_tick(self, active_maps):
         """Progress off-screen trainers even when there are zero connected humans.
 
-        `active_maps` affects presentation only. A bot is skipped solely when it is
-        part of the currently materialized cohort on an observed map, because that
-        exact trainer is already eligible for visible field simulation. Other bots
-        on the same map continue background training normally.
+        ``active_maps`` affects presentation only. A bot is skipped solely when it
+        is part of the currently materialized cohort on an observed map, because
+        that exact trainer is already eligible for visible field simulation. Other
+        bots on the same map continue background training normally.
+
+        All due bot writes are committed in one bounded batch.  Crucially, the
+        already-authoritative in-memory population is *not* re-read from MySQL
+        afterwards; doing that every two seconds caused the complete 2,000-row JSON
+        population to be deserialized repeatedly and was the dominant long-uptime
+        disk/latency spike.
         """
         if time.monotonic() - self.last_background_field < self.background_field_interval:
             return 0
@@ -334,6 +354,8 @@ class AutonomousTrainers:
             processed = 0
             inspected = 0
             total = len(bots)
+            field_records = []
+            rebalance = []
             while inspected < total and processed < self.background_field_batch:
                 index = self.background_cursor % total
                 self.background_cursor = (self.background_cursor + 1) % total
@@ -344,11 +366,126 @@ class AutonomousTrainers:
                 due = int(bot.get('personality', {}).get('nextBackgroundFieldAt', 0) or 0)
                 if due > now:
                     continue
-                if await self._background_field_action_locked(bot, now):
+                outcome = self._background_field_action_locked(bot, now)
+                if not outcome:
+                    continue
+                if outcome.get('rebalance'):
+                    rebalance.append(bot)
+                if outcome.get('processed'):
                     processed += 1
-            if processed:
-                await self._refresh_snapshot_locked(force=True)
+                    field_records.append(outcome['record'])
+            if rebalance:
+                try:
+                    await asyncio.to_thread(self.db.ai_rebalance_world, rebalance)
+                except Exception:
+                    await self._rollback_bots_from_store_locked(bot['id'] for bot in rebalance)
+                    raise
+            if field_records:
+                try:
+                    committed_at = await asyncio.to_thread(self.db.ai_commit_fields, field_records)
+                except Exception:
+                    await self._rollback_bots_from_store_locked(
+                        record['bot']['id'] for record in field_records)
+                    raise
+                for record in field_records:
+                    bot = record['bot']
+                    bot['last_action_at'] = committed_at
+                    self.dirty.discard(bot['id'])
             return processed
+
+    # ------------------------------------------------------------------
+    # Authoritative autonomous level evolution
+    # ------------------------------------------------------------------
+
+    def _apply_level_evolutions(self, bot, uids=None):
+        """Apply only authored level evolutions to owned autonomous Pokemon.
+
+        The normal Growth service remains authoritative for eligibility, HP
+        preservation, move queues, evolution history and species transitions.
+        This AI layer merely decides *when* an autonomous trainer accepts an
+        eligible level evolution. Stone and trade methods are deliberately not
+        synthesized: they still require their real item/trade preconditions.
+
+        Returns detached audit records for presentation/tests. The owned UID and
+        party order never change.
+        """
+        state = bot['state']
+        wanted = None if uids is None else set(uids)
+        selected = [m['uid'] for m in state.get('creatures', [])
+                    if wanted is None or m.get('uid') in wanted]
+        events = []
+        for uid in selected:
+            seen_species = set()
+            chain = 0
+            while chain < 8:
+                mon = next((m for m in state.get('creatures', []) if m.get('uid') == uid), None)
+                if mon is None:
+                    break
+                # Growth.options is sourced from the authored ROM evolution table.
+                # Preserve that source order instead of inventing an AI-specific
+                # branch preference. Unsupported conditions remain unsupported.
+                option = next((v for v in self.c.growth.options(mon)
+                               if v.get('method') == 'level' and not v.get('deferred')), None)
+                if option is None:
+                    break
+                source = mon['species']
+                if source in seen_species:
+                    raise RuntimeError(f'Autonomous evolution cycle detected for {bot["username"]} Pokemon {uid}.')
+                seen_species.add(source)
+                target = option['target']
+                candidate = self.c.growth.evolve(state, uid, target)
+                # Keep the same state object referenced by the bot/world runtime
+                # while adopting the Growth service's detached authoritative copy.
+                state.clear(); state.update(candidate)
+                evolved = next((m for m in state['creatures'] if m.get('uid') == uid), None)
+                if evolved is None or evolved.get('uid') != uid or evolved.get('species') != target:
+                    raise RuntimeError('Autonomous evolution violated Pokemon identity.')
+                events.append({
+                    'uid': uid, 'source': source, 'target': target, 'level': evolved['level'],
+                    'sourceName': self.c.species[source]['name'],
+                    'targetName': self.c.species[target]['name'],
+                })
+                chain += 1
+            if chain >= 8:
+                mon = next((m for m in state.get('creatures', []) if m.get('uid') == uid), None)
+                if mon and any(v.get('method') == 'level' and not v.get('deferred')
+                               for v in self.c.growth.options(mon)):
+                    raise RuntimeError(f'Autonomous evolution chain exceeded safety limit for {bot["username"]} Pokemon {uid}.')
+        return events
+
+    async def _ensure_autonomous_level_evolution_locked(self):
+        """One-time upgrade for Pokemon that out-levelled evolution in older builds.
+
+        Existing v0.6.2 populations may already contain level-eligible unevolved
+        Pokemon. Repair those through the same Growth rules before field/ranked
+        simulation resumes, while leaving stone/trade evolutions untouched.
+        """
+        updates = []
+        for bot in self.snapshot:
+            personality = bot.setdefault('personality', {})
+            if int(personality.get('levelEvolutionVersion', 0) or 0) >= AUTONOMOUS_LEVEL_EVOLUTION_VERSION:
+                continue
+            state = bot['state']
+            candidates = []
+            for index, mon in enumerate(state.get('creatures', [])):
+                # The first owned Pokemon is the persistent starter in autonomous
+                # records. For later captures, require evidence that the Pokemon has
+                # actually earned post-capture EXP before repairing an old missed
+                # level evolution. This avoids auto-evolving a legitimate wild
+                # lower-stage Pokemon merely because it was caught above the usual
+                # evolution threshold.
+                growth = self.c.species[mon['species']]['growth']
+                progressed = int(mon.get('exp', 0)) > self.c.xp(int(mon.get('level', 1)), growth)
+                if index == 0 or progressed:
+                    candidates.append(mon['uid'])
+            events = self._apply_level_evolutions(bot, candidates)
+            personality['levelEvolutionVersion'] = AUTONOMOUS_LEVEL_EVOLUTION_VERSION
+            personality['legacyLevelEvolutionsRepaired'] = len(events)
+            if events:
+                state['revision'] = int(state.get('revision', 0)) + 1
+            updates.append(bot)
+        for start in range(0, len(updates), 200):
+            await asyncio.to_thread(self.db.ai_rebalance_world, updates[start:start + 200])
 
     # ------------------------------------------------------------------
     # Population placement and snapshot indexes
@@ -810,7 +947,18 @@ class AutonomousTrainers:
         self.materialized_layout = {m: key for m, key in self.materialized_layout.items() if m in live_maps}
 
     async def _refresh_snapshot_locked(self, force=False):
-        if not force and time.monotonic() - self.snapshot_at < 15:
+        """Reload the complete population only for explicit reconciliation.
+
+        The world lease guarantees a single authoritative server writer.  During
+        normal runtime every autonomous mutation is therefore already represented
+        in ``self.snapshot``/``self.by_id``.  Periodically SELECTing and decoding
+        all 2,000 growing JSON states was redundant and became an enormous MySQL
+        read-amplification source after long uptimes.
+
+        ``force=True`` remains available for startup, recovery tools and focused
+        regression tests that deliberately mutate storage out-of-band.
+        """
+        if not force:
             return
         if self.dirty:
             await self._flush_world_locked(force=True)
@@ -821,6 +969,49 @@ class AutonomousTrainers:
     async def refresh_snapshot(self, force=False):
         async with self.lock:
             await self._refresh_snapshot_locked(force)
+
+    def _adopt_bot_locked(self, source):
+        """Merge a successfully committed detached bot into the live snapshot."""
+        target = self.by_id.get(int(source['id']))
+        if target is None:
+            target = source
+            self.snapshot.append(target)
+            self._index_snapshot()
+            return target
+        old_map = target.get('state', {}).get('map')
+        target.clear()
+        target.update(source)
+        new_map = target.get('state', {}).get('map')
+        if old_map != new_map:
+            if old_map in self.by_map:
+                self.by_map[old_map] = [bot for bot in self.by_map[old_map]
+                                        if bot['id'] != target['id']]
+            if not any(bot['id'] == target['id'] for bot in self.by_map[new_map]):
+                self.by_map[new_map].append(target)
+            self.runtime.pop(target['id'], None)
+            if old_map in self.materialized:
+                self.materialized[old_map] = tuple(
+                    bot_id for bot_id in self.materialized[old_map] if bot_id != target['id'])
+                self.materialized_layout.pop(old_map, None)
+        return target
+
+    async def _rollback_bots_from_store_locked(self, bot_ids):
+        """Best-effort durable rollback after an exceptional batched write failure.
+
+        Field simulation mutates the live actor before persistence so presentation
+        can use the result immediately.  Batching increases the number of actors in
+        one transaction, so if that transaction fails restore only those touched
+        rows from durable storage.  This slow path is never used during successful
+        runtime and therefore cannot reintroduce population-wide read amplification.
+        """
+        for ai_id in sorted({int(ai_id) for ai_id in bot_ids}):
+            try:
+                stored = await asyncio.to_thread(self.db.ai_get, ai_id)
+            except Exception:
+                continue
+            if stored is not None:
+                self._adopt_bot_locked(stored)
+                self.dirty.discard(ai_id)
 
     # ------------------------------------------------------------------
     # Shared-world entities and field movement
@@ -1108,13 +1299,18 @@ class AutonomousTrainers:
 
     def _develop(self, bot, won):
         state = bot['state']
+        leveled = []
         for mon in self._party_members(bot):
-            self.c.gain_xp(mon, max(8, int((20 if won else 9) * (1 + bot['personality'].get('training', .5)))))
+            gained = self.c.gain_xp(mon, max(8, int((20 if won else 9) * (1 + bot['personality'].get('training', .5)))))
+            if gained:
+                leveled.append(mon['uid'])
+        evolutions = self._apply_level_evolutions(bot, leveled)
         self._optimize_party(bot)
         for mon in state['creatures']:
             if mon['uid'] in state['party']:
                 self.c.heal(mon)
         state['revision'] = int(state.get('revision', 0)) + 1
+        return evolutions
 
     def _capture_item(self, items):
         choices = [k for k, spec in self.c.items.items() if 'capture' in spec and items.get(k, 0) > 0]
@@ -1228,6 +1424,7 @@ class AutonomousTrainers:
         state['creatures'] = [by_uid.get(mon['uid'], mon) for mon in state['creatures']]
         state['items'] = copy.deepcopy(battle.items[0])
         levels = []
+        leveled_uids = []
         for mon in state['creatures']:
             amount = exp_awards.get(mon['uid'], 0)
             if amount:
@@ -1235,6 +1432,8 @@ class AutonomousTrainers:
                 gained = self.c.gain_xp(mon, amount)
                 if gained:
                     levels.append((self.c.species[mon['species']]['name'], before, mon['level']))
+                    leveled_uids.append(mon['uid'])
+        evolutions = self._apply_level_evolutions(bot, leveled_uids)
 
         caught_name = None
         caught_species = None
@@ -1272,6 +1471,8 @@ class AutonomousTrainers:
             summary = f'{bot["username"]} trained against a wild {self.c.varieties.display_name(enemy)} (Lv. {level}) on {m["name"]}.'
         if levels:
             summary += ' ' + ', '.join(f'{name} reached Lv. {after}' for name, _before, after in levels[:2]) + '.'
+        if evolutions:
+            summary += ' ' + ', '.join(f'{e["sourceName"]} evolved into {e["targetName"]}' for e in evolutions[:2]) + '.'
         outcome = {
             'result': result,
             'summary': summary,
@@ -1279,13 +1480,21 @@ class AutonomousTrainers:
             'level': level,
             'caught': caught_name,
             'levels': levels,
+            'evolutions': evolutions,
             'turns': turns,
         }
         self._record_wild_outcome(bot, outcome)
         return outcome
 
     async def field_tick(self, active_maps):
-        """High-frequency world life only where at least one human can observe it."""
+        """High-frequency world life only where at least one human can observe it.
+
+        Movement remains high frequency and is persisted by the existing dirty-state
+        batch.  Visible travel/wild results are stronger state transitions, but they
+        are now accumulated and committed once per world tick instead of opening one
+        transaction per bot.  This preserves every event while removing fsync/redo-log
+        amplification when several visible trainers act together.
+        """
         if not active_maps:
             async with self.lock:
                 await self._flush_world_locked(force=False)
@@ -1296,6 +1505,7 @@ class AutonomousTrainers:
                 if expiry <= now:
                     self.engaged.pop(bot_id, None)
             wild_started = 0
+            field_records = []
             human_positions = collections.defaultdict(set)
             for p in self.w.players.values():
                 if not p.closed:
@@ -1321,9 +1531,14 @@ class AutonomousTrainers:
                                 departure_open = False
                                 self.active_departure_at[map_id] = now + self.active_departure_seconds
                                 bot['next_action_at'] = max(int(bot.get('next_action_at', 0)), epoch + 30)
-                                await asyncio.to_thread(self.db.ai_commit_field, bot, {
-                                    'kind': 'travel', 'opponent': 0, 'result': 'relocate',
-                                    'summary': travel['summary']})
+                                field_records.append({
+                                    'bot': bot,
+                                    'event': {
+                                        'kind': 'travel', 'opponent': 0, 'result': 'relocate',
+                                        'summary': travel['summary'],
+                                    },
+                                    'record_activity': True,
+                                })
                                 continue
                     moved = self._step_bot(bot, occupied, now)
                     if not moved or wild_started >= self.field_wild_per_tick:
@@ -1345,8 +1560,25 @@ class AutonomousTrainers:
                     rt['field_action'] = 'wild_battle'
                     rt['wild_species'] = result['species']
                     bot['next_action_at'] = self._next(bot, epoch)
-                    await asyncio.to_thread(self.db.ai_commit_field, bot, {
-                        'kind': 'wild', 'opponent': 0, 'result': result['result'], 'summary': result['summary']})
+                    field_records.append({
+                        'bot': bot,
+                        'event': {
+                            'kind': 'wild', 'opponent': 0, 'result': result['result'],
+                            'summary': result['summary'],
+                        },
+                        'record_activity': True,
+                    })
+
+            if field_records:
+                try:
+                    committed_at = await asyncio.to_thread(self.db.ai_commit_fields, field_records)
+                except Exception:
+                    await self._rollback_bots_from_store_locked(
+                        record['bot']['id'] for record in field_records)
+                    raise
+                for record in field_records:
+                    bot = record['bot']
+                    bot['last_action_at'] = committed_at
                     self.dirty.discard(bot['id'])
             await self._flush_world_locked(force=False)
 
@@ -1371,32 +1603,78 @@ class AutonomousTrainers:
         return bool(encounter_slots(m, state))
 
     async def _simulate_due_locked(self):
+        """Run one bounded competitive pass from the authoritative memory image.
+
+        Earlier builds queried full ``state_json``/``personality_json`` rows for
+        the due cohort, re-read every actor, fetched up to 24 full candidate rows
+        per actor, committed each pairing separately, and finally re-read all
+        2,000 trainers.  As bot collections grew that multiplied MySQL I/O every
+        eight seconds.  The world lease makes the in-memory population authoritative,
+        so matchmaking can be computed here and committed once at the end.
+        """
         await self._flush_world_locked(force=True)
         now = int(time.time())
-        due = await asyncio.to_thread(self.db.ai_due, now, self.batch)
-        changed = False
-        for queued in due:
-            if self.engaged.get(queued['id'], 0) > time.monotonic():
+        due_ids = [bot['id'] for bot in sorted(
+            (bot for bot in self.snapshot if int(bot.get('next_action_at', 0)) <= now),
+            key=lambda bot: (int(bot.get('next_action_at', 0)), bot['id']))[:self.batch]]
+        if not due_ids:
+            return
+
+        recent_by_id = await asyncio.to_thread(
+            self.db.ai_recent_opponents_many, due_ids, now - 21600, 8)
+        working = {}
+        changed_ids = set()
+        events = []
+
+        def work(ai_id):
+            ai_id = int(ai_id)
+            if ai_id not in working:
+                live = self.by_id.get(ai_id)
+                if live is None:
+                    return None
+                working[ai_id] = copy.deepcopy(live)
+            return working[ai_id]
+
+        def effective(bot):
+            return working.get(bot['id'], bot)
+
+        for ai_id in due_ids:
+            if self.engaged.get(ai_id, 0) > time.monotonic():
                 continue
-            a = await asyncio.to_thread(self.db.ai_get, queued['id'])
+            a = work(ai_id)
             if not a or a['next_action_at'] > now:
                 continue
 
-            # Competitive activity is intentionally separate from field life.
-            # Regional travel, wild battles, captures and Pokemon development are
-            # driven by background_field_tick/field_tick and cannot be starved by
-            # this ranked queue.
-
-            recent = set(await asyncio.to_thread(self.db.ai_recent_opponents, a['id'], now - 21600, 8))
-            candidates = await asyncio.to_thread(self.db.ai_candidates, a['id'], a['rating'], 24)
-            candidates = [x for x in candidates if self.engaged.get(x['id'], 0) <= time.monotonic()]
-            candidates = [x for x in candidates if x['id'] not in recent] or candidates
+            recent = set(recent_by_id.get(a['id'], ()))
+            low, high = max(0, int(a['rating']) - 350), int(a['rating']) + 350
+            candidates = []
+            for live in self.snapshot:
+                candidate = effective(live)
+                if candidate['id'] == a['id'] or not low <= int(candidate['rating']) <= high:
+                    continue
+                candidates.append(candidate)
+            # Preserve the historical query semantics exactly: choose the 24
+            # rating-nearest rows first, then exclude currently engaged bots.
+            candidates.sort(key=lambda bot: (abs(int(bot['rating']) - int(a['rating'])), bot['id']))
+            candidates = candidates[:24]
+            candidates = [bot for bot in candidates
+                          if self.engaged.get(bot['id'], 0) <= time.monotonic()]
+            filtered = [bot for bot in candidates if bot['id'] not in recent]
+            if filtered:
+                candidates = filtered
             if not candidates:
                 a['next_action_at'] = self._next(a, now)
-                await asyncio.to_thread(self.db.ai_save_single, a)
-                changed = True
+                changed_ids.add(a['id'])
                 continue
-            b = min(candidates, key=lambda x: (abs(x['rating'] - a['rating']) + self.c.rng.randrange(75), x['id']))
+
+            chosen = min(candidates, key=lambda bot: (
+                abs(bot['rating'] - a['rating']) + self.c.rng.randrange(75), bot['id']))
+            b = work(chosen['id'])
+            if b is None:
+                a['next_action_at'] = self._next(a, now)
+                changed_ids.add(a['id'])
+                continue
+
             sa, sb = self._team_strength(a), self._team_strength(b)
             pa = 1 / (1 + math.exp(max(-8, min(8, (sb - sa) / 110))))
             a_won = self.c.rng.random() < pa
@@ -1409,22 +1687,37 @@ class AutonomousTrainers:
             b['losses'] += int(a_won)
             a['tier'] = tier_for(a['rating'])
             b['tier'] = tier_for(b['rating'])
-            self._develop(a, a_won)
-            self._develop(b, not a_won)
+            evolutions_a = self._develop(a, a_won)
+            evolutions_b = self._develop(b, not a_won)
             a['next_action_at'] = self._next(a, now)
             b['next_action_at'] = self._next(b, now) + self.c.rng.randrange(30)
             winner = a if a_won else b
             loser = b if a_won else a
             summary = f'{winner["username"]} defeated {loser["username"]} in autonomous ranked play.'
-            await asyncio.to_thread(
-                self.db.ai_commit_pair, a, b,
-                {'actor': a['id'], 'kind': 'ai', 'opponent': b['id'], 'result': 'win' if a_won else 'loss',
-                 'summary': summary, 'before': before_a, 'after': a['rating']},
-                {'actor': b['id'], 'kind': 'ai', 'opponent': a['id'], 'result': 'loss' if a_won else 'win',
-                 'summary': summary, 'before': before_b, 'after': b['rating']})
-            changed = True
-        if changed:
-            await self._refresh_snapshot_locked(force=True)
+            ranked_evolutions = evolutions_a + evolutions_b
+            if ranked_evolutions:
+                summary += ' ' + ', '.join(
+                    f'{event["sourceName"]} evolved into {event["targetName"]}'
+                    for event in ranked_evolutions[:2]) + '.'
+            events.extend((
+                {'actor': a['id'], 'kind': 'ai', 'opponent': b['id'],
+                 'result': 'win' if a_won else 'loss', 'summary': summary,
+                 'before': before_a, 'after': a['rating']},
+                {'actor': b['id'], 'kind': 'ai', 'opponent': a['id'],
+                 'result': 'loss' if a_won else 'win', 'summary': summary,
+                 'before': before_b, 'after': b['rating']},
+            ))
+            recent_by_id.setdefault(a['id'], []).append(b['id'])
+            recent_by_id.setdefault(b['id'], []).append(a['id'])
+            changed_ids.update((a['id'], b['id']))
+
+        if not changed_ids:
+            return
+        records = [working[ai_id] for ai_id in sorted(changed_ids)]
+        committed_at = await asyncio.to_thread(self.db.ai_commit_competitive_batch, records, events)
+        for bot in records:
+            bot['last_action_at'] = committed_at
+            self._adopt_bot_locked(bot)
 
     async def simulate_due(self):
         async with self.lock:
@@ -1453,17 +1746,21 @@ class AutonomousTrainers:
         engaged = False
         try:
             async with self.lock:
+                # The lease-protected snapshot is the authoritative trainer image.
+                # Flush pending position state before engaging the bot, then clone
+                # directly from memory instead of re-reading a growing JSON row.
                 await self._flush_world_locked(force=True)
-                bot = await asyncio.to_thread(self.db.ai_get, ai_id)
+                bot = self.by_id.get(ai_id)
                 require(bot is not None, 'That autonomous trainer is unavailable.')
                 roster = self._party_members(bot, clone=True)
                 require(bool(roster), 'That autonomous trainer has no valid party.')
+                bot_name = bot['username']
                 self.engaged[ai_id] = time.monotonic() + max(180, self.s.int('gameplay', 'battle_turn_seconds') * 20)
                 engaged = True
             for m in roster:
                 self.c.heal(m)
             b = Battle(
-                self.c, 'duel', [p.id, None], [p.username, bot['username']], [self.w.party(p), roster], [{}, {}],
+                self.c, 'duel', [p.id, None], [p.username, bot_name], [self.w.party(p), roster], [{}, {}],
                 self.s.int('gameplay', 'battle_turn_seconds'), audio_source=p.state['map'].split('_', 1)[0])
             b.ai_trainer_id = ai_id
             self.w.battles[b.id] = b
@@ -1492,22 +1789,35 @@ class AutonomousTrainers:
             return
         async with self.lock:
             await self._flush_world_locked(force=True)
-            bot = await asyncio.to_thread(self.db.ai_get, b.ai_trainer_id)
-            if not bot:
+            live = self.by_id.get(int(b.ai_trainer_id))
+            if not live:
                 self.engaged.pop(b.ai_trainer_id, None)
                 return
+
+            # Develop a detached copy first.  Nothing in the live snapshot changes
+            # unless the joint human+AI transaction commits successfully.
+            bot = copy.deepcopy(live)
             human = await asyncio.to_thread(self.db.competitive_profile, p.id)
             human_before = human['rating']
             ai_before = bot['rating']
             human_won = b.winner == 0
             human_after = elo(human_before, ai_before, 1 if human_won else 0, 32)
             ai_after = elo(ai_before, human_before, 0 if human_won else 1, 32)
-            self._develop(bot, not human_won)
+            evolutions = self._develop(bot, not human_won)
             summary = f'{p.username} ' + ('defeated' if human_won else 'lost to') + f' {bot["username"]} in ranked play.'
-            await asyncio.to_thread(
+            if evolutions:
+                summary += ' ' + ', '.join(f'{e["sourceName"]} evolved into {e["targetName"]}' for e in evolutions[:2]) + '.'
+            committed_at = await asyncio.to_thread(
                 self.db.ai_ranked_human_result, p.id, bot['id'], human_won, human_after, tier_for(human_after),
                 ai_before, ai_after, tier_for(ai_after), bot['state'], summary)
+
+            bot['rating'] = ai_after
+            bot['tier'] = tier_for(ai_after)
+            bot['wins'] += int(not human_won)
+            bot['losses'] += int(human_won)
+            bot['next_action_at'] = committed_at + 120
+            bot['last_action_at'] = committed_at
+            self._adopt_bot_locked(bot)
             self.engaged.pop(bot['id'], None)
             b.logs.append(f'Ranked rating: {human_before} → {human_after}.')
             p.send('notice', message=f'Ranked result saved. Rating {human_before} → {human_after}.')
-            await self._refresh_snapshot_locked(force=True)

@@ -1,6 +1,19 @@
-# Autonomous Trainer World Life — 0.6.2-alpha
+# Autonomous Trainer World Life — 0.6.4-alpha
 
 Pokemon NXT MMO maintains a persistent population of **2,000 autonomous trainers**. They are server-owned simulation actors rather than login accounts, so they cannot authenticate or collide with human credentials. The ranked ladder/rivals system, visible world actors and authoritative party identity remain in place; 0.6.0 introduced region-aware travel and progression; 0.6.1 stabilizes the visible map population so travel cannot cause crowding, rapid cohort churn or empty observed maps.
+
+## Long-uptime performance contract — 0.6.4
+
+The running world owns one database lease, so the loaded autonomous population is the authoritative runtime image until an explicit startup/recovery reconciliation. Version 0.6.4 removes normal-path full-population reloads and database query fan-out while preserving every gameplay system and configured cadence.
+
+- The 10 Hz world tick never reloads all 2,000 `state_json` / `personality_json` rows. `refresh_snapshot(force=True)` remains the explicit reconciliation path for startup, migrations, recovery and focused tests.
+- Ranked due selection and rating-near candidate selection run against the authoritative memory image. The scheduler makes one bounded recent-opponent query for the due cohort and one transactional batch commit for the completed pass.
+- Off-screen field simulation still runs at the configured two-second cadence with the configured 16-bot batch, but all successful state/personality outcomes share one lease-fenced transaction and do not trigger a population reload afterward.
+- Visible wild/travel outcomes share one transaction per world tick. Ordinary walking position/direction continues through the existing two-second dirty-state batch.
+- Human ranked challenges clone the authoritative in-memory bot instead of re-reading its full JSON row. Saved human-vs-bot outcomes are developed on a detached copy and adopted into live memory only after the joint database transaction commits.
+- AI Activity keeps the same 45-day retention window, but pruning runs at most once per hour. A composite actor/kind/time index supports bounded recent-opponent lookup.
+
+This is a persistence/I/O architecture change, not a simulation downgrade. Population remains 2,000, visible cohort limits/cadences are unchanged, and real battles, captures, EXP, evolution, regional travel, ranking, rivalry and activity records remain authoritative. Schema remains 3 and existing deployments upgrade in place. See `AUTONOMOUS_PERFORMANCE.md` for the failure analysis and operational validation.
 
 ## Authoritative party identity
 
@@ -35,7 +48,7 @@ Only maps with connected human observers run high-frequency tile movement, and o
 - Bots avoid solid map objects, warps, other materialized trainers and connected human positions when selecting a visible step.
 - When a cohort is materialized it is authoritatively scattered across real encounter terrain. Each member keeps a local roam anchor/radius so the group does not reconverge onto one grass patch.
 - Training-oriented bots seek real encounter terrain and wander within their local training territory rather than pacing only on decorative roads.
-- Position and direction are batched to persistent storage. Travel relocations are committed immediately as autonomous activity events.
+- Position and direction are batched to persistent storage. Visible travel/wild outcomes remain authoritative activity events and are committed together once per world tick.
 
 ## Real wild battles, captures and training
 
@@ -78,7 +91,7 @@ The right-side gameplay panel retains **AI Activity**, **Ranking Ladder** and **
 
 ## Persistence and configuration
 
-Schema 3 remains authoritative and continues to use `ai_trainers`, `competitive_profiles`, `ai_activity` and `ai_rivals`. Travel metadata fits the existing trainer personality JSON; map/position and owned Pokémon remain in authoritative state JSON. Activity older than 45 days remains bounded by pruning.
+Schema 3 remains authoritative and continues to use `ai_trainers`, `competitive_profiles`, `ai_activity` and `ai_rivals`. Travel metadata fits the existing trainer personality JSON; map/position and owned Pokémon remain in authoritative state JSON. Activity older than 45 days remains bounded by pruning; the retention delete is throttled to at most once per hour rather than repeated on every bot activity write.
 
 `[autonomous_trainers]` defaults:
 
@@ -119,3 +132,10 @@ For the current materialization/travel stability contract see `Docs/AUTONOMOUS_P
 ## Off-screen field simulation (0.6.2-alpha)
 
 Wild progression is not tied to a connected player, an observed map, or the competitive queue. The world service runs a separate bounded field scheduler for every non-materialized autonomous trainer. It uses the trainer's real persistent party, real map encounter table and the shared Battle engine, then commits captures, EXP/levels, supplies and travel state to storage. A connected client only changes presentation: the currently materialized cohort is handled by the visible field loop so the same bot is never progressed twice.
+
+
+## Autonomous level evolution (0.6.3-alpha)
+
+Autonomous Pokémon now use the same authored `Growth` evolution service as normal gameplay. A bot accepts an eligible **level** evolution after a genuine level gain from wild or ranked development; the persistent owned UID and party slot do not change, so the evolved species is immediately the same individual used by the overworld follower and every later battle. Existing v0.6.2 populations receive a one-time repair for already-overlevelled supported level evolutions.
+
+The AI does not invent missing conditions. Stone evolutions are not triggered without a real stone-use decision, trade evolutions are not triggered without the server's real trade marker, and unsupported ROM methods remain unsupported. This keeps autonomous progression inside the same gameplay contracts as player Pokémon instead of substituting simplified bot-only rules.

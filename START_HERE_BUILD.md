@@ -1,27 +1,27 @@
 # Pokemon NXT MMO — automatic all-in-one source build
 
 
-**Download all FOUR source ZIPs:** `Pokemon_NXT_MMO_v0.6.2-alpha_Source_OfflineAutonomousFieldSimulation_Part1.zip`, `Part2.zip`, `Part3.zip` and `Part4.zip` (all share the same prefix). Extract each ordinary ZIP into the same destination, merging the identically named `Pokemon_NXT_MMO_v0.6.2-alpha_Source_OfflineAutonomousFieldSimulation` folders. Do not concatenate the ZIP files. Run `BUILD_ALL.bat` only after all four parts are extracted. The four parts contain the complete source and assets; no earlier source pack or optional patch is required.
+**Download all FOUR source ZIPs:** `Pokemon_NXT_MMO_v0.6.4-alpha_Source_AutonomousTrainerPerformance_Part1.zip`, `Part2.zip`, `Part3.zip` and `Part4.zip` (all share the same prefix). Extract each ordinary ZIP into the same destination, merging the identically named `Pokemon_NXT_MMO_v0.6.4-alpha_Source_AutonomousTrainerPerformance` folders. Do not concatenate the ZIP files. Run `BUILD_ALL.bat` only after all four parts are extracted. The four parts contain the complete source and assets; no earlier source pack or optional patch is required.
 
-Gameplay **0.6.2-alpha** · Build tools **1.4.1** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
+Gameplay **0.6.4-alpha** · Build tools **1.4.1** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
 
 The full source includes the extracted FireRed and Sigma music, sound effects and cries. `BUILD_ALL.bat` verifies and packages these files; it does not extract them again. **No ROM, FFmpeg or C++ audio-renderer build is needed for a normal build.**
 
 ## Windows build repair · 1.4.1
 
-**Windows build correction (1.4.1):** Explicitly close temporary SQLite probe connections; this fixes the reported `WinError 32` in the schema/lease regression without disabling it or changing the server. See `Docs/WINDOWS_BUILD_FIX_1.4.1.md` and its test report. That historical repair remains preserved; current gameplay uses schema 3 and the 0.6.1 content pack.
+**Windows build correction (1.4.1):** Explicitly close temporary SQLite probe connections; this fixes the reported `WinError 32` in the schema/lease regression without disabling it or changing the server. See `Docs/WINDOWS_BUILD_FIX_1.4.1.md` and its test report. That historical repair remains preserved; current gameplay uses schema 3 and the 0.6.4 content pack.
 
-## Autonomous off-screen field simulation · 0.6.2-alpha
+## Autonomous trainer performance hardening · 0.6.4-alpha
 
-The 2,000 autonomous trainers now have a dedicated persistent field scheduler. They battle/capture wild Pokémon and gain EXP even with **zero connected players**; observing a map is only required for visible walking/rendering, never for simulation.
+This release keeps the full 2,000-trainer feature set but removes the database amplification that could make every bot appear to freeze together after sustained uptime. The single leased world now treats its in-memory autonomous population as authoritative between explicit recovery/reconciliation operations. Normal 10 Hz world ticks no longer reload and JSON-decode all bot rows, off-screen field outcomes are committed as one bounded batch, ranked due/candidate selection runs against the authoritative memory image with one recent-opponent query and one batched commit, and visible field outcomes share a single transaction per world tick. AI Activity retention cleanup is throttled to once per hour instead of running a delete on every recorded bot action.
 
-The 2,000 persistent trainers retain 0.6.0 region-aware level progression, but observed maps now use a stable bounded materialized cohort. Bots are scattered across real encounter terrain instead of piling into one grass patch; local roam anchors keep that spacing useful over time. Normal travel uses dwell-time hysteresis, preserves a resident floor and allows at most one visible departure from an observed map per configured cadence, preventing flicker and empty-map drain. Unsafe placements can still escape immediately. The accepted 0.5.1 authoritative-party identity is preserved exactly. See `Docs/AUTONOMOUS_POPULATION_STABILITY.md` and `Docs/AUTONOMOUS_REGIONAL_TRAVEL.md`.
+No bots, battles, captures, evolutions, regional travel, ranking, rivals, activity feeds or materialized-map behavior were removed or reduced. The existing 0.6.3 level-evolution contract is preserved. Schema 3 remains authoritative; startup adds the supporting activity index idempotently and requires no reset. See `Docs/AUTONOMOUS_PERFORMANCE.md`, `Docs/AUTONOMOUS_PERFORMANCE_TEST_REPORT.md`, `Docs/AUTONOMOUS_TRAINERS.md` and the preserved evolution/travel documentation.
 
 Start the built world server as usual, then type `help` in its interactive terminal. All administration stays on the host; player chat and game packets cannot invoke commands. **No new port or administrator password is needed.** Administrative writes and their audits are transactional, destructive previews need confirmation, and developer commands are disabled by default. See `Docs/LOCAL_ADMIN_CONSOLE.md`.
 
 Back up the existing database before this update. Schema 3 remains authoritative and this gameplay update requires no new schema bump. Existing human accounts, autonomous identities, Pokémon, ratings, rivalries and histories are upgraded in place.
 
-The earlier **build-tools 1.3.4 Windows symlink-privilege correction remains included**. Its isolated sprite-copy tests stay active. Current gameplay is **0.6.2-alpha**, build tools **1.4.1**, with a newly published matching content pack. Historical repair instructions are in `Docs/WINDOWS_BUILD_FIX_1.3.4.md`; do not apply that old repair over this complete release.
+The earlier **build-tools 1.3.4 Windows symlink-privilege correction remains included**. Its isolated sprite-copy tests stay active. Current gameplay is **0.6.4-alpha**, build tools **1.4.1**, with a newly published matching content pack. Historical repair instructions are in `Docs/WINDOWS_BUILD_FIX_1.3.4.md`; do not apply that old repair over this complete release.
 
 ## Varieties and regional encounter/Cut updates
 

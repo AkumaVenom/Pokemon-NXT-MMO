@@ -469,9 +469,10 @@ class World:
    self.players.pop(p.id,None);p.closed=True;self.emit('logout',player=p);log.info('Left %s; online=%d',p.username,len(self.players))
  async def tick(self):
   begin=time.monotonic()
-  # Autonomous simulation is database-authoritative but intentionally runs outside
-  # the gameplay actor lock so a catch-up batch can never stall player movement.
-  await self.autonomous.maybe_tick();await self.autonomous.refresh_snapshot()
+  # The lease-protected in-memory autonomous population is authoritative while the
+  # world is running. Simulation remains outside the gameplay actor lock, and no
+  # periodic full-population JSON reload is performed on the 10 Hz world path.
+  await self.autonomous.maybe_tick()
   # Persistent wild training/captures are independent of observation. This
   # background scheduler progresses every non-materialized bot even when there are
   # zero connected humans; active maps only decide which cohort gets visible
