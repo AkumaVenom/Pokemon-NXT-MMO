@@ -20,6 +20,17 @@ spec.loader.exec_module(builder)
 
 
 class SourceSelectionTests(unittest.TestCase):
+    def test_regional_dialogue_sidecars_and_extractors_are_required_and_preserved(self):
+        for name in ("kanto_dialogue.json", "johto_dialogue.json"):
+            path = "Server/data/" + name
+            self.assertIn(name, builder.SOURCE_DATA_FILES)
+            self.assertIn(path, builder.REQUIRED_SOURCE)
+            self.assertTrue(builder.is_source_file(PurePosixPath(path)))
+            self.assertTrue((ROOT / path).is_file())
+        for path in ("Tools/publish_dialogue.py", "Tools/extract_firered_dialogue.py", "Tools/extract_sigma_dialogue.py", "Tests/test_kanto_dialogue.py", "Tests/test_johto_dialogue.py"):
+            self.assertIn(path, builder.REQUIRED_SOURCE)
+            self.assertTrue(builder.is_source_file(PurePosixPath(path)))
+
     def test_regional_encounter_republish_sidecars_are_required_and_preserved(self):
         names = ("encounters_firered.json", "encounters_crystal.json", "encounter_bindings.json", "species_additions.json")
         for name in names:

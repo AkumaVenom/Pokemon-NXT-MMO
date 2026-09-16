@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.7-alpha · Kanto FireRed NPC Dialogue Restoration · 2026-09-17
+
+- Add 642 validated static dialogue bindings for ordinary Kanto NPCs extracted from the exact reviewed FireRed Rev 1 ROM (`729041b940afe031302d630fdbe57c0c145f3f7b6d9b8eca5e98678d0ca4d059`, 16,777,216 bytes). The source ROM is never packaged or required at runtime.
+- Audit all 1,620 visible FireRed object events and restrict publication to 669 ordinary person-NPC actors. Exclude 498 item/Pokémon/field objects, 413 resolved trainer bindings and 40 trainer-type objects so acquisition/result scripts and trainer challenge logic cannot be misrepresented as ordinary NPC speech.
+- Preserve trainer and Gym Leader team-preview/battle UI, all Kanto Pokémon Center nurse services and Poké Mart shop actions while using audited FireRed greetings for regular service NPCs.
+- Merge Kanto and Johto dialogue as a versioned two-source `npcDialogue` pack with independent ROM provenance/policy validation and region-aware runtime token rendering.
+- Preserve the accepted v0.6.6 Interior Portal Hotfix, Johto/Sigma dialogue, v0.6.5 Sudowoodo progression and v0.6.4 autonomous performance architecture without schema/save changes.
+- Add deterministic FireRed extraction tooling, build-source enforcement, dedicated Kanto dialogue regressions and release documentation.
+
 ## 0.6.6-alpha hotfix · Interior Return & Goldenrod Elevator Hardening · 2026-09-17
 
 - Fix Pokémon Center return ownership after using an internal upstairs/downstairs link. A shared lower Center now keeps its original per-character exterior return instead of incorrectly treating the upstairs room as a new building entrance; leaving the Center therefore returns outside instead of bouncing back upstairs and trapping the player.

@@ -1,6 +1,6 @@
 # Alpha scope and acceptance boundaries
 
-Gameplay **0.6.6-alpha: Johto Sigma NPC Dialogue Restoration**, preserving the accepted autonomous-performance, Route 36 story, regional encounter/Cut and battle-screen baselines. The accepted starter-selection, account-login, owner replication and progressive saving fixes remain part of this release. Startup, automatic prerequisites and online TLS setup are preserved.
+Gameplay **0.6.7-alpha: Kanto FireRed NPC Dialogue Restoration**, preserving the accepted autonomous-performance, Route 36 story, regional encounter/Cut and battle-screen baselines. The accepted starter-selection, account-login, owner replication and progressive saving fixes remain part of this release. Startup, automatic prerequisites and online TLS setup are preserved.
 
 ## Implemented slice
 

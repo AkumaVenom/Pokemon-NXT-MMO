@@ -1,4 +1,4 @@
-"""Runtime renderer for audited static Johto/Sigma NPC talk text."""
+"""Runtime renderer for audited static regional ROM NPC talk text."""
 from __future__ import annotations
 
 import re
@@ -7,7 +7,6 @@ TOKEN_RE = re.compile(r"\{[A-Z0-9_]+\}")
 STATIC_REPLACEMENTS = {
     "{KUN}": "",
     "{RIVAL}": "Rival",
-    "{VERSION}": "Ultra Shiny Gold Sigma",
     "{EVIL_TEAM}": "Team Rocket",
     "{EVIL_LEADER}": "Giovanni",
     "{LEGENDARY}": "legendary Pokémon",
@@ -19,6 +18,10 @@ STATIC_REPLACEMENTS = {
     "{STR_VAR_1}": "…",
     "{STR_VAR_2}": "…",
     "{STR_VAR_3}": "…",
+}
+REGION_VERSION = {
+    "kanto": "FireRed",
+    "johto": "Ultra Shiny Gold Sigma",
 }
 
 
@@ -35,19 +38,23 @@ def _party_name(content, state: dict, index: int) -> str:
 
 
 def render(content, state: dict, username: str, map_id: str, npc_id: int) -> str | None:
-    """Return owner-contextualized ROM text, or None when no audited literal exists."""
-    if not map_id.startswith("johto_"):
+    """Return owner-contextualized audited ROM text, or None when unavailable."""
+    region = map_id.split("_", 1)[0] if "_" in map_id else ""
+    if region not in REGION_VERSION:
         return None
     entry = content.data.get("npcDialogue", {}).get("entries", {}).get(f"{map_id}:{npc_id}")
     if not entry:
+        return None
+    if entry.get("sourceRegion", region) != region:
         return None
     message = entry.get("message")
     if not isinstance(message, str):
         return None
 
     replacements = dict(STATIC_REPLACEMENTS)
+    replacements["{VERSION}"] = REGION_VERSION[region]
     replacements["{PLAYER}"] = username
-    trade_context = "trade" in message.casefold() or "looking for the pokémon" in message.casefold()
+    trade_context = "trade" in message.casefold() or "looking for the pokémon" in message.casefold() or "looking for the pokemon" in message.casefold()
     replacements["{STR_VAR_1}"] = "Pokémon" if trade_context else "Trainer"
     replacements["{STR_VAR_2}"] = "Pokémon"
     replacements["{STR_VAR_3}"] = "Pokémon"

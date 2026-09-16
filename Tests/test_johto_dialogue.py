@@ -39,14 +39,15 @@ class PublishedDialogueTests(unittest.TestCase):
         cls.content = Content(ROOT / "Server/data/world.json")
         cls.world = cls.content.data
         cls.sidecar = json.loads((ROOT / "Server/data/johto_dialogue.json").read_text(encoding="utf-8"))
-        cls.entries = cls.world["npcDialogue"]["entries"]
+        cls.entries = {key: entry for key, entry in cls.world["npcDialogue"]["entries"].items() if key.startswith("johto_")}
 
     def test_reviewed_sigma_provenance_and_release_version_are_published(self):
-        self.assertEqual(self.world["version"], "0.6.6-alpha")
+        self.assertEqual(self.world["version"], "0.6.7-alpha")
         self.assertEqual(self.sidecar["source"]["sha256"], SIGMA_SHA)
-        self.assertEqual(self.world["npcDialogue"]["source"]["sha256"], SIGMA_SHA)
+        self.assertEqual(self.world["npcDialogue"]["format"], 2)
+        self.assertEqual(self.world["npcDialogue"]["sources"]["johto"]["sha256"], SIGMA_SHA)
         self.assertEqual(self.sidecar["source"]["size"], 17632785)
-        self.assertFalse(self.world["npcDialogue"]["policy"]["scriptExecution"])
+        self.assertFalse(self.world["npcDialogue"]["policies"]["johto"]["scriptExecution"])
 
     def test_every_published_entry_targets_a_real_nontrainer_nonstory_johto_object(self):
         trainer_keys = set(self.world["adventureRom"]["trainers"])
@@ -115,14 +116,15 @@ class PublishedDialogueTests(unittest.TestCase):
         self.assertEqual((nurse_total, nurse_dialogue), (33, 31))
         self.assertEqual(mart_dialogue, 47)
 
-    def test_renderer_substitutes_owner_context_and_never_applies_sigma_text_to_kanto(self):
+    def test_renderer_substitutes_owner_context_and_keeps_johto_source_identity(self):
         key, entry = next((key, entry) for key, entry in self.entries.items() if "{PLAYER}" in entry["message"])
         map_id, npc = key.rsplit(":", 1)
         state = {"party": [], "creatures": []}
         rendered = render(self.content, state, "AkumaVenom", map_id, int(npc))
         self.assertIn("AkumaVenom", rendered)
         self.assertNotIn("{PLAYER}", rendered)
-        self.assertIsNone(render(self.content, state, "AkumaVenom", "kanto_3_0", 1))
+        self.assertEqual(entry.get("sourceRegion"), "johto")
+        self.assertIsNotNone(render(self.content, state, "AkumaVenom", "kanto_4_0", 1))
 
 
 class RuntimeDialogueTests(unittest.IsolatedAsyncioTestCase):
@@ -198,7 +200,7 @@ class RuntimeDialogueTests(unittest.IsolatedAsyncioTestCase):
     async def test_mart_clerk_keeps_shop_action_and_uses_sigma_greeting(self):
         entries = self.content.data["npcDialogue"]["entries"]
         candidate = next((entry["map"], entry["npc"]) for entry in entries.values()
-                         if next(o for o in self.content.maps[entry["map"]]["objects"] if o["id"] == entry["npc"])["graphics"] == 68)
+                         if entry["map"].startswith("johto_") and next(o for o in self.content.maps[entry["map"]]["objects"] if o["id"] == entry["npc"])["graphics"] == 68)
         map_id, npc = candidate
         await self.place(map_id, npc)
         await self.world.dispatch(self.player, {"op": "npc", "map": map_id, "npc": npc})
