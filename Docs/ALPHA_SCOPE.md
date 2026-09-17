@@ -1,6 +1,10 @@
 # Alpha scope and acceptance boundaries
 
-Gameplay **0.6.8-alpha: GBA Battle System Completion**, preserving the accepted autonomous-performance, Route 36 story, regional encounter/Cut and battle-screen baselines. The accepted starter-selection, account-login, owner replication and progressive saving fixes remain part of this release. Startup, automatic prerequisites and online TLS setup are preserved.
+Gameplay **0.6.10-alpha: Item Gameplay Repair**, preserving the accepted autonomous-performance, Route 36 story, regional encounter/Cut and battle-screen baselines. The accepted starter-selection, account-login, owner replication and progressive saving fixes remain part of this release. Startup, automatic prerequisites and online TLS setup are preserved.
+
+## Item gameplay boundary (0.6.10)
+
+All 125 Johto/Sigma pickup identities now have explicit actions, including Timer Ball and other capture rules, medicine/PP/training, item evolution and machine teaching, held equipment and sale/service contexts. The original pickup IDs/flags persist unchanged. `ITEM_GAMEPLAY.md` separates verified native role evidence from the named-item/crafting/case/Tera adaptations and documents the non-consuming unsupported-ability/Transform-PP guards. EV rewards and vitamin training are now implemented. This does not make full original minigames, every later-generation ability, or the complete original campaign available.
 
 ## Implemented slice
 
@@ -30,7 +34,7 @@ Cut now unlocks automatically at Misty/Cascade for Kanto and Bugsy/Hive for Joht
 
 ## Explicitly not implemented
 
-Original FireRed/Sigma story execution or a complete original campaign; complete stateful dialogue/quest-script execution and Elite Four story sequencing; arbitrary script-controlled doors/bridges/cutscenes; animated environment tiles; full original battle visual effects; cycle-perfect GBA battle-engine parity, complete ability/held-item edge-case parity or double-battle targeting; unsupported evolution methods, breeding, eggs and EV training; fishing/rock-smash progression; original trainer line-of-sight AI; guilds, auctions, mail, friend lists, cross-shard travel or account recovery. The implemented sixteen-gym badge journey and journal objectives are specifically an MMO adventure layer.
+Original FireRed/Sigma story execution or a complete original campaign; complete stateful dialogue/quest-script execution and Elite Four story sequencing; arbitrary script-controlled doors/bridges/cutscenes; animated environment tiles; full original battle visual effects; cycle-perfect GBA battle-engine parity, complete ability/held-item edge-case parity or double-battle targeting; unsupported evolution methods, breeding and eggs; fishing/rock-smash progression; original trainer line-of-sight AI; guilds, auctions, mail, friend lists, cross-shard travel or account recovery. The implemented sixteen-gym badge journey and journal objectives are specifically an MMO adventure layer.
 
 No complete directional overworld follower set was established. This alpha animates each available lead species using its extracted two-frame party icon, including fallback presentation for tiny/atypical forms. Follower position and species are server-replicated, but this is not four-direction HGSS-style follower animation. Shiny follower colors are not promised; battle front/back shiny art is available.
 

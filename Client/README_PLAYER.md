@@ -25,3 +25,12 @@ Defeat or capture Sudowoodo to save the Route 36 path as permanently clear for t
 Wild Pokémon follow the current map's FireRed/Crystal ordinary encounter table, not a universal starter-area list. Crystal locations change with the server's morning/day/night period. Surf encounters are separate from grass/caves; an encounter-free location does not invent a fallback.
 
 Earn the Cascade Badge from Misty to unlock Kanto Cut, or the Hive Badge from Bugsy to unlock Johto Cut. These are independent field licenses, visible in the journal. No selected battle move is automatically replaced. Approach and click a small HM tree: locked Cut is disabled; enabled Cut removes the tree and its collision for your character after saving. Other players still have their own tree. Your cleared paths remain cleared after relogging.
+
+
+## Using collected items (0.6.10)
+
+Open **Bag** and search for the item. Medicine, training and evolution actions ask for a compatible owned Pokémon; Ether/PP upgrades and TMs also ask for a move slot. A zero-effect target is disabled or rejected without consuming an item. Use **Give to Pokémon…** for held items, and **Take held item** on the Pokémon detail page to return equipment.
+
+For a **Timer Ball**, enter a wild battle, choose **Battle item → Timer Ball**, then **Throw Timer Ball**. The option shows the current turn-based multiplier. Capture balls are not field-use items and cannot capture trainers’ Pokémon. **Flame Ball is different:** in this Sigma source it is a held Fire-type booster, so equip it rather than throw it.
+
+Sell valuables at a Poké Mart clerk. White Apricorn crafting requires Kurt’s Azalea house. Coin Case and Pokéblock Case have dedicated panels. Their services and the Tera Orb battle action are labeled NXT adaptations, not exact replicas of all cartridge minigames. Unsupported Skill Capsule destination abilities are blocked without consumption. See the source documentation for all item-specific behavior.

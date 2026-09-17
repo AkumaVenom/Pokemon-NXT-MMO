@@ -3,7 +3,7 @@ from pathlib import Path
 import json, struct, sys, unittest
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'Tools'))
-from extract_adventure_data import Rom, first_battles, normalize_object_list, trainer
+from extract_adventure_data import Rom, field_item_script, first_battles, normalize_object_list, trainer
 
 def encode(value):return bytes(0xbb+ord(c)-65 for c in value)
 
@@ -44,6 +44,20 @@ class ScriptReaderTests(unittest.TestCase):
   self.assertFalse(first_battles(r,0)[0])
   r.b[:5]=b'\x05'+pointer(999999)
   self.assertEqual(first_battles(r,0)[1],{'invalid-instruction':1})
+
+ def test_field_item_reader_accepts_only_bounded_linear_standard_give(self):
+  direct=b'\x1a\x00\x80\x0d\x00\x1a\x01\x80\x03\x00\x09\x01\x02'
+  r=fake_rom(size=128);r.b[:len(direct)]=direct
+  self.assertEqual(field_item_script(r,0)['sourceItemId'],13);self.assertEqual(field_item_script(r,0)['quantity'],3)
+  r=fake_rom(size=128);r.b[:3+len(direct)]=b'\x29\x43\x02'+direct
+  self.assertEqual(field_item_script(r,0)['sourceItemId'],13)
+
+ def test_field_item_reader_never_scans_past_end_or_branch_into_adjacent_bytes(self):
+  direct=b'\x1a\x00\x80\x0d\x00\x1a\x01\x80\x01\x00\x09\x01\x02'
+  r=fake_rom(size=128);r.b[:1+len(direct)]=b'\x02'+direct
+  self.assertIsNone(field_item_script(r,0))
+  r=fake_rom(size=128);r.b[:6+len(direct)]=b'\x06\x01'+pointer(64)+direct
+  self.assertIsNone(field_item_script(r,0))
 
 class ObjectIdentityTests(unittest.TestCase):
  def test_hidden_duplicate_does_not_renumber_visible_npc(self):
@@ -114,6 +128,29 @@ class ShippedAdventureDataTests(unittest.TestCase):
      if rule['method']=='stone':self.assertTrue(self.data['items'][rule['item']]['evolutionStone'])
   self.assertEqual(self.data['evolutions']['fr_4'][0]['target'],'fr_5')
   self.assertEqual(self.data['evolutions']['fr_152'][0]['target'],'fr_153')
+
+ def test_sigma_field_item_balls_are_fully_audited_and_bound(self):
+  audit=self.data['itemPickupAudit'];pickups=self.data['itemPickups']
+  self.assertEqual((audit['scannedPokeballObjects'],audit['verifiedPickups'],audit['excludedLookalikes'],audit['uniqueItems']),(386,361,25,125))
+  self.assertEqual(len(pickups),361);self.assertEqual(len({p['item'] for p in pickups.values()}),125);self.assertTrue(any(p['quantity']>1 for p in pickups.values()))
+  excluded={(p['map'],p['npc']) for p in audit['excluded']}
+  self.assertEqual(len(excluded),25)
+  for map_id,npc in excluded:
+   obj=next((o for o in self.world['maps'][map_id]['objects'] if o['id']==npc),None)
+   if obj is not None:self.assertNotIn('itemPickup',obj)
+  for pickup_id,pickup in pickups.items():
+   with self.subTest(pickup=pickup_id):
+    self.assertEqual(pickup['id'],pickup_id);self.assertTrue(1<=pickup['quantity']<=999);self.assertIn(pickup['item'],self.data['items'])
+    extracted=next(o for o in self.data['normalizedObjects'][pickup['map']] if o['id']==pickup['npc'])
+    published=next(o for o in self.world['maps'][pickup['map']]['objects'] if o['id']==pickup['npc'])
+    self.assertEqual(extracted['graphics'],92);self.assertEqual(extracted['sourceObjectIndex'],pickup['sourceObjectIndex']);self.assertEqual(published['itemPickup'],pickup_id)
+    self.assertNotIn((pickup['map'],pickup['npc']),excluded)
+
+ def test_sigma_field_item_catalog_preserves_core_mmo_item_mechanics(self):
+  self.assertEqual(self.world['items']['pokeball']['capture'],1);self.assertEqual(self.world['items']['greatball']['capture'],1.5);self.assertEqual(self.world['items']['ultraball']['capture'],2)
+  self.assertEqual(self.world['items']['potion']['heal'],20);self.assertEqual(self.world['items']['superpotion']['heal'],50)
+  self.assertFalse(self.world['items']['choicescarf']['buyable']);self.assertTrue(self.world['items']['choicescarf']['tradable']);self.assertTrue(self.world['items']['coincase']['keyItem']);self.assertFalse(self.world['items']['coincase']['tradable'])
+  self.assertEqual(self.world['items']['pokeball']['sourceId'],4);self.assertEqual(self.world['items']['pokeball']['sourcePrice'],300)
 
  def test_sigma_learnsets_keep_source_order_and_valid_moves(self):
   self.assertGreater(len(self.data['speciesOverrides']),450)

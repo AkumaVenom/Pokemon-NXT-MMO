@@ -34,7 +34,7 @@ class Clock {
 function harness(){
  const nodes=new Map(),byId=id=>{if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id);};
  const document=new Element();Object.assign(document,{getElementById:byId,createElement:t=>new Element(t),createTextNode:t=>Object.assign(new Element('#text'),{textContent:t}),activeElement:null});
- const renderer={setCutTrees(){},setStoryEvents(){},objectVisible(){return true;},players:new Map(),active:false,resize(){},scene(){},entity(e){this.lastEntity=e;},loadMap:async()=>true};
+ const renderer={setCutTrees(){},setStoryEvents(){},setItemPickups(){},objectVisible(){return true;},players:new Map(),active:false,resize(){},scene(){},entity(e){this.lastEntity=e;},loadMap:async()=>true};
  const content={pack:'registration-test-pack',starters:Object.keys(names),species:Object.fromEntries(Object.entries(names).map(([key,name])=>[key,{name,front:key+'.png'}])),items:{}};
  const config={endpoint:'ws://localhost/world',host:'localhost',port:7777,tls:false};
  const audio=new Proxy({settings:{}},{get:(target,k)=>k in target?target[k]:()=>{}});

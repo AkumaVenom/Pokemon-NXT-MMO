@@ -13,6 +13,7 @@ try:
  from .publish_encounters import assemble as assemble_encounters
  from .publish_varieties import assemble as assemble_varieties
  from .publish_battle_mechanics import assemble as assemble_battle_mechanics
+ from .publish_item_mechanics import assemble as assemble_item_mechanics
 except ImportError:
  from verify_audio import verify as verify_audio
  from publish_adventure import assemble as assemble_adventure
@@ -20,6 +21,7 @@ except ImportError:
  from publish_encounters import assemble as assemble_encounters
  from publish_varieties import assemble as assemble_varieties
  from publish_battle_mechanics import assemble as assemble_battle_mechanics
+ from publish_item_mechanics import assemble as assemble_item_mechanics
 ROOT=Path(__file__).resolve().parents[1]
 def write_json(path:Path,value):
  path.parent.mkdir(parents=True,exist_ok=True)
@@ -35,6 +37,7 @@ def publish(world:dict,root:Path=ROOT):
  # Adventure/learnset publishers rebuild move records, so bind reviewed battle
  # fields last before hashing/publishing the matching server/client pack.
  assemble_battle_mechanics(world,root)
+ assemble_item_mechanics(world,root)
  assets=root/'Client/app/assets'
  if world.get('format')!=1:raise ValueError('Unsupported world format')
  def asset(path):

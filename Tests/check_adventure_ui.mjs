@@ -10,7 +10,7 @@ const source=fs.readFileSync(new URL('../Client/app/app.js',import.meta.url),'ut
 const html=fs.readFileSync(new URL('../Client/app/index.html',import.meta.url),'utf8');
 class Element{
  constructor(tag='div'){this.tagName=tag.toUpperCase();this.children=[];this.events=new Map();this.attributes={};this.style={};this.value='';this.textContent='';this.disabled=false;this.open=false;this.scrollTop=0;this.classes=new Set();this.classList={add:k=>this.classes.add(k),remove:k=>this.classes.delete(k),contains:k=>this.classes.has(k),toggle:(k,on)=>on??!this.classes.has(k)?this.classes.add(k):this.classes.delete(k)};}
- append(...nodes){this.children.push(...nodes);}replaceChildren(...nodes){this.children=nodes;}setAttribute(k,v){this.attributes[k]=String(v);}getAttribute(k){return this.attributes[k]??null;}
+ append(...nodes){this.children.push(...nodes);}prepend(...nodes){this.children.unshift(...nodes);}replaceChildren(...nodes){this.children=nodes;}setAttribute(k,v){this.attributes[k]=String(v);}getAttribute(k){return this.attributes[k]??null;}
  addEventListener(k,fn){if(!this.events.has(k))this.events.set(k,[]);this.events.get(k).push(fn);}dispatch(k,event={}){return (this.events.get(k)||[]).map(fn=>fn({target:this,currentTarget:this,preventDefault(){},...event}));}
  close(){this.open=false;}showModal(){this.open=true;}remove(){}focus(){}blur(){}closest(){return null;}querySelector(){return null;}
  get firstChild(){return this.children[0];}
@@ -28,7 +28,7 @@ function harness(){
  const own={id:1,map:'kanto_5_4',x:7,y:5,appearance:0};
  const socket={readyState:1,sent:[],send(data){this.sent.push(JSON.parse(data));},close(){this.readyState=2;}};
  const audioCalls=[];const audio=new Proxy({settings:{}},{get:(target,key)=>key in target?target[key]:(...args)=>audioCalls.push([key,...args])});
- const renderer={cutTrees:{},storyEvents:[],setCutTrees(cuts){this.cutTrees=cuts||{};},setStoryEvents(events){this.storyEvents=events||[];},players:new Map(),active:true,resize(){},scene(){},entity(){},resetSession(){},loadMap:async()=>true};
+ const renderer={cutTrees:{},storyEvents:[],setCutTrees(cuts){this.cutTrees=cuts||{};},setStoryEvents(events){this.storyEvents=events||[];},setItemPickups(items){this.itemPickups=items||[];},players:new Map(),active:true,resize(){},scene(){},entity(){},resetSession(){},loadMap:async()=>true};
  const context=vm.createContext({...varietyPresentation,Node:Element,document,window:new Element(),GameAudio:class{constructor(){return audio;}},WorldRenderer:class{},mountAudioControls(){},WebSocket:{OPEN:1},setInterval(){},setTimeout(){},clearTimeout(){},performance:{now:()=>0},console});
  const script=source.replace(/^import .*?;\n/gm,'').replace(/boot\(\);\s*$/,`globalThis.api={showPokemon,showCollection,showJournal,showDex,showBag,showNpcDialog,showAtlas,canTravelTo,updateAdventureAccess,setupInput,handle,loadMap,closeModal,get state(){return state;},get modal(){return modalKind;},seed(values){({content,state,session,own,ws,renderer}=values);},busy(kind){trade=kind==='trade'?{}:null;activeBattle=kind==='battle'?{}:null;},changeOwner(){session={id:2};}};`);
  vm.runInContext(script,context,{filename:'app.js'});context.api.seed({content,state,session,own,ws:socket,renderer});
@@ -99,14 +99,14 @@ test('Travel Pass enables only visited waypoints and starting towns while preser
  const h=harness();h.session.alphaAtlas=false;assert.equal(h.app.canTravelTo({id:'kanto_3_0',mapType:1}),false);h.state.adventure.unlocks.push('travel_pass');assert.equal(h.app.canTravelTo({id:'kanto_3_1',mapType:2}),true);assert.equal(h.app.canTravelTo({id:'johto_3_0',mapType:1}),true);assert.equal(h.app.canTravelTo({id:'johto_3_20',mapType:3}),false);h.session.alphaAtlas=true;assert.equal(h.app.canTravelTo({id:'johto_3_20',mapType:3}),true);assert.equal(h.app.canTravelTo({id:'johto_3_20',playable:false}),false);
 });
 test('bag distinguishes evolution items and enables buying only at a nearby Mart',()=>{
- const h=harness();h.session.alphaAtlas=false;h.renderer.map={id:h.own.map,objects:[]};h.app.showBag();assert.equal(h.findButton('Buy 1').disabled,true);assert.match(h.words(),/Evolution item/);h.findButton('Use on lead').dispatch('click');assert.deepEqual(h.socket.sent.at(-1),{op:'use',item:'potion',uid:'a'});
+ const h=harness();h.session.alphaAtlas=false;h.renderer.map={id:h.own.map,objects:[]};h.app.showBag();assert.equal(h.findButton('Buy 1').disabled,true);assert.match(h.words(),/Evolution item/);h.state.creatures[0].hp=1;h.findButton('Use…').dispatch('click');h.findButton('Confirm use').dispatch('click');const used=h.socket.sent.at(-1);assert.ok(used.requestId);assert.deepEqual({...used,requestId:undefined},{op:'use',item:'potion',uid:'a',requestId:undefined});
  h.renderer.map.objects=[{graphics:68,x:h.own.x+1,y:h.own.y}];h.app.showBag();assert.equal(h.findButton('Buy 1').disabled,false);h.findButton('Buy 1').dispatch('click');assert.deepEqual(h.socket.sent.at(-1),{op:'buy',item:'potion',quantity:1});
 });
 
 test('Sigma Link Cable and Fairy Dust use their actual names and generic item keys',()=>{
  for(const [key,name] of [['linkcable','Link Cable'],['fairydust','Fairy Dust']]){
   const h=harness(),mon=h.state.creatures[0];h.content.items[key]={name,price:2100,evolutionStone:true};mon.evolutions=[{target:'fr_2',name:'Ivysaur',method:'stone',item:key,deferred:false}];h.app.showPokemon(mon);assert.match(h.words(),new RegExp('Uses one '+name));assert.equal(h.findButton('Evolve into Ivysaur').disabled,true);
-  h.state.items[key]=1;h.app.showPokemon(mon);h.findButton('Evolve into Ivysaur').dispatch('click');assert.deepEqual(h.socket.sent.at(-1),{op:'pokemon.evolve',uid:'a',target:'fr_2'});
+  h.state.items[key]=1;h.app.showPokemon(mon);h.findButton('Evolve into Ivysaur').dispatch('click');assert.deepEqual(h.socket.sent.at(-1),{op:'pokemon.evolve',uid:'a',target:'fr_2',item:key});
   h.app.showBag();assert.match(h.words(),new RegExp(name));assert.match(h.words(),/Evolution item/);
  }
 });
@@ -169,4 +169,11 @@ test('locked Sudowoodo interaction and journal explain Whitney/Plain Badge progr
 test('owner state forwards story completion to renderer and foreign or stale snapshots cannot hide it',()=>{
  const h=harness(),next=structuredClone(h.state);next.revision++;next.adventure.storyEvents=['johto_sudowoodo'];h.app.handle(next);assert.deepEqual(h.renderer.storyEvents,['johto_sudowoodo']);
  h.app.handle({...next,ownerId:2,revision:99,adventure:{...next.adventure,storyEvents:['forged']}});assert.deepEqual(h.renderer.storyEvents,['johto_sudowoodo']);h.app.handle({...next,revision:1,adventure:{...next.adventure,storyEvents:['forged']}});assert.deepEqual(h.renderer.storyEvents,['johto_sudowoodo']);
+});
+
+test('field-only Sigma items stay out of the Bag until collected and are not offered for sale',()=>{
+ const h=harness();h.content.items.choicescarf={name:'Choice Scarf',price:900,buyable:false,tradable:true,fieldItem:true,description:'Field item'};h.app.showBag();assert.doesNotMatch(h.words(),/Choice Scarf/);
+ const buyButtonsBefore=h.buttons().filter(button=>button.textContent==='Buy 1').length;
+ h.state.items.choicescarf=1;h.app.showBag();assert.match(h.words(),/Choice Scarf × 1/);assert.match(h.words(),/FIELD PICKUP/);
+ const buyButtonsAfter=h.buttons().filter(button=>button.textContent==='Buy 1').length;assert.equal(buyButtonsAfter,buyButtonsBefore);
 });

@@ -73,6 +73,7 @@ class Growth:
   return self.ensure(mon)
  def rules(self,mon):
   source=mon['species'];rules=self.c.data.get('adventureRom',{}).get('evolutions',self.c.data.get('evolutions',{})).get(source,[])
+  rules=list(rules)+list(self.c.data.get('itemMechanics',{}).get('evolutions',{}).get(source,[]))
   # Unsupported ROM methods remain provenance, never approximated as a level rule.
   return [r for r in rules if r.get('method') in SUPPORTED_EVOLUTIONS and r.get('target') in self.c.species and r['target']!=source]
  def queue_moves(self,mon,old_level,new_level,source=None):
@@ -119,7 +120,8 @@ class Growth:
    choice={'target':target,'name':self.c.species[target]['name'],'method':method,'deferred':target in deferred}
    if method=='level':choice['level']=rule['level']
    if method=='stone':choice['item']=rule['item']
-   if not any(v['target']==target for v in choices):choices.append(choice)
+   if rule.get('migrateGrowth'):choice['migrateGrowth']=True
+   if not any((v['target'],v['method'],v.get('item'))==(target,method,choice.get('item')) for v in choices):choices.append(choice)
   return choices
  def mark_trade(self,mon):
   """World calls only on transferred copies inside the atomic two-owner trade."""
@@ -149,14 +151,21 @@ class Growth:
   candidate=copy.deepcopy(state);mon=self.owned(candidate,uid)
   require(isinstance(target,str) and any(v['target']==target and v['deferred'] for v in self.options(mon)),'That paused evolution is not available.')
   mon['evolutionDeferred'].remove(target);return candidate
- def evolve(self,state,uid,target):
+ def evolve(self,state,uid,target,item=None):
   candidate=copy.deepcopy(state);mon=self.owned(candidate,uid)
   require(isinstance(target,str),'Select an available evolution.')
-  option=next((v for v in self.options(mon) if v['target']==target),None)
+  option=next((v for v in self.options(mon) if v['target']==target and (item is None or v.get('item')==item)),None)
   require(option is not None and not option['deferred'],'That evolution is not available. Resume a paused evolution first.')
   source=mon['species']
   # A malformed ROM mapping must never change the meaning of saved EXP.
-  require(self.c.species[source]['growth']==self.c.species[target]['growth'],'This evolution uses an unsupported experience-growth transition.')
+  old_growth=self.c.species[source]['growth'];new_growth=self.c.species[target]['growth']
+  require(old_growth==new_growth or option.get('migrateGrowth'),'This evolution uses an unsupported experience-growth transition.')
+  if old_growth!=new_growth:
+   # Reviewed cross-source Sigma item edges preserve level and fractional
+   # progress, rather than reinterpreting an old total EXP on another curve.
+   lv=mon['level'];old_floor=self.c.xp(lv,old_growth);old_span=max(1,self.c.xp(min(100,lv+1),old_growth)-old_floor)
+   new_floor=self.c.xp(lv,new_growth);new_span=max(0,self.c.xp(min(100,lv+1),new_growth)-new_floor)
+   mon['exp']=new_floor+max(0,min(old_span-1,mon['exp']-old_floor))*new_span//old_span
   if option['method']=='stone':
    item=option['item'];require(candidate['items'].get(item,0)>0,'You do not have the required evolution item.');candidate['items'][item]-=1
   old_hp=self.c.stats(mon)[0];hp=mon['hp'];mon['species']=target;new_hp=self.c.stats(mon)[0]

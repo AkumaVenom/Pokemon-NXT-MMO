@@ -1417,7 +1417,7 @@ class AutonomousTrainers:
             [party, [enemy]], [copy.deepcopy(state.get('items', {})), {}],
             self.s.int('gameplay', 'battle_turn_seconds'), audio_source=m['id'].split('_', 1)[0],
             terrain=self.w.battle_terrain(state))
-        exp_awards = collections.Counter()
+        exp_awards = collections.defaultdict(list)
         turns = 0
         while not battle.ended and turns < 64:
             turns += 1
@@ -1439,7 +1439,7 @@ class AutonomousTrainers:
                 total = max(1, self.c.species[event['species']]['baseExperience'] * event['level'] * 2 // 14)
                 exp = max(1, total // len(participants))
                 for mon in participants:
-                    exp_awards[mon['uid']] += exp
+                    exp_awards[mon['uid']].append((event['species'], exp))
         if not battle.ended:
             battle.ended = True
             battle.winner = None
@@ -1450,10 +1450,13 @@ class AutonomousTrainers:
         levels = []
         leveled_uids = []
         for mon in state['creatures']:
-            amount = exp_awards.get(mon['uid'], 0)
-            if amount:
+            awards = exp_awards.get(mon['uid'], [])
+            if awards:
                 before = mon['level']
-                gained = self.c.gain_xp(mon, amount)
+                gained = 0
+                for defeated_species, amount in awards:
+                    _, increase = self.c.item_system.award_experience(mon, defeated_species, amount)
+                    gained += increase
                 if gained:
                     levels.append((self.c.species[mon['species']]['name'], before, mon['level']))
                     leveled_uids.append(mon['uid'])

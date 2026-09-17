@@ -133,6 +133,7 @@ class AudioEventTests(unittest.IsolatedAsyncioTestCase):
 
  async def test_capture_audio_waits_for_commit_and_has_stable_ordered_result(self):
   b=await self.wild('fr_129',2);self.drain(self.a);self.c.rng.random=lambda:0.0;actual=self.db.save_many
+  native_shake_range = self.c.rng.randrange; self.c.rng.randrange = lambda *args: 0 if args==(65536,) else native_shake_range(*args)
   def save(records):
    self.assertFalse(any(p['type'] in ('audio','battle') for p in self.a.queue._queue));return actual(records)
   with patch.object(self.db,'save_many',side_effect=save):await self.w.dispatch(self.a,{'op':'battle','id':b.id,'action':'capture','item':'pokeball'})
@@ -141,6 +142,7 @@ class AudioEventTests(unittest.IsolatedAsyncioTestCase):
 
  async def test_capture_rollback_discards_throw_success_and_reward_events(self):
   b=await self.wild('fr_129',2);before=copy.deepcopy(self.a.state);self.drain(self.a);self.c.rng.random=lambda:0.0
+  native_shake_range = self.c.rng.randrange; self.c.rng.randrange = lambda *args: 0 if args==(65536,) else native_shake_range(*args)
   with patch.object(self.db,'save_many',side_effect=RuntimeError('injected capture rollback')):
    with self.assertLogs('nxt.world',level='ERROR'):await self.w.dispatch(self.a,{'op':'battle','id':b.id,'action':'capture','item':'pokeball'})
   events=self.battle_events(self.drain(self.a));self.assertEqual(self.cues(events),['abort']);self.assertEqual(events[0]['reason'],'save_failed');self.assertEqual(self.a.state,before);self.assertEqual(self.db.load(self.a.id),before)

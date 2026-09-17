@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "checks": [
+    "Field Potion uses the selected owner target and commits HP/item together",
+    "Revive targets a fainted bench partner instead of the lead",
+    "PP Up changes max PP and Max Ether restores the upgraded cap",
+    "Flame Ball can be equipped with its source namespace preserved",
+    "TM48 uses the real Sigma Thunderbolt move, compatibility and explicit replacement",
+    "Rare Candy commits a level and exposes native evolution choices",
+    "Timer Ball is visibly a battle capture item, not an inert field-use button",
+    "Real Timer Ball UI shows 2.1x on turn 12, throws, catches and persists the ball identity",
+    "Kurt crafting requires the real house and makes an owned usable Fast Ball",
+    "Pok\u00e9block blending and selected-target feeding persist condition and consume the berry/block, not the case",
+    "Repel activates from the Bag and publishes its remaining step budget",
+    "Selling two Nuggets at a real clerk commits exactly two units and the server price",
+    "Coin Case purchase and prize exchange use the real mart controls and durable wallet",
+    "Second connected account retains its inventory, Pok\u00e9mon and progress throughout",
+    "1024-pixel layout has no document overflow; both pages have no JavaScript errors"
+  ],
+  "browser": "Chromium 144.0.7559.96",
+  "transport": "DOM/asset bridge + real aiohttp WebSocket",
+  "database": "disposable SQLite",
+  "pageErrors": []
+}

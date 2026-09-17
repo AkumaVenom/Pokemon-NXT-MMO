@@ -1,11 +1,23 @@
 # Pokemon NXT MMO — automatic all-in-one source build
 
 
-**Download all FOUR source ZIPs:** `Pokemon_NXT_MMO_v0.6.8-alpha_Source_GbaBattleSystemCompletion_AutonomousBattleHotfix_Part1.zip`, `Part2.zip`, `Part3.zip` and `Part4.zip` (all share the same prefix). Extract each ordinary ZIP into the same destination, merging the identically named `Pokemon_NXT_MMO_v0.6.8-alpha_Source_GbaBattleSystemCompletion` folders. Do not concatenate the ZIP files. Run `BUILD_ALL.bat` only after all four parts are extracted. The four parts contain the complete source and assets; no earlier source pack or optional patch is required.
+**Download all FOUR source ZIPs:** `Pokemon_NXT_MMO_v0.6.10-alpha_Source_ItemGameplayRepair_Part1.zip`, `Part2.zip`, `Part3.zip` and `Part4.zip` (all share the same prefix). Extract each ordinary ZIP into the same destination, merging the identically named `Pokemon_NXT_MMO_v0.6.10-alpha_Source_ItemGameplayRepair` folders. Do not concatenate the ZIP files. Run `BUILD_ALL.bat` only after all four parts are extracted. The four parts contain the complete source and assets; no earlier source pack or optional patch is required.
 
-Gameplay **0.6.8-alpha** · Build tools **1.4.1** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
+Gameplay **0.6.10-alpha** · Build tools **1.4.1** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
 
 The full source includes the extracted FireRed and Sigma music, sound effects and cries. `BUILD_ALL.bat` verifies and packages these files; it does not extract them again. **No ROM, FFmpeg or C++ audio-renderer build is needed for a normal build.**
+
+## Item gameplay repair · 0.6.10-alpha
+
+Collecting an item now unlocks its actual Bag/battle/service action, including Timer Ball capture, medicine, PP, training, held equipment, TMs and evolution. **Rebuild both Server and Client** with the merged four-part source, then deploy the matching pair; old running executables or cached clients do not load new Python/JavaScript automatically. No ROM is needed for the build.
+
+Before replacing a live deployment, stop the world and back up its database and configuration. Preserve `Server/config.ini`, the configured MySQL database or SQLite file, credentials and TLS certificates; source/built distribution folders are not backups. No reset or pickup recollection is required. Do not mix an old client pack with the new server pack.
+
+Read `Docs/ITEM_GAMEPLAY.md` for the exact item actions and the clearly labeled Sigma/NXT differences.
+
+## Preserved Johto / Sigma collection layer · 0.6.9-alpha
+
+This release adds the exact one-time item pickups represented by Poké Ball objects throughout the reviewed Johto / Sigma world. The shipped content already contains the audited metadata; **the Sigma ROM is not required to build or run this release**. The ROM is needed only if a developer intentionally reruns the extraction audit. Collection is saved per character and does not require a database schema migration.
 
 ## GBA battle system completion · 0.6.8-alpha
 
@@ -37,7 +49,7 @@ This release is built directly on the accepted 0.6.4 long-uptime autonomous-perf
 
 ## Windows build repair · 1.4.1
 
-**Windows build correction (1.4.1):** Explicitly close temporary SQLite probe connections; this fixes the reported `WinError 32` in the schema/lease regression without disabling it or changing the server. See `Docs/WINDOWS_BUILD_FIX_1.4.1.md` and its test report. That historical repair remains preserved; current gameplay uses schema 3 and the current 0.6.8 content pack.
+**Windows build correction (1.4.1):** Explicitly close temporary SQLite probe connections; this fixes the reported `WinError 32` in the schema/lease regression without disabling it or changing the server. See `Docs/WINDOWS_BUILD_FIX_1.4.1.md` and its test report. That historical repair remains preserved; current gameplay uses schema 3 and the current 0.6.9 content pack.
 
 ## Autonomous trainer performance hardening · 0.6.4-alpha
 
@@ -49,13 +61,13 @@ Start the built world server as usual, then type `help` in its interactive termi
 
 Back up the existing database before this update. Schema 3 remains authoritative and this gameplay update requires no new schema bump. Existing human accounts, autonomous identities, Pokémon, ratings, rivalries and histories are upgraded in place.
 
-The earlier **build-tools 1.3.4 Windows symlink-privilege correction remains included**. Its isolated sprite-copy tests stay active. Current gameplay is **0.6.8-alpha**, build tools **1.4.1**, with a newly published matching content pack. Historical repair instructions are in `Docs/WINDOWS_BUILD_FIX_1.3.4.md`; do not apply that old repair over this complete release.
+The earlier **build-tools 1.3.4 Windows symlink-privilege correction remains included**. Its isolated sprite-copy tests stay active. Current gameplay is **0.6.10-alpha**, build tools **1.4.1**, with a newly published matching content pack. Historical repair instructions are in `Docs/WINDOWS_BUILD_FIX_1.3.4.md`; do not apply that old repair over this complete release.
 
 ## Varieties and regional encounter/Cut updates
 
 Version 0.3.5 adds five persistent cosmetic varieties, server-controlled rarity, collection/dex presentation and replicated follower sparkles. All player-side battle Pokémon use horizontally flipped front sprites. Read `Docs/POKEMON_VARIETIES.md` and its test report for the full 251-species coverage and additional-form limits. The supplied converted fronts are already included; no images.rar, Pillow, image converter, new art download or back-sprite collection is needed for a normal build.
 
-The accepted 0.3.4 FireRed/Crystal encounter resolver and independent regional Cut licenses remain: Misty/Cascade for Kanto and Bugsy/Hive for Johto. Personal tree clearing remains saved per character. See `Docs/REGIONAL_ENCOUNTERS_AND_CUT.md`. Old release guides describe their historical package counts; this 0.6.8 source is supplied in **four** parts.
+The accepted 0.3.4 FireRed/Crystal encounter resolver and independent regional Cut licenses remain: Misty/Cascade for Kanto and Bugsy/Hive for Johto. Personal tree clearing remains saved per character. See `Docs/REGIONAL_ENCOUNTERS_AND_CUT.md`. Old release guides describe their historical package counts; this 0.6.9 source is supplied in **four** parts.
 
 ## Battle screen correction
 

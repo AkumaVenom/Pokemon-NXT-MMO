@@ -13,15 +13,16 @@ class Adventure:
  def __init__(self,content):
   self.c=content;self.rules=content.data.get('adventure',{});rom=content.data.get('adventureRom',{})
   self.trainers=rom.get('trainers',{});self.gyms=sorted(rom.get('gyms',[]),key=lambda g:(g['region'],g['order']))
+  self.item_pickups=rom.get('itemPickups',{});self.item_by_npc={(v['map'],v['npc']):v for v in self.item_pickups.values()}
   self.by_npc={(t['map'],t['npc']):t for t in self.trainers.values()}
   self.gym_by_npc={(g['map'],g['npc']):g for g in self.gyms if g.get('map') is not None and g.get('npc') is not None}
  def region(self,value):return str(value).split('_',1)[0].lower()
  def badge_id(self,g):return f'{self.region(g["region"])}_{g["order"]}'
  def migrate(self,state):
   state=copy.deepcopy(state);a=state.setdefault('adventure',{})
-  defaults={'format':1,'trainers':{},'badges':[],'claimed':[],'seen':[],'caught':[],'visited':[],'unlocks':[],'lastCenter':None}
+  defaults={'format':1,'trainers':{},'badges':[],'claimed':[],'seen':[],'caught':[],'visited':[],'unlocks':[],'itemPickups':[],'lastCenter':None}
   for k,v in defaults.items():a.setdefault(k,copy.deepcopy(v))
-  require(a.get('format')==1,'This adventure save needs a newer server.')
+  require(a.get('format')==1,'This adventure save needs a newer server.');require(isinstance(a.get('itemPickups'),list) and len(a['itemPickups'])==len(set(a['itemPickups'])) and len(a['itemPickups'])<=len(self.item_pickups) and all(isinstance(x,str) and x in self.item_pickups for x in a['itemPickups']),'Field item collection state is invalid; contact the administrator.')
   self.observe(state,[m['species'] for m in state['creatures']],caught=True)
   self.visit(state,state['map']);self.refresh_unlocks(state);migrate_cuts(state,self.c.maps);migrate_story(state,self.c);return state
  def observe(self,state,species,caught=False):
@@ -77,6 +78,10 @@ class Adventure:
   state['money']+=money
   for item,n in reward.get('items',{}).items():state['items'][item]=state['items'].get(item,0)+n
   state['adventure']['claimed'].append(key);return state
+ def collect_item(self,state,pickup):
+  pickup_id=pickup.get('id');require(pickup_id in self.item_pickups and self.item_pickups[pickup_id]==pickup,'That field item is unavailable.');require(pickup_id not in state['adventure'].get('itemPickups',[]),'You already collected this field item.')
+  item=pickup.get('item');quantity=pickup.get('quantity');require(item in self.c.items and type(quantity) is int and 1<=quantity<=999,'That field item has invalid content.');require(state['items'].get(item,0)+quantity<=999,'Make room in your Bag before collecting this item.')
+  state=copy.deepcopy(state);state['items'][item]=state['items'].get(item,0)+quantity;state['adventure']['itemPickups'].append(pickup_id);return state
  def pc(self,state,action,uid):
   require(self.pc_available(state),'Use the PC service at a nearby Pokemon Center.');require(isinstance(uid,str) and any(m['uid']==uid for m in state['creatures']),'That Pokemon is not yours.');state=copy.deepcopy(state);party=state['party']
   if action=='deposit':
@@ -98,4 +103,4 @@ class Adventure:
   goals=[]
   for goal in self.rules.get('goals',[]):
    current=self.goal_current(state,goal);goals.append({'id':goal['id'],'title':goal['title'],'description':goal['description'],'current':min(current,goal['target']),'target':goal['target'],'complete':current>=goal['target'],'claimed':goal['id'] in a['claimed'],'reward':goal.get('reward',{})})
-  return {'fieldMoves':public_field_moves(state),'cutTrees':copy.deepcopy(a.get('cutTrees',{})),'storyEvents':list(a.get('storyEvents',[])),'story':public_story_events(state,self.c),'regions':regions,'goals':goals,'trainers':{'defeated':sorted(a['trainers']),'count':len(a['trainers'])},'dex':{'seen':sorted(a['seen']),'caught':sorted(a['caught']),'varieties':copy.deepcopy(a.get('varietyDex',{'seen':{},'caught':{}}))},'visited':list(a['visited']),'unlocks':list(a['unlocks']),'pcAvailable':self.pc_available(state),'stored':len(state['creatures'])-len(state['party'])}
+  return {'fieldMoves':public_field_moves(state),'cutTrees':copy.deepcopy(a.get('cutTrees',{})),'storyEvents':list(a.get('storyEvents',[])),'itemPickups':list(a.get('itemPickups',[])),'story':public_story_events(state,self.c),'regions':regions,'goals':goals,'trainers':{'defeated':sorted(a['trainers']),'count':len(a['trainers'])},'dex':{'seen':sorted(a['seen']),'caught':sorted(a['caught']),'varieties':copy.deepcopy(a.get('varietyDex',{'seen':{},'caught':{}}))},'visited':list(a['visited']),'unlocks':list(a['unlocks']),'pcAvailable':self.pc_available(state),'stored':len(state['creatures'])-len(state['party'])}

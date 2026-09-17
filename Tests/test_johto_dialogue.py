@@ -42,7 +42,7 @@ class PublishedDialogueTests(unittest.TestCase):
         cls.entries = {key: entry for key, entry in cls.world["npcDialogue"]["entries"].items() if key.startswith("johto_")}
 
     def test_reviewed_sigma_provenance_and_release_version_are_published(self):
-        self.assertEqual(self.world["version"], "0.6.8-alpha")
+        self.assertEqual(self.world["version"], "0.6.10-alpha")
         self.assertEqual(self.sidecar["source"]["sha256"], SIGMA_SHA)
         self.assertEqual(self.world["npcDialogue"]["format"], 2)
         self.assertEqual(self.world["npcDialogue"]["sources"]["johto"]["sha256"], SIGMA_SHA)

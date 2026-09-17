@@ -5,7 +5,7 @@ echo.
 echo ================================================================
 echo   POKEMON NXT MMO - AUTOMATIC ALL-IN-ONE SOURCE BUILD 1.4.1
 echo   Missing Go + Python + build packages are installed automatically
-echo   Gameplay 0.6.8-alpha - GBA battle system completion
+echo   Gameplay 0.6.10-alpha - Item gameplay repair
 echo ================================================================
 echo.
 echo Extract the entire package first. An internet connection is needed

@@ -1,0 +1,2440 @@
+{
+  "release": "0.6.10-alpha",
+  "pack": "7acc655cf1328ed72b75b06f",
+  "sourceSha256": "62d1a99f5b64a45cd4f6364273743f9d8961e9c439d8201bfeedb27c02f32c64",
+  "baselineItemDefinitions": 128,
+  "runtimeItemDefinitions": 129,
+  "pickupItemIdentities": 125,
+  "pickupPlacements": 361,
+  "machineAssignments": 9,
+  "nativeItemEvolutionEdges": 81,
+  "effectFamilies": {
+    "ability": 1,
+    "apricorn": 1,
+    "capture": 11,
+    "coincase": 1,
+    "direhit": 1,
+    "escape": 1,
+    "evolution": 25,
+    "guardspec": 1,
+    "held": 21,
+    "journal": 1,
+    "level": 1,
+    "machine": 9,
+    "medicine": 20,
+    "pokeblocks": 1,
+    "pokeflute": 1,
+    "pp": 4,
+    "ppboost": 2,
+    "repel": 3,
+    "revive": 3,
+    "sacredash": 1,
+    "story": 1,
+    "tera": 1,
+    "valuable": 7,
+    "vitamin": 6,
+    "xstat": 5
+  },
+  "adapterItemKeys": [
+    "choicescarf",
+    "teraorb",
+    "whtapricorn",
+    "pokeblockcas",
+    "coincase",
+    "dragonshell",
+    "poweranklet",
+    "powerband",
+    "destinyknot",
+    "powerlens",
+    "widelens",
+    "fastball"
+  ],
+  "limitations": [
+    "Skill Capsule destinations outside native ability IDs 1–77 are blocked without consumption; complete expanded ability effects are not implemented.",
+    "PP restoratives during Transform are blocked until switching out.",
+    "Crafting/case/Tera and selected named-item roles are labeled NXT adaptations, not complete original minigames or later-generation parity.",
+    "Native Windows/Edge and live MySQL deployment acceptance are not established by these tests."
+  ],
+  "items": [
+    {
+      "key": "pokeball",
+      "name": "Poke Ball",
+      "sourceId": 4,
+      "pickupPlacements": 3,
+      "effect": "capture",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Throw in wild battle",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "A standard wild capture ball (1×).",
+      "held": null,
+      "machine": null,
+      "sellPrice": 100
+    },
+    {
+      "key": "greatball",
+      "name": "Great Ball",
+      "sourceId": 3,
+      "pickupPlacements": 5,
+      "effect": "capture",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Throw in wild battle",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "A wild capture ball with a 1.5× catch modifier.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 300
+    },
+    {
+      "key": "ultraball",
+      "name": "Ultra Ball",
+      "sourceId": 2,
+      "pickupPlacements": 13,
+      "effect": "capture",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Throw in wild battle",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "A wild capture ball with a 2× catch modifier.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 600
+    },
+    {
+      "key": "potion",
+      "name": "Potion",
+      "sourceId": 13,
+      "pickupPlacements": 5,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Restores 20 HP to one non-fainted Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 150
+    },
+    {
+      "key": "superpotion",
+      "name": "Super Potion",
+      "sourceId": 22,
+      "pickupPlacements": 6,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Restores 50 HP to one non-fainted Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 350
+    },
+    {
+      "key": "sunstone",
+      "name": "Sun Stone",
+      "sourceId": 93,
+      "pickupPlacements": 1,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "moonstone",
+      "name": "Moon Stone",
+      "sourceId": 94,
+      "pickupPlacements": 4,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "firestone",
+      "name": "Fire Stone",
+      "sourceId": 95,
+      "pickupPlacements": 1,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "thunderstone",
+      "name": "Thunder Stone",
+      "sourceId": 96,
+      "pickupPlacements": 3,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "waterstone",
+      "name": "Water Stone",
+      "sourceId": 97,
+      "pickupPlacements": 2,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "leafstone",
+      "name": "Leaf Stone",
+      "sourceId": 98,
+      "pickupPlacements": 2,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "kingsrock",
+      "name": "King's Rock",
+      "sourceId": 42,
+      "pickupPlacements": 1,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "metalcoat",
+      "name": "Metal Coat",
+      "sourceId": 43,
+      "pickupPlacements": 0,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "upgrade",
+      "name": "Up-Grade",
+      "sourceId": 44,
+      "pickupPlacements": 1,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "reapercloth",
+      "name": "Reaper Cloth",
+      "sourceId": 46,
+      "pickupPlacements": 0,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "dubiousdisc",
+      "name": "Dubious Disc",
+      "sourceId": 47,
+      "pickupPlacements": 1,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "linkcable",
+      "name": "Link Cable",
+      "sourceId": 49,
+      "pickupPlacements": 2,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "razorclaw",
+      "name": "Razor Claw",
+      "sourceId": 51,
+      "pickupPlacements": 3,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "electirizer",
+      "name": "Electirizer",
+      "sourceId": 52,
+      "pickupPlacements": 1,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "magmarizer",
+      "name": "Magmarizer",
+      "sourceId": 53,
+      "pickupPlacements": 1,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "dragonscale",
+      "name": "Dragon Scale",
+      "sourceId": 55,
+      "pickupPlacements": 1,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "fairydust",
+      "name": "Fairy Dust",
+      "sourceId": 56,
+      "pickupPlacements": 1,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1500
+    },
+    {
+      "key": "ovalstone",
+      "name": "Oval Stone",
+      "sourceId": 57,
+      "pickupPlacements": 2,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "protector",
+      "name": "Protector",
+      "sourceId": 58,
+      "pickupPlacements": 1,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "prismscale",
+      "name": "Prism Scale",
+      "sourceId": 59,
+      "pickupPlacements": 2,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "shinystone",
+      "name": "Shiny Stone",
+      "sourceId": 60,
+      "pickupPlacements": 2,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "dawnstone",
+      "name": "Dawn Stone",
+      "sourceId": 61,
+      "pickupPlacements": 3,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "duskstone",
+      "name": "Dusk Stone",
+      "sourceId": 62,
+      "pickupPlacements": 3,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "razorfang",
+      "name": "Razor Fang",
+      "sourceId": 72,
+      "pickupPlacements": 1,
+      "effect": "evolution",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Evolves a compatible Pokémon. Choose the Pokémon and confirm its available evolution; consumed only on success.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "squirtbottle",
+      "name": "SquirtBottle",
+      "sourceId": null,
+      "pickupPlacements": 0,
+      "effect": "story",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Use at Route 36 story object"
+      ],
+      "reusable": true,
+      "description": "A bottle used for watering plants. It reacts to the odd tree on Route 36.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 0
+    },
+    {
+      "key": "choicescarf",
+      "name": "Choice Scarf",
+      "sourceId": 119,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "nxt-named-item-adapter",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Held: raises Speed by 50%, but locks the holder into its first selected move until it switches out.",
+      "held": {
+        "stats": {
+          "3": [
+            3,
+            2
+          ]
+        },
+        "choice": true
+      },
+      "machine": null,
+      "sellPrice": 450
+    },
+    {
+      "key": "machobrace",
+      "name": "Macho Brace",
+      "sourceId": 181,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Held: doubles earned EVs and halves battle Speed.",
+      "held": {
+        "stats": {
+          "3": [
+            1,
+            2
+          ]
+        },
+        "evMultiplier": 2
+      },
+      "machine": null,
+      "sellPrice": 1500
+    },
+    {
+      "key": "teraorb",
+      "name": "Tera Orb",
+      "sourceId": 187,
+      "pickupPlacements": 1,
+      "effect": "tera",
+      "policy": "nxt-battle-adapter",
+      "actions": [
+        "Terastallize with attack"
+      ],
+      "reusable": true,
+      "description": "NXT battle adaptation: once per battle, Terastallize your active Pokémon into its primary species type alongside an attack. Changes defensive typing and STAB until battle ends. The Orb is not consumed.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 0
+    },
+    {
+      "key": "zinc",
+      "name": "Zinc",
+      "sourceId": 70,
+      "pickupPlacements": 4,
+      "effect": "vitamin",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Adds up to 10 Special Defense effort points, with the GBA vitamin cap of 100 per stat and total EV cap of 510. Increases friendship on successful use.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 4000
+    },
+    {
+      "key": "focusband",
+      "name": "Focus Band",
+      "sourceId": 196,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Held: 10% chance to survive an otherwise fatal hit at 1 HP.",
+      "held": {
+        "legacyCode": 196
+      },
+      "machine": null,
+      "sellPrice": 250
+    },
+    {
+      "key": "antidote",
+      "name": "Antidote",
+      "sourceId": 14,
+      "pickupPlacements": 7,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Cures poison / toxic on one Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 50
+    },
+    {
+      "key": "paralyzheal",
+      "name": "Paralyz Heal",
+      "sourceId": 18,
+      "pickupPlacements": 5,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Cures paralysis on one Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 100
+    },
+    {
+      "key": "rarecandy",
+      "name": "Rare Candy",
+      "sourceId": 68,
+      "pickupPlacements": 12,
+      "effect": "level",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Raises a Pokémon below level 100 by one level, preserves EXP progression, and processes its native move-learning/evolution choices.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 2400
+    },
+    {
+      "key": "escaperope",
+      "name": "Escape Rope",
+      "sourceId": 85,
+      "pickupPlacements": 10,
+      "effect": "escape",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Returns to the recorded safe entrance where the source map permits Escape Rope. Cannot be used in battle; no item is spent without a safe destination.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 275
+    },
+    {
+      "key": "direhit",
+      "name": "Dire Hit",
+      "sourceId": 74,
+      "pickupPlacements": 3,
+      "effect": "direhit",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Raises the active Pokémon’s critical-hit stage by two until it switches out. Does not stack with Focus Energy.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 325
+    },
+    {
+      "key": "maxrevive",
+      "name": "Max. Revive",
+      "sourceId": 25,
+      "pickupPlacements": 12,
+      "effect": "revive",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Revives one fainted Pokémon to full HP.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 2000
+    },
+    {
+      "key": "fullrestore",
+      "name": "Full Restore",
+      "sourceId": 19,
+      "pickupPlacements": 16,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Fully restores one living Pokémon’s HP and cures major status conditions and confusion.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1500
+    },
+    {
+      "key": "maxelixir",
+      "name": "Max. Elixir",
+      "sourceId": 37,
+      "pickupPlacements": 6,
+      "effect": "pp",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Restores all PP to every move of one Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 2250
+    },
+    {
+      "key": "ether",
+      "name": "Ether",
+      "sourceId": 34,
+      "pickupPlacements": 6,
+      "effect": "pp",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Restores 10 PP to one selected move.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 600
+    },
+    {
+      "key": "xattack",
+      "name": "X Attack",
+      "sourceId": 75,
+      "pickupPlacements": 2,
+      "effect": "xstat",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Raises the active Pokémon’s Attack by one stage for this battle, until it switches out.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 250
+    },
+    {
+      "key": "diveball",
+      "name": "Dive Ball",
+      "sourceId": 7,
+      "pickupPlacements": 2,
+      "effect": "capture",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Throw in wild battle",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "3.5× catch modifier in underwater terrain; otherwise 1×. Surfing alone is not underwater.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 500
+    },
+    {
+      "key": "nevermeltice",
+      "name": "NeverMeltIce",
+      "sourceId": 212,
+      "pickupPlacements": 2,
+      "effect": "held",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Held: boosts Ice-type move power by 10%.",
+      "held": {
+        "boostType": 15,
+        "boost": [
+          11,
+          10
+        ]
+      },
+      "machine": null,
+      "sellPrice": 150
+    },
+    {
+      "key": "energypowder",
+      "name": "EnergyPowder",
+      "sourceId": 30,
+      "pickupPlacements": 2,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Restores 50 HP to one non-fainted Pokémon. Bitter medicine lowers friendship.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 250
+    },
+    {
+      "key": "bigpearl",
+      "name": "Big Pearl",
+      "sourceId": 107,
+      "pickupPlacements": 4,
+      "effect": "valuable",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "A treasure for sale at a Poké Mart. Sell it for half its Sigma ROM shop value; it is not a battle consumable.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 3000
+    },
+    {
+      "key": "tm36",
+      "name": "TM36",
+      "sourceId": 324,
+      "pickupPlacements": 1,
+      "effect": "machine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Teach with target/slot confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Teaches Sludge Bomb to a compatible Pokémon using the supplied Sigma machine table. One TM is consumed only after the move is successfully learned.",
+      "held": null,
+      "machine": {
+        "index": 35,
+        "sourceMoveId": 188,
+        "move": 188,
+        "moveName": "Sludge Bomb",
+        "offset": "0x45a852"
+      },
+      "sellPrice": 3250
+    },
+    {
+      "key": "pearl",
+      "name": "Pearl",
+      "sourceId": 106,
+      "pickupPlacements": 1,
+      "effect": "valuable",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "A treasure for sale at a Poké Mart. Sell it for half its Sigma ROM shop value; it is not a battle consumable.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 700
+    },
+    {
+      "key": "whtapricorn",
+      "name": "Wht Apricorn",
+      "sourceId": 218,
+      "pickupPlacements": 1,
+      "effect": "apricorn",
+      "policy": "nxt-service-adapter",
+      "actions": [
+        "Craft at Kurt",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Bring this White Apricorn to Kurt in his Azalea Town house to make a Fast Ball. The NXT Fast Ball has a 4× modifier against species with base Speed of at least 100.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 100
+    },
+    {
+      "key": "ppup",
+      "name": "PP Up",
+      "sourceId": 69,
+      "pickupPlacements": 13,
+      "effect": "ppboost",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Permanently increases a selected move’s maximum PP by one 20% increment, up to three increments. Does not affect Sketch or 1-PP moves.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 4900
+    },
+    {
+      "key": "blueflute",
+      "name": "Blue Flute",
+      "sourceId": 39,
+      "pickupPlacements": 1,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target"
+      ],
+      "reusable": true,
+      "description": "Cures sleep on one Pokémon. Reusable; not consumed.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 0
+    },
+    {
+      "key": "iron",
+      "name": "Iron",
+      "sourceId": 65,
+      "pickupPlacements": 6,
+      "effect": "vitamin",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Adds up to 10 Defense effort points, with the GBA vitamin cap of 100 per stat and total EV cap of 510. Increases friendship on successful use.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 4000
+    },
+    {
+      "key": "maxpotion",
+      "name": "Max. Potion",
+      "sourceId": 20,
+      "pickupPlacements": 13,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Restores all HP to one non-fainted Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1250
+    },
+    {
+      "key": "fullheal",
+      "name": "Full Heal",
+      "sourceId": 23,
+      "pickupPlacements": 8,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Cures major status conditions and confusion on one Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 300
+    },
+    {
+      "key": "iceheal",
+      "name": "Ice Heal",
+      "sourceId": 16,
+      "pickupPlacements": 4,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Cures freeze on one Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 125
+    },
+    {
+      "key": "nestball",
+      "name": "Nest Ball",
+      "sourceId": 8,
+      "pickupPlacements": 3,
+      "effect": "capture",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Throw in wild battle",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "More effective on lower-level wild Pokémon: max(1, (40 − level) / 10)×.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 500
+    },
+    {
+      "key": "hpup",
+      "name": "HP Up",
+      "sourceId": 63,
+      "pickupPlacements": 6,
+      "effect": "vitamin",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Adds up to 10 HP effort points, with the GBA vitamin cap of 100 per stat and total EV cap of 510. Increases friendship on successful use.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 4900
+    },
+    {
+      "key": "tm02",
+      "name": "TM02",
+      "sourceId": 290,
+      "pickupPlacements": 1,
+      "effect": "machine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Teach with target/slot confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Teaches Headbutt to a compatible Pokémon using the supplied Sigma machine table. One TM is consumed only after the move is successfully learned.",
+      "held": null,
+      "machine": {
+        "index": 1,
+        "sourceMoveId": 29,
+        "move": 29,
+        "moveName": "Headbutt",
+        "offset": "0x45a80e"
+      },
+      "sellPrice": 3000
+    },
+    {
+      "key": "hyperpotion",
+      "name": "Hyper Potion",
+      "sourceId": 21,
+      "pickupPlacements": 10,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Restores 200 HP to one non-fainted Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 600
+    },
+    {
+      "key": "xspeed",
+      "name": "X Speed",
+      "sourceId": 77,
+      "pickupPlacements": 2,
+      "effect": "xstat",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Raises the active Pokémon’s Speed by one stage for this battle, until it switches out.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 175
+    },
+    {
+      "key": "tm12",
+      "name": "TM12",
+      "sourceId": 300,
+      "pickupPlacements": 1,
+      "effect": "machine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Teach with target/slot confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Teaches Sweet Scent to a compatible Pokémon using the supplied Sigma machine table. One TM is consumed only after the move is successfully learned.",
+      "held": null,
+      "machine": {
+        "index": 11,
+        "sourceMoveId": 230,
+        "move": 230,
+        "moveName": "Sweet Scent",
+        "offset": "0x45a822"
+      },
+      "sellPrice": 3000
+    },
+    {
+      "key": "masterball",
+      "name": "Master Ball",
+      "sourceId": 1,
+      "pickupPlacements": 1,
+      "effect": "capture",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Throw in wild battle"
+      ],
+      "reusable": false,
+      "description": "Always catches a wild Pokémon. Cannot capture another trainer’s Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 0
+    },
+    {
+      "key": "ppmax",
+      "name": "PP Max.",
+      "sourceId": 71,
+      "pickupPlacements": 1,
+      "effect": "ppboost",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Permanently increases a selected move’s maximum PP to all three 20% increments. Does not affect Sketch or 1-PP moves.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 4900
+    },
+    {
+      "key": "tm21",
+      "name": "TM21",
+      "sourceId": 309,
+      "pickupPlacements": 2,
+      "effect": "machine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Teach with target/slot confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Teaches Whirlpool to a compatible Pokémon using the supplied Sigma machine table. One TM is consumed only after the move is successfully learned.",
+      "held": null,
+      "machine": {
+        "index": 20,
+        "sourceMoveId": 250,
+        "move": 250,
+        "moveName": "Whirlpool",
+        "offset": "0x45a834"
+      },
+      "sellPrice": 2500
+    },
+    {
+      "key": "blackglasses",
+      "name": "BlackGlasses",
+      "sourceId": 206,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Held: boosts Dark-type move power by 10%.",
+      "held": {
+        "boostType": 17,
+        "boost": [
+          11,
+          10
+        ]
+      },
+      "machine": null,
+      "sellPrice": 100
+    },
+    {
+      "key": "calcium",
+      "name": "Calcium",
+      "sourceId": 67,
+      "pickupPlacements": 3,
+      "effect": "vitamin",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Adds up to 10 Special Attack effort points, with the GBA vitamin cap of 100 per stat and total EV cap of 510. Increases friendship on successful use.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 4000
+    },
+    {
+      "key": "carbos",
+      "name": "Carbos",
+      "sourceId": 66,
+      "pickupPlacements": 6,
+      "effect": "vitamin",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Adds up to 10 Speed effort points, with the GBA vitamin cap of 100 per stat and total EV cap of 510. Increases friendship on successful use.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 4000
+    },
+    {
+      "key": "wishingstar",
+      "name": "Wishing Star",
+      "sourceId": 109,
+      "pickupPlacements": 4,
+      "effect": "valuable",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "A treasure for sale at a Poké Mart. Sell it for half its Sigma ROM shop value; it is not a battle consumable.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 3500
+    },
+    {
+      "key": "revive",
+      "name": "Revive",
+      "sourceId": 24,
+      "pickupPlacements": 9,
+      "effect": "revive",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Revives one fainted Pokémon to half HP.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 750
+    },
+    {
+      "key": "tm48",
+      "name": "TM48",
+      "sourceId": 336,
+      "pickupPlacements": 1,
+      "effect": "machine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Teach with target/slot confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Teaches Thunderbolt to a compatible Pokémon using the supplied Sigma machine table. One TM is consumed only after the move is successfully learned.",
+      "held": null,
+      "machine": {
+        "index": 47,
+        "sourceMoveId": 85,
+        "move": 85,
+        "moveName": "Thunderbolt",
+        "offset": "0x45a86a"
+      },
+      "sellPrice": 3500
+    },
+    {
+      "key": "timerball",
+      "name": "Timer Ball",
+      "sourceId": 10,
+      "pickupPlacements": 4,
+      "effect": "capture",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Throw in wild battle",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Starts at 1× and gains 0.1× per completed turn, up to 4× after 30 completed turns (GBA rule).",
+      "held": null,
+      "machine": null,
+      "sellPrice": 500
+    },
+    {
+      "key": "maxrepel",
+      "name": "Max. Repel",
+      "sourceId": 84,
+      "pickupPlacements": 2,
+      "effect": "repel",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "For 250 successful walking steps, prevents wild encounters below your first party Pokémon’s level. Cannot replace an active Repel.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 350
+    },
+    {
+      "key": "silverpowder",
+      "name": "SilverPowder",
+      "sourceId": 188,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Held: boosts Bug-type move power by 10%.",
+      "held": {
+        "boostType": 6,
+        "boost": [
+          11,
+          10
+        ]
+      },
+      "machine": null,
+      "sellPrice": 50
+    },
+    {
+      "key": "twistedspoon",
+      "name": "TwistedSpoon",
+      "sourceId": 214,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Held: boosts Psychic-type move power by 10%.",
+      "held": {
+        "boostType": 14,
+        "boost": [
+          11,
+          10
+        ]
+      },
+      "machine": null,
+      "sellPrice": 50
+    },
+    {
+      "key": "nugget",
+      "name": "Nugget",
+      "sourceId": 110,
+      "pickupPlacements": 8,
+      "effect": "valuable",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "A treasure for sale at a Poké Mart. Sell it for half its Sigma ROM shop value; it is not a battle consumable.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 5000
+    },
+    {
+      "key": "elixir",
+      "name": "Elixir",
+      "sourceId": 36,
+      "pickupPlacements": 11,
+      "effect": "pp",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Restores 10 PP to every move of one Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1500
+    },
+    {
+      "key": "hm09",
+      "name": "HM09",
+      "sourceId": 347,
+      "pickupPlacements": 1,
+      "effect": "machine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Teach with target/slot confirmation"
+      ],
+      "reusable": true,
+      "description": "Teaches Sing to a compatible Pokémon using the supplied Sigma machine table. Reusable HM.",
+      "held": null,
+      "machine": {
+        "index": 58,
+        "sourceMoveId": 47,
+        "move": 47,
+        "moveName": "Sing",
+        "offset": "0x45a880"
+      },
+      "sellPrice": 0
+    },
+    {
+      "key": "guardspec",
+      "name": "Guard. Spec.",
+      "sourceId": 73,
+      "pickupPlacements": 2,
+      "effect": "guardspec",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Protects your side against opposing stat reductions for five turns.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 350
+    },
+    {
+      "key": "tm17",
+      "name": "TM17",
+      "sourceId": 305,
+      "pickupPlacements": 1,
+      "effect": "machine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Teach with target/slot confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Teaches Protect to a compatible Pokémon using the supplied Sigma machine table. One TM is consumed only after the move is successfully learned.",
+      "held": null,
+      "machine": {
+        "index": 16,
+        "sourceMoveId": 182,
+        "move": 182,
+        "moveName": "Protect",
+        "offset": "0x45a82c"
+      },
+      "sellPrice": 3000
+    },
+    {
+      "key": "awakening",
+      "name": "Awakening",
+      "sourceId": 17,
+      "pickupPlacements": 2,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Cures sleep on one Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 125
+    },
+    {
+      "key": "pokeblockcas",
+      "name": "PokéBlockCas",
+      "sourceId": 54,
+      "pickupPlacements": 1,
+      "effect": "pokeblocks",
+      "policy": "nxt-service-adapter",
+      "actions": [
+        "Blend/feed block"
+      ],
+      "reusable": true,
+      "description": "Reusable NXT berry-blending case. Blend an owned Lum or Sitrus Berry and feed the resulting block to increase friendship and the displayed contest condition. No contest minigame is simulated.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 0
+    },
+    {
+      "key": "coincase",
+      "name": "Coin Case",
+      "sourceId": 260,
+      "pickupPlacements": 1,
+      "effect": "coincase",
+      "policy": "nxt-service-adapter",
+      "actions": [
+        "Coin wallet and clerk exchange"
+      ],
+      "reusable": true,
+      "description": "Reusable coin wallet. At an NXT Poké Mart coin exchange, buy coins or exchange them for displayed prizes. Coins and money are saved atomically.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 0
+    },
+    {
+      "key": "skillcapsule",
+      "name": "SkillCapsule",
+      "sourceId": 229,
+      "pickupPlacements": 2,
+      "effect": "ability",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Switches between a species’ two different regular abilities. It does not create an ability or grant a hidden ability. Unsupported destination ability IDs are blocked without consumption.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 4250
+    },
+    {
+      "key": "yellowflute",
+      "name": "Yellow Flute",
+      "sourceId": 40,
+      "pickupPlacements": 1,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Battle use with appropriate target"
+      ],
+      "reusable": true,
+      "description": "Cures confusion on one Pokémon. Reusable; not consumed.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 0
+    },
+    {
+      "key": "xspecial",
+      "name": "X Special",
+      "sourceId": 79,
+      "pickupPlacements": 3,
+      "effect": "xstat",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Raises the active Pokémon’s Special Attack by one stage for this battle, until it switches out.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 175
+    },
+    {
+      "key": "dragonshell",
+      "name": "Dragon Shell",
+      "sourceId": 201,
+      "pickupPlacements": 1,
+      "effect": "evolution",
+      "policy": "nxt-evolution-adapter",
+      "actions": [
+        "Evolve with target confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "A Sigma Dragon Scale counterpart. Evolves Seadra into Kingdra through NXT’s confirmed item-evolution action.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1050
+    },
+    {
+      "key": "maxether",
+      "name": "Max. Ether",
+      "sourceId": 35,
+      "pickupPlacements": 4,
+      "effect": "pp",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Restores all PP to one selected move.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1000
+    },
+    {
+      "key": "xaccuracy",
+      "name": "X Accuracy",
+      "sourceId": 78,
+      "pickupPlacements": 1,
+      "effect": "xstat",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Raises the active Pokémon’s accuracy by one stage for this battle, until it switches out.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 475
+    },
+    {
+      "key": "protein",
+      "name": "Protein",
+      "sourceId": 64,
+      "pickupPlacements": 4,
+      "effect": "vitamin",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Adds up to 10 Attack effort points, with the GBA vitamin cap of 100 per stat and total EV cap of 510. Increases friendship on successful use.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 4000
+    },
+    {
+      "key": "luxuryball",
+      "name": "Luxury Ball",
+      "sourceId": 11,
+      "pickupPlacements": 2,
+      "effect": "capture",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Throw in wild battle",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "A 1× capture ball. Its caught Pokémon gains an extra friendship point when friendship increases.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 750
+    },
+    {
+      "key": "dragonfang",
+      "name": "Dragon Fang",
+      "sourceId": 216,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Held: boosts Dragon-type move power by 10%.",
+      "held": {
+        "boostType": 16,
+        "boost": [
+          11,
+          10
+        ]
+      },
+      "machine": null,
+      "sellPrice": 300
+    },
+    {
+      "key": "freshwater",
+      "name": "Fresh Water",
+      "sourceId": 26,
+      "pickupPlacements": 1,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Restores 50 HP to one non-fainted Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 125
+    },
+    {
+      "key": "revivalherb",
+      "name": "Revival Herb",
+      "sourceId": 33,
+      "pickupPlacements": 1,
+      "effect": "revive",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Revives one fainted Pokémon to full HP. Bitter medicine lowers friendship.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1400
+    },
+    {
+      "key": "xdefend",
+      "name": "X Defend",
+      "sourceId": 76,
+      "pickupPlacements": 3,
+      "effect": "xstat",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Raises the active Pokémon’s Defense by one stage for this battle, until it switches out.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 275
+    },
+    {
+      "key": "repeatball",
+      "name": "Repeat Ball",
+      "sourceId": 9,
+      "pickupPlacements": 2,
+      "effect": "capture",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Throw in wild battle",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "3× if this species is already in your caught Pokédex; otherwise 1×. Merely seeing it does not count.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 500
+    },
+    {
+      "key": "burnheal",
+      "name": "Burn Heal",
+      "sourceId": 15,
+      "pickupPlacements": 1,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Cures burn on one Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 125
+    },
+    {
+      "key": "poweranklet",
+      "name": "Power Anklet",
+      "sourceId": 101,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "nxt-named-item-adapter",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Held: adds 4 Speed EVs per defeated Pokémon and halves battle Speed.",
+      "held": {
+        "stats": {
+          "3": [
+            1,
+            2
+          ]
+        },
+        "evStat": 3,
+        "evAdd": 4
+      },
+      "machine": null,
+      "sellPrice": 1500
+    },
+    {
+      "key": "superrepel",
+      "name": "Super Repel",
+      "sourceId": 83,
+      "pickupPlacements": 1,
+      "effect": "repel",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "For 200 successful walking steps, prevents wild encounters below your first party Pokémon’s level. Cannot replace an active Repel.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 250
+    },
+    {
+      "key": "stardust",
+      "name": "Stardust",
+      "sourceId": 108,
+      "pickupPlacements": 2,
+      "effect": "valuable",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "A treasure for sale at a Poké Mart. Sell it for half its Sigma ROM shop value; it is not a battle consumable.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 1000
+    },
+    {
+      "key": "rotompad",
+      "name": "Rotom Pad",
+      "sourceId": 363,
+      "pickupPlacements": 1,
+      "effect": "journal",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Open Pokédex/journal"
+      ],
+      "reusable": true,
+      "description": "Opens your saved Pokédex and trainer/badge records. Reusable; nothing is consumed.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 0
+    },
+    {
+      "key": "repel",
+      "name": "Repel",
+      "sourceId": 86,
+      "pickupPlacements": 2,
+      "effect": "repel",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "For 100 successful walking steps, prevents wild encounters below your first party Pokémon’s level. Cannot replace an active Repel.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 175
+    },
+    {
+      "key": "dragonbone",
+      "name": "DragonBone",
+      "sourceId": 283,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Give/Take; automatic held effect"
+      ],
+      "reusable": false,
+      "description": "Held: boosts Dragon-type move power by 10%.",
+      "held": {
+        "boostType": 16,
+        "boost": [
+          11,
+          10
+        ]
+      },
+      "machine": null,
+      "sellPrice": 0
+    },
+    {
+      "key": "energyroot",
+      "name": "Energy Root",
+      "sourceId": 31,
+      "pickupPlacements": 1,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Restores 200 HP to one non-fainted Pokémon. Bitter medicine lowers friendship.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 400
+    },
+    {
+      "key": "smokeball",
+      "name": "Smoke Ball",
+      "sourceId": 194,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Held: guarantees escape from wild battles, including trapping effects.",
+      "held": {
+        "alwaysRun": true
+      },
+      "machine": null,
+      "sellPrice": 100
+    },
+    {
+      "key": "sacredash",
+      "name": "Sacred Ash",
+      "sourceId": 45,
+      "pickupPlacements": 1,
+      "effect": "sacredash",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Revives every fainted member of your current party to full HP. Field use only.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 100
+    },
+    {
+      "key": "netball",
+      "name": "Net Ball",
+      "sourceId": 6,
+      "pickupPlacements": 2,
+      "effect": "capture",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Throw in wild battle",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "3× catch modifier against Water- or Bug-type wild Pokémon; otherwise 1×.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 500
+    },
+    {
+      "key": "healpowder",
+      "name": "Heal Powder",
+      "sourceId": 32,
+      "pickupPlacements": 1,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Cures major status conditions and confusion on one Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 250
+    },
+    {
+      "key": "tm01",
+      "name": "TM01",
+      "sourceId": 289,
+      "pickupPlacements": 1,
+      "effect": "machine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Teach with target/slot confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Teaches Superpower to a compatible Pokémon using the supplied Sigma machine table. One TM is consumed only after the move is successfully learned.",
+      "held": null,
+      "machine": {
+        "index": 0,
+        "sourceMoveId": 276,
+        "move": 276,
+        "moveName": "Superpower",
+        "offset": "0x45a80c"
+      },
+      "sellPrice": 3000
+    },
+    {
+      "key": "roseincense",
+      "name": "Rose Incense",
+      "sourceId": 115,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Sigma held effect: reduces the accuracy of attacks targeting the holder by 5%.",
+      "held": {
+        "evasion": [
+          95,
+          100
+        ]
+      },
+      "machine": null,
+      "sellPrice": 4900
+    },
+    {
+      "key": "tm05",
+      "name": "TM05",
+      "sourceId": 293,
+      "pickupPlacements": 1,
+      "effect": "machine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Teach with target/slot confirmation",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Teaches Roar to a compatible Pokémon using the supplied Sigma machine table. One TM is consumed only after the move is successfully learned.",
+      "held": null,
+      "machine": {
+        "index": 4,
+        "sourceMoveId": 46,
+        "move": 46,
+        "moveName": "Roar",
+        "offset": "0x45a814"
+      },
+      "sellPrice": 1000
+    },
+    {
+      "key": "powerband",
+      "name": "Power Band",
+      "sourceId": 114,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "nxt-named-item-adapter",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Held: adds 4 Special Defense EVs per defeated Pokémon and halves battle Speed.",
+      "held": {
+        "stats": {
+          "3": [
+            1,
+            2
+          ]
+        },
+        "evStat": 5,
+        "evAdd": 4
+      },
+      "machine": null,
+      "sellPrice": 1500
+    },
+    {
+      "key": "destinyknot",
+      "name": "Destiny Knot",
+      "sourceId": 232,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "nxt-description-adapter",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "NXT Sigma-description adaptation: boosts source type 9 moves (including Moonblast and Dazlinggleam) by 10%. Sigma describes this role as Fairy; the published source type remains ???, not an invented type 18.",
+      "held": {
+        "boostType": 9,
+        "boost": [
+          11,
+          10
+        ]
+      },
+      "machine": null,
+      "sellPrice": 2725
+    },
+    {
+      "key": "powerlens",
+      "name": "Power Lens",
+      "sourceId": 231,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "nxt-named-item-adapter",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Held: adds 4 Special Attack EVs per defeated Pokémon and halves battle Speed.",
+      "held": {
+        "stats": {
+          "3": [
+            1,
+            2
+          ]
+        },
+        "evStat": 4,
+        "evAdd": 4
+      },
+      "machine": null,
+      "sellPrice": 1500
+    },
+    {
+      "key": "stickybarb",
+      "name": "Sticky Barb",
+      "sourceId": 193,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Sigma held effect: doubles Clamperl’s Special Defense (native Deep Sea Scale effect). It is not the later-generation contact-damage item.",
+      "held": {
+        "legacyCode": 193
+      },
+      "machine": null,
+      "sellPrice": 250
+    },
+    {
+      "key": "widelens",
+      "name": "Wide Lens",
+      "sourceId": 112,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "nxt-description-adapter",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Held: increases move accuracy by 10%.",
+      "held": {
+        "accuracy": [
+          11,
+          10
+        ]
+      },
+      "machine": null,
+      "sellPrice": 1000
+    },
+    {
+      "key": "cometshard",
+      "name": "Comet Shard",
+      "sourceId": 113,
+      "pickupPlacements": 1,
+      "effect": "valuable",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "A treasure for sale at a Poké Mart. Sell it for half its Sigma ROM shop value; it is not a battle consumable.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 4500
+    },
+    {
+      "key": "flameball",
+      "name": "Flame Ball",
+      "sourceId": 230,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Held: boosts Fire-type move power by 10%. This is a held item, not a capture ball.",
+      "held": {
+        "boostType": 10,
+        "boost": [
+          11,
+          10
+        ]
+      },
+      "machine": null,
+      "sellPrice": 6000
+    },
+    {
+      "key": "tinymushroom",
+      "name": "TinyMushroom",
+      "sourceId": 103,
+      "pickupPlacements": 1,
+      "effect": "valuable",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "A treasure for sale at a Poké Mart. Sell it for half its Sigma ROM shop value; it is not a battle consumable.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 500
+    },
+    {
+      "key": "luckyegg",
+      "name": "Lucky Egg",
+      "sourceId": 197,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Held: increases battle EXP earned by 50%.",
+      "held": {
+        "exp": [
+          3,
+          2
+        ]
+      },
+      "machine": null,
+      "sellPrice": 100
+    },
+    {
+      "key": "oddincense",
+      "name": "Odd Incense",
+      "sourceId": 116,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Sigma held effect: reduces the accuracy of attacks targeting the holder by 5%.",
+      "held": {
+        "evasion": [
+          95,
+          100
+        ]
+      },
+      "machine": null,
+      "sellPrice": 4900
+    },
+    {
+      "key": "lumberry",
+      "name": "Lum Berry",
+      "sourceId": 141,
+      "pickupPlacements": 1,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Cures major status conditions and confusion on one Pokémon. When held: Automatically cures major status and confusion, then is consumed.",
+      "held": {
+        "legacyCode": 141
+      },
+      "machine": null,
+      "sellPrice": 10
+    },
+    {
+      "key": "ragecookie",
+      "name": "Rage Cookie",
+      "sourceId": 38,
+      "pickupPlacements": 1,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Cures major status conditions and confusion on one Pokémon.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 100
+    },
+    {
+      "key": "sitrusberry",
+      "name": "Sitrus Berry",
+      "sourceId": 142,
+      "pickupPlacements": 1,
+      "effect": "medicine",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target",
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Restores 30 HP to one non-fainted Pokémon. When held: Restores 30 HP when at half HP or lower, then is consumed.",
+      "held": {
+        "legacyCode": 142
+      },
+      "machine": null,
+      "sellPrice": 10
+    },
+    {
+      "key": "enigmastone",
+      "name": "Enigma Stone",
+      "sourceId": 91,
+      "pickupPlacements": 1,
+      "effect": "held",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Give/Take; automatic held effect",
+        "Sell at validated mart clerk"
+      ],
+      "reusable": false,
+      "description": "Sigma held effect: raises Latios or Latias Special Attack and Special Defense by 50%.",
+      "held": {
+        "legacyCode": 191
+      },
+      "machine": null,
+      "sellPrice": 100
+    },
+    {
+      "key": "pokeflute",
+      "name": "Poké Flute",
+      "sourceId": 102,
+      "pickupPlacements": 1,
+      "effect": "pokeflute",
+      "policy": "reviewed-native-role",
+      "actions": [
+        "Field use with appropriate target",
+        "Battle use with appropriate target"
+      ],
+      "reusable": true,
+      "description": "Wakes sleeping Pokémon in your party. In battle, wakes both active Pokémon. Reusable.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 0
+    },
+    {
+      "key": "fastball",
+      "name": "Fast Ball",
+      "sourceId": null,
+      "pickupPlacements": 0,
+      "effect": "capture",
+      "policy": "nxt-service-adapter",
+      "actions": [
+        "Throw in wild battle"
+      ],
+      "reusable": false,
+      "description": "Made from a White Apricorn at the Azalea crafting service. NXT rule: 4× catch modifier for species with base Speed of at least 100; otherwise 1×.",
+      "held": null,
+      "machine": null,
+      "sellPrice": 0
+    }
+  ]
+}

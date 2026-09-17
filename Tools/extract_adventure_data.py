@@ -242,6 +242,114 @@ def extract_evolutions(r,tag,lookup,world):
   if entries:rules[key]=entries
  return rules,unsupported
 
+SIGMA_ITEM_TABLE_POINTER=0x1c8
+SIGMA_ITEM_TABLE=0x3db028
+FIELD_ITEM_GRAPHICS=92
+ITEM_POCKETS={1:'items',2:'key-items',3:'poke-balls',4:'tm-hm',5:'berries'}
+
+
+def field_item_script(r,start,limit=128):
+ """Recognize the reviewed linear Sigma field-item idiom without executing code.
+
+ The item scripts write source item/quantity into VAR_8000/VAR_8001 and call
+ standard script 1. Prefix dialogue/facing commands are tolerated only when
+ their fixed lengths are known. Calls, gotos, branches, returns and unknown
+ opcodes stop the path, preventing bytes from adjacent scripts being treated as
+ a pickup.
+ """
+ pc=start;item=None;quantity=None;steps=0
+ while steps<64 and 0<=pc<len(r.b) and pc-start<limit:
+  steps+=1;op=r.b[pc]
+  try:
+   if op==0x1a:
+    var,value=r.u16(pc+1),r.u16(pc+3)
+    if var==0x8000:item=value
+    elif var==0x8001:quantity=value
+    pc+=5;continue
+   if op==0x09:
+    standard=r.b[pc+1]
+    if standard==1 and item is not None and quantity is not None:
+     if not 1<=item<=999 or not 1<=quantity<=999:return None
+     return {'sourceItemId':item,'quantity':quantity,'sourceGiveCommand':hex(pc),'scriptBytes':pc-start+2}
+    pc+=2;continue
+   # Never invent outcomes for control flow. These commands terminate this
+   # bounded path rather than following ROM branches or subroutines.
+   if op in (0x02,0x03,0x04,0x05,0x06,0x07,0x08):return None
+   size=LENGTHS.get(op)
+   if size is None:return None
+   r.raw(pc,size);pc+=size
+  except (IndexError,ValueError,struct.error):return None
+ return None
+
+
+def sigma_item_definition(r,item_id):
+ table=r.ptr(SIGMA_ITEM_TABLE_POINTER)
+ if table!=SIGMA_ITEM_TABLE:raise ValueError('Sigma active item table mismatch')
+ q=table+item_id*44;r.raw(q,44);name=text(r.raw(q,14)).strip()
+ if not name or '?' in name:raise ValueError(f'Unreadable Sigma item name: {item_id}')
+ stored=r.u16(q+14);price=r.u16(q+16);importance=r.b[q+24];pocket=r.b[q+26]
+ key=normalize(name.replace('é','e'))
+ if not key:raise ValueError(f'Invalid Sigma item key: {item_id}')
+ category=ITEM_POCKETS.get(pocket,'items')
+ description={'key-items':'Key Item','poke-balls':'Poké Ball','tm-hm':'TM / HM','berries':'Berry'}.get(category,'Item')+' recovered from a verified Johto / Sigma field Poké Ball.'
+ item={'name':name,'sourceId':item_id,'source':'johto','sourceOffset':hex(q),'sourceStoredId':stored,
+  'sourcePrice':price,'price':price,'priceSource':'sigma-rom-field-catalog','pocket':pocket,'pocketName':category,
+  'importance':importance,'fieldItem':True,'buyable':False,'tradable':not bool(importance),'description':description}
+ if importance:item['keyItem']=True
+ return key,item
+
+
+def extract_sigma_item_pickups(r,world):
+ """Audit Poké Ball map objects and publish only statically verified pickups."""
+ pickups={};items={};excluded=[];scanned=0
+ for mid,m in sorted(world['maps'].items()):
+  if not mid.startswith('johto_'):continue
+  try:
+   ev=r.ptr(int(m['sourceHeader'],16)+4);count=r.b[ev]
+   if count>128:raise ValueError('object count')
+   table=r.ptr(ev+4) if count else None
+  except (KeyError,ValueError,IndexError,struct.error):continue
+  for obj in normalize_objects(r,m):
+   if obj.get('graphics')!=FIELD_ITEM_GRAPHICS:continue
+   scanned+=1;q=table+obj['sourceObjectIndex']*24
+   try:
+    source_script=r.ptr(q+16);match=field_item_script(r,source_script);source_flag=r.u16(q+20)
+   except (ValueError,IndexError,struct.error):match=None;source_script=None;source_flag=None
+   if not match:
+    excluded.append({'map':mid,'npc':obj['id'],'name':m.get('name',mid),'x':obj['x'],'y':obj['y'],
+     'sourceObjectIndex':obj['sourceObjectIndex'],'sourceLocalId':obj.get('sourceLocalId',obj['id']),
+     'sourceObjectOffset':hex(q),'sourceScript':hex(source_script) if source_script is not None else None,
+     'reason':'No bounded linear standard item-give script on this Poké Ball object.'})
+    continue
+   item_id=match['sourceItemId'];item_key,item=sigma_item_definition(r,item_id)
+   if item_key in items and items[item_key]['sourceId']!=item_id:raise ValueError('Sigma field-item key collision: '+item_key)
+   items[item_key]=item;pickup_id=f'{mid}:{obj["id"]}'
+   if pickup_id in pickups:raise ValueError('Duplicate Sigma pickup identity: '+pickup_id)
+   pickups[pickup_id]={'id':pickup_id,'map':mid,'npc':obj['id'],'x':obj['x'],'y':obj['y'],'graphics':FIELD_ITEM_GRAPHICS,
+    'item':item_key,'quantity':match['quantity'],'sourceItemId':item_id,'sourceScript':hex(source_script),
+    'sourceGiveCommand':match['sourceGiveCommand'],'sourceObjectOffset':hex(q),'sourceObjectIndex':obj['sourceObjectIndex'],
+    'sourceLocalId':obj.get('sourceLocalId',obj['id']),'sourceFlag':source_flag}
+ field_item_count=len(items)
+ # Evolution-item behavior remains an MMO feature. Keep every established
+ # evolution item in the catalog even when that item has no verified field-ball
+ # placement, while enriching any overlapping pickup with the same ROM identity.
+ evolution={**STONES,**SIGMA_ITEMS}
+ for item_id,(key,name) in evolution.items():
+  if key not in items:
+   extracted_key,item=sigma_item_definition(r,item_id)
+   if extracted_key!=key:raise ValueError('Sigma evolution item key mismatch: '+key)
+   item['fieldItem']=False;item['description']='Evolution item identified in the reviewed Johto / Sigma item catalog.'
+   items[key]=item
+  if items[key]['sourceId']!=item_id or normalize(items[key]['name'])!=normalize(name):raise ValueError('Sigma evolution item identity mismatch: '+key)
+  items[key]['evolutionStone']=True
+ audit={'spriteGraphics':FIELD_ITEM_GRAPHICS,'scannedPokeballObjects':scanned,'verifiedPickups':len(pickups),
+  'excludedLookalikes':len(excluded),'uniqueItems':field_item_count,'catalogItems':len(items),'scriptPolicy':'Linear fixed-length path; VAR_8000 item + VAR_8001 quantity + callstd 1; no branches/calls/gotos executed.',
+  'excluded':excluded}
+ if (scanned,len(pickups),len(excluded),field_item_count)!=(386,361,25,125):
+  raise ValueError(f'Unexpected Sigma item-ball audit counts: {(scanned,len(pickups),len(excluded),field_item_count)}')
+ return pickups,items,audit
+
+
 def extract_sigma_learnsets(r,world):
  """Read the relocated table used by the supplied Sigma engine."""
  table=r.ptr(0x3ea7c)
@@ -268,7 +376,7 @@ def extract(firered,sigma,root=ROOT):
  recovered=root/'Server/data/interior_maps.json'
  if recovered.is_file():
   for key,m in json.loads(recovered.read_text()).items():world['maps'].setdefault(key,m)
- out={'format':1,'sources':{},'trainers':{},'gyms':[],'evolutions':{},'evolutionsBySource':{},'items':{},'speciesOverrides':{},'normalizedObjects':{},'unsupported':{}}
+ out={'format':1,'sources':{},'trainers':{},'gyms':[],'evolutions':{},'evolutionsBySource':{},'items':{},'itemPickups':{},'itemPickupAudit':{},'speciesOverrides':{},'normalizedObjects':{},'unsupported':{}}
  for tag,path in [('kanto',firered),('johto',sigma)]:
   r=Rom(path);digest=hashlib.sha256(r.b).hexdigest()
   # The extraction manifest was generated from the accepted matching ROMs.
@@ -285,9 +393,9 @@ def extract(firered,sigma,root=ROOT):
   if tag=='johto':
    out['speciesOverrides'],learn_errors=extract_sigma_learnsets(r,world)
    out['unsupported'][tag]['learnsets']=learn_errors
+   out['itemPickups'],out['items'],out['itemPickupAudit']=extract_sigma_item_pickups(r,world)
   for key,rules in evolutions.items():
    if world['species'][key]['source']==tag:out['evolutions'][key]=rules
- for itemId,(key,name) in {**STONES,**SIGMA_ITEMS}.items():out['items'][key]={'name':name,'sourceId':itemId,'evolutionStone':True,'source':'johto' if itemId in SIGMA_ITEMS else 'kanto'}
  out['policy']={'sharedSpeciesEvolution':'Canonical source of the stable species key; region changes never change an owned Pokemon evolution rules.',
   'trainerRewards':'MMO-authored; source parties and coordinates do not imply original event scripts, rewards, held-item effects or trainer AI are executed.',
   'unsupportedScripts':'Unknown opcodes, ambiguous first teams, doubles and custom moves unavailable in the current move catalog are excluded.'}
@@ -297,5 +405,5 @@ def main():
  parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('firered',type=Path);parser.add_argument('sigma',type=Path);parser.add_argument('--root',type=Path,default=ROOT)
  args=parser.parse_args();result=extract(args.firered,args.sigma,args.root)
  dest=args.root/'Server/data/adventure_rom.json';dest.write_text(json.dumps(result,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
- print(json.dumps({'trainers':len(result['trainers']),'gyms':result['gyms'],'evolutionSpecies':len(result['evolutions']),'output':str(dest)},indent=2))
+ print(json.dumps({'trainers':len(result['trainers']),'gyms':result['gyms'],'evolutionSpecies':len(result['evolutions']),'itemPickups':len(result['itemPickups']),'fieldItems':len(result['items']),'output':str(dest)},indent=2))
 if __name__=='__main__':main()

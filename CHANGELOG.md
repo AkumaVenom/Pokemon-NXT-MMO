@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.6.10-alpha · Item Gameplay Repair · 2026-09-18
+
+- Replace inert collected-item identities with explicit, server-authoritative item contracts for all 125 pickup identities and all 128 original inventory definitions; add one crafted Fast Ball. No inventory key or collected-object ID changes.
+- Wire all capture balls into the wild-battle UI and native-style catch resolver. Timer Ball now increases with completed turns; Net, Dive, Nest, Repeat, Luxury and Master Balls have distinct behavior. Capture identity persists on the caught Pokémon.
+- Implement target-aware HP/status/revival medicine, PP restoratives and permanent PP upgrades, vitamins/EVs, Rare Candy, guarded regular-ability switching, X items, Dire Hit, Guard Spec., Repels, Escape Rope, reusable flutes and party Sacred Ash.
+- Extract the referenced Sigma machine table rather than the stale vanilla table; publish 9 machine assignments and species compatibility, plus 81 source-backed item-evolution alternatives. Teach/replace/evolve only after an explicit compatible target selection.
+- Add namespaced held-item Give/Take/swap, battle modifiers and berries, EV/EXP rewards, and a lossless reserve for preexisting source-specific held identities. Sigma reused IDs cannot accidentally activate unrelated Kanto effects. Preserve PP upgrades through healing and normal level growth.
+- Add clearly identified NXT services for White Apricorn crafting at Kurt, Coin Case exchange, Pokéblock blending/feeding, and a once-per-battle primary-type Tera Orb adaptation. Do not claim original minigames or full later-generation systems.
+- Make field actions atomic with owner persistence, add durable replay receipts, reject ineffective/stale/foreign-target commands, and keep Repel steps correct across accepted movement/map transitions. Source map permission and a safe entrance are required before an Escape Rope can be consumed.
+- Preserve existing battle/autonomous/save/registration/trade/Windows bootstrap contracts. Adjust capture test fixtures for the native four-shake RNG without weakening their success/persistence assertions. Add shipped-content item tests and two-account DOM/WebSocket/SQLite acceptance.
+- Explicit limits: unsupported destination ability IDs are blocked without consuming Skill Capsules; PP restoratives during Transform require switching out; the preexisting singles engine and unresolved source-weight limits are unchanged. Native Windows/Edge execution still needs deployment acceptance.
+
+## 0.6.9-alpha · Johto / Sigma Field Item Ball Completion · 2026-09-17
+
+- Hash-verified the accepted **Ultra Shiny Gold Sigma Completo 1.5.0** ROM (`62d1a99f5b64a45cd4f6364273743f9d8961e9c439d8201bfeedb27c02f32c64`) and audited every Johto / Sigma visible object using the field Poké Ball graphics ID 92.
+- Of **386 Poké Ball-looking objects**, **361** are now verified one-time field-item pickups by a bounded static script reader (`VAR_8000` item, `VAR_8001` quantity, standard item-give script). The remaining **25** custom/decorative/story objects are deliberately excluded rather than guessed.
+- Published **125 distinct pickup item identities** with their exact source item IDs and exact award quantities. Multi-item balls preserve the ROM quantity, including stacks of 2/3/4/5/10/16 where authored.
+- Collection is **server-authoritative, proximity/map validated, atomic with persistence, owner-private and once per character**. A failed save or full 999-item stack leaves the Poké Ball available; another account's collection does not remove yours.
+- Collected balls disappear only for that character through replicated adventure state and return correctly for accounts that have not collected them. Old saves migrate additively with an empty `itemPickups` list; no SQL schema, account, autonomous-trainer or content reset is required.
+- Existing MMO item mechanics and balancing are preserved for Poké/Great/Ultra Balls, Potions, Super Potions and evolution items. Newly recovered Sigma-only catalog items are field-only instead of being injected into Poké Mart stock; ROM-important/key items are non-tradable. Unsupported TM/HM, held-item and special consumable effects are not fabricated.
+- Added `Docs/JOHTO_SIGMA_FIELD_ITEMS.md`, a machine-readable placement/exclusion audit, dedicated runtime/ROM-reader regression tests, and UI filtering so field-only items do not flood the Bag/Trade editors before they are owned.
+
+
 ## 0.6.8-alpha hotfix · Autonomous Battle Move-View Compatibility · 2026-09-17
 
 - Fix a world-tick exception in autonomous wild battles introduced by the completed temporary-move mechanics. `Battle.usable()` correctly returns slots from the current battle move view, including Transform/Mimic overrides, but the bot attack scorer still indexed the shorter persistent `mon['moves']` list. A Ditto that transformed from its one saved move into a foe with four moves could therefore raise `IndexError` and repeatedly fail the periodic tick service.

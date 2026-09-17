@@ -47,9 +47,19 @@ def assemble(world: dict, root: Path) -> None:
         required = {'name', 'price', 'keyItem', 'buyable', 'tradable', 'description'}
         if set(item) != required or item['price'] != 0 or item['keyItem'] is not True or item['buyable'] is not False or item['tradable'] is not False:
             raise ValueError('Invalid story key item: ' + key)
-        if key in world['items'] and world['items'][key] != item:
+        if key in world['items'] and {k: v for k, v in world['items'][key].items() if k != 'mechanics'} != item:
             raise ValueError('Story key item conflicts with an existing item: ' + key)
         world['items'][key] = copy.deepcopy(item)
+    for pickup_id, pickup in native.get('itemPickups', {}).items():
+        m = world['maps'].get(pickup.get('map'))
+        obj = next((o for o in (m or {}).get('objects', []) if o.get('id') == pickup.get('npc')), None)
+        if not m or not obj or obj.get('graphics') != 92 or [obj.get('x'), obj.get('y')] != [pickup.get('x'), pickup.get('y')]:
+            raise ValueError('Field item object binding mismatch: ' + pickup_id)
+        if pickup.get('id') != pickup_id or obj.get('sourceObjectIndex') != pickup.get('sourceObjectIndex'):
+            raise ValueError('Field item source identity mismatch: ' + pickup_id)
+        if obj.get('storyEvent') or obj.get('itemPickup') not in (None, pickup_id):
+            raise ValueError('Field item object already has another event: ' + pickup_id)
+        obj['itemPickup'] = pickup_id
     for event in world['adventure'].get('storyEvents', []):
         m = world['maps'].get(event.get('map'))
         if not m:
@@ -57,6 +67,8 @@ def assemble(world: dict, root: Path) -> None:
         obj = next((o for o in m.get('objects', []) if o.get('id') == event.get('npc')), None)
         if not obj or obj.get('graphics') != event.get('graphics'):
             raise ValueError('Story event object binding mismatch: ' + str(event.get('id')))
+        if obj.get('itemPickup'):
+            raise ValueError('Story object conflicts with a field item: ' + event['id'])
         if 'storyEvent' in obj and obj['storyEvent'] != event['id']:
             raise ValueError('Story object already has another event: ' + m['id'])
         obj['storyEvent'] = event['id']
@@ -64,10 +76,29 @@ def assemble(world: dict, root: Path) -> None:
         if key not in world['species'] or set(fields) - {'learnset', 'learnsetSource', 'learnsetProvenance'}:
             raise ValueError('Invalid ROM species override: ' + key)
         world['species'][key].update(copy.deepcopy(fields))
+    source_metadata = {'sourceId', 'source', 'sourceOffset', 'sourceStoredId', 'sourcePrice', 'pocket', 'pocketName', 'importance', 'fieldItem', 'description'}
     for key, item in native.get('items', {}).items():
-        # Stock and prices are explicit MMO rules, not extracted original shop scripts.
-        price = 2100 if key in {'firestone', 'waterstone', 'thunderstone', 'leafstone'} else 4000
-        world['items'][key] = {**copy.deepcopy(item), 'price': price, 'priceSource': 'mmo-adventure'}
+        if key in world['items']:
+            # Preserve established MMO mechanics/prices (capture, healing and
+            # evolution behavior) while attaching audited Sigma provenance.
+            merged = copy.deepcopy(world['items'][key])
+            for field in source_metadata:
+                if field in item:
+                    merged[field] = copy.deepcopy(item[field])
+            if item.get('evolutionStone'):
+                merged['evolutionStone'] = True
+            world['items'][key] = merged
+        elif item.get('evolutionStone'):
+            # Preserve the pre-existing MMO shop contract for extracted
+            # evolution items even in a clean content reconstruction.
+            price = 2100 if key in {'firestone', 'waterstone', 'thunderstone', 'leafstone'} else 4000
+            published = {k: copy.deepcopy(v) for k, v in item.items() if k not in ('buyable', 'tradable', 'keyItem')}
+            published.update(price=price, priceSource='mmo-adventure')
+            world['items'][key] = published
+        else:
+            # New ROM-derived pickups are collectible/tradable (except key
+            # items) but are not silently injected into Poké Mart stock.
+            world['items'][key] = copy.deepcopy(item)
     additions = read(root, 'species_additions')
     if additions.get('format') != 1:
         raise ValueError('Unsupported additive species catalog')
@@ -76,7 +107,7 @@ def assemble(world: dict, root: Path) -> None:
             raise ValueError('Additive species identity conflict: ' + key)
         world['species'].setdefault(key, copy.deepcopy(profile))
     apply_learnsets(world, root)
-    world['version'] = '0.6.8-alpha'
+    world['version'] = '0.6.10-alpha'
     validate(world)
     extend_audio(world, root)
 
@@ -125,6 +156,21 @@ def validate(world: dict) -> None:
             raise ValueError('Invalid story key-item binding: ' + event['id'])
         if any(str(move) not in moves for move in event.get('moves', [])) or len(event.get('moves', [])) > 4:
             raise ValueError('Invalid story encounter moves: ' + event['id'])
+    pickups = native.get('itemPickups', {})
+    audit = native.get('itemPickupAudit', {})
+    if audit.get('verifiedPickups') != len(pickups) or audit.get('scannedPokeballObjects') != len(pickups) + audit.get('excludedLookalikes', 0):
+        raise ValueError('Field item audit summary is inconsistent')
+    bound = set()
+    for pickup_id, pickup in pickups.items():
+        m = maps.get(pickup.get('map'));obj = next((o for o in (m or {}).get('objects', []) if o.get('id') == pickup.get('npc')), None)
+        if pickup.get('id') != pickup_id or not obj or obj.get('graphics') != 92 or obj.get('itemPickup') != pickup_id:
+            raise ValueError('Invalid published field item: ' + pickup_id)
+        if pickup.get('item') not in world['items'] or not 1 <= pickup.get('quantity', 0) <= 999:
+            raise ValueError('Invalid field item inventory award: ' + pickup_id)
+        identity = (pickup['map'], pickup['npc'])
+        if identity in bound:
+            raise ValueError('Duplicate field item object binding: ' + pickup_id)
+        bound.add(identity)
     for key, choices in native['evolutions'].items():
         if key not in species:
             raise ValueError('Unknown evolving species: ' + key)

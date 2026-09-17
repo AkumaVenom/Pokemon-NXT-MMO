@@ -1,8 +1,9 @@
 """Versioned content registry and immutable creature factories."""
 from __future__ import annotations
-import json,math,secrets,uuid
+import copy,json,math,secrets,uuid
 from pathlib import Path
 from .growth import Growth
+from .items import ItemSystem
 from .varieties import Varieties, VARIETIES, variety_key
 from .encounters import validate_encounter_map
 TYPES=['Normal','Fighting','Flying','Poison','Ground','Rock','Bug','Ghost','Steel','Mystery','Fire','Water','Grass','Electric','Psychic','Ice','Dragon','Dark','Fairy']
@@ -11,7 +12,7 @@ class Content:
  def __init__(self,path:Path):
   self.source_path=path
   d=json.loads(path.read_text(encoding='utf-8'));self.data=d;self.maps=d['maps'];self.species=d['species'];self.moves=d['moves'];self.pack=d['pack'];self.items=d['items'];self.rng=secrets.SystemRandom()
-  self.growth=Growth(self);self.varieties=Varieties(self)
+  self.growth=Growth(self);self.varieties=Varieties(self);self.item_system=ItemSystem(self)
   if d['format']!=1:raise RuntimeError('Unsupported world content format')
   for k,m in self.maps.items():
    validate_encounter_map(m,self.species)
@@ -38,7 +39,7 @@ class Content:
   s=self.species[mon['species']];n=mon['level'];iv=mon['ivs'];nature=mon['nature'];boost,drop=nature//5,nature%5;order=[1,2,3,4,5]
   out=[]
   for i,base in enumerate(s['baseStats']):
-   raw=(2*base+iv[i])*n//100
+   raw=(2*base+iv[i]+mon.get('evs',[0]*6)[i]//4)*n//100
    if i==0:val=1 if s['name']=='Shedinja' else raw+n+10
    else:
     val=raw+5
@@ -64,7 +65,7 @@ class Content:
    common,rare=(s.get('heldItems') or [0,0])[:2];roll=self.rng.randrange(100)
    held=rare if rare and roll<5 else common if common and roll<55 else 0
   mon={'uid':str(uuid.uuid4()),'species':key,'level':level,'exp':self.xp(level,s['growth']),'ivs':[self.rng.randrange(32) for _ in range(6)],'nature':self.rng.randrange(25),'personality':personality,'friendship':int(s.get('baseFriendship',70)),'heldItemId':held,'originalTrainer':owner,'variety':variety,'shiny':variety=='shiny','status':'','sleep':0,'moves':[{'id':mid,'pp':self.moves[str(mid)]['pp']} for mid in ids[-4:]]}
-  mon['hp']=self.stats(mon)[0];self.growth.ensure(mon);self.growth.stamp_move_namespace(mon);return mon
+  self.item_system.ensure_mon(mon);mon['hp']=self.stats(mon)[0];self.growth.ensure(mon);self.growth.stamp_move_namespace(mon);return mon
  def gain_xp(self,mon,amount):
   self.growth.ensure(mon);s=self.species[mon['species']];old=mon['level'];oldhp=self.stats(mon)[0];hp=mon['hp']
   mon['exp']=min(self.xp(100,s['growth']),mon['exp']+max(0,int(amount)))
@@ -75,8 +76,12 @@ class Content:
   return mon['level']-old
  def public_mon(self,mon,private=True):
   s=self.species[mon['species']];v={k:mon[k] for k in ('uid','species','level','hp','status')};value=variety_key(mon);v.update({'name':s['name'],'displayName':self.varieties.display_name(mon),'variety':value,'shiny':value=='shiny','varietyArtAvailable':self.varieties.supported(mon['species'],value),'maxHp':self.stats(mon)[0]})
-  if private:v.update({'moves':mon['moves'],'exp':mon['exp'],'nextExp':self.xp(min(100,mon['level']+1),s['growth']),'levelExp':self.xp(mon['level'],s['growth']),'stats':self.stats(mon),'nature':NATURES[mon['nature']],'originalTrainer':mon['originalTrainer'],'pendingLearn':self.growth.pending_moves(mon),'relearnMoves':self.growth.reminder_options(mon),'levelUpMoves':self.growth.level_up_moves(mon),'evolutions':self.growth.options(mon)})
+  if private:v.update({'moves':copy.deepcopy(mon['moves']),'exp':mon['exp'],'nextExp':self.xp(min(100,mon['level']+1),s['growth']),'levelExp':self.xp(mon['level'],s['growth']),'stats':self.stats(mon),'nature':NATURES[mon['nature']],'originalTrainer':mon['originalTrainer'],'pendingLearn':self.growth.pending_moves(mon),'relearnMoves':self.growth.reminder_options(mon),'levelUpMoves':self.growth.level_up_moves(mon),'evolutions':self.growth.options(mon)})
+  if private:v.update(self.item_system.public_mon(mon))
   return v
+ def pp_max(self,move):
+  base=int(self.moves[str(move['id'])]['pp']);ups=max(0,min(3,int(move.get('ppUps',0))))
+  return base+base*ups//5
  def heal(self,mon):
   mon['hp']=self.stats(mon)[0];mon['status']='';mon['sleep']=0
-  for m in mon['moves']:m['pp']=self.moves[str(m['id'])]['pp']
+  for m in mon['moves']:m['pp']=self.pp_max(m)

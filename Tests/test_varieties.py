@@ -211,7 +211,7 @@ class VarietyWorldTests(unittest.IsolatedAsyncioTestCase):
   for value in VARIETIES:
    with patch.object(self.c.varieties,'roll',return_value=value):await self.w.start_wild(self.a,('fr_19',5))
    battle=self.w.battles[self.a.battle];original=copy.deepcopy(battle.mon(1));self.assertEqual(original['variety'],value)
-   with patch.object(self.c.rng,'random',return_value=0.0):
+   with patch.object(self.c.rng,'random',return_value=0.0),patch.object(self.c.rng,'randrange',return_value=0):
     await self.w.battle_action(self.a,{'id':battle.id,'action':'capture','item':'pokeball','variety':'shadow','species':'fr_150'})
    self.assertTrue(battle.caught)
    saved=self.db.load(self.a.id);owned=next(m for m in saved['creatures'] if m['uid']==original['uid'])
@@ -221,7 +221,7 @@ class VarietyWorldTests(unittest.IsolatedAsyncioTestCase):
  async def test_save_failure_cannot_publish_variant_catch_or_spend_ball(self):
   with patch.object(self.c.varieties,'roll',return_value='shadow'):await self.w.start_wild(self.a,('fr_19',5))
   battle=self.w.battles[self.a.battle];before=copy.deepcopy(self.a.state);self.packets(self.a)
-  with patch.object(self.c.rng,'random',return_value=0.0),patch.object(self.db,'save_many',side_effect=OSError('fixture disk failure')):
+  with patch.object(self.c.rng,'random',return_value=0.0),patch.object(self.c.rng,'randrange',return_value=0),patch.object(self.db,'save_many',side_effect=OSError('fixture disk failure')):
    await self.w.battle_action(self.a,{'id':battle.id,'action':'capture','item':'pokeball'})
   self.assertEqual(self.db.load(self.a.id),before);self.assertEqual(self.a.state,before);self.assertIsNone(battle.caught)
   packets=self.packets(self.a);self.assertFalse(any(e.get('cue')=='capture_success' for p in packets for e in p.get('battle',{}).get('audio',{}).get('events',[])))

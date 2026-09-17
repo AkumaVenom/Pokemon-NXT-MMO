@@ -511,9 +511,12 @@ class LocalAdmin:
             else:
                 options = [v for v in c.growth.options(mon) if not v['deferred']]
                 require(options, 'No eligible authored evolution exists. Meet its level/item/trade condition and resume any paused choice.')
-                target = self.exact(c.species,args[2],'species') if len(args)>2 else options[0]['target'] if len(options)==1 else None
+                targets = list(dict.fromkeys(v['target'] for v in options))
+                target = self.exact(c.species,args[2],'species') if len(args)>2 else targets[0] if len(targets)==1 else None
                 require(target is not None, 'Choose an evolution target explicitly: '+', '.join(v['target'] for v in options))
-                t.after = c.growth.evolve(state,mon['uid'],target); plan.details['target_species'] = target
+                eligible = [v for v in options if v['target']==target]
+                selected = next((v for v in eligible if not v.get('item') or state['items'].get(v['item'],0)>0), eligible[0] if eligible else {})
+                t.after = c.growth.evolve(state,mon['uid'],target,item=selected.get('item')); plan.details['target_species'] = target
             plan.lines = [f'{name} for #{t.uid} {t.account["username"]}, Pokémon {mon["uid"]}' + (f': {plan.details}' if len(plan.details)>1 else '')]
         elif name in ('heal', 'healall'):
             self.count(args, 1 if name=='heal' else 0)

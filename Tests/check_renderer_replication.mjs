@@ -84,3 +84,8 @@ test('a fresh authoritative snapshot replaces rather than merges private flags',
 test('owner story completion hides only its authored Sudowoodo object and resets cleanly',()=>{
  const {r}=harness(),tree={id:3,graphics:98,storyEvent:'johto_sudowoodo'},other={id:4,graphics:98};r.map={...mapData('johto_2_23'),objects:[tree,other]};r.hits=[{kind:'npc',id:3,map:r.map.id},{kind:'npc',id:4,map:r.map.id}];r.setStoryEvents(['johto_sudowoodo',7,null]);assert.equal(r.objectVisible(tree),false);assert.equal(r.objectVisible(other),true);assert.deepEqual(r.hits.map(h=>h.id),[4]);r.setStoryEvents([]);assert.equal(r.objectVisible(tree),true);r.setStoryEvents(['johto_sudowoodo']);r.resetSession();assert.equal(r.storyEvents.size,0);assert.equal(r.objectVisible(tree),true);
 });
+
+test('owner field-item collection hides only the matching Poké Ball and resets cleanly',()=>{
+ const {r}=harness(),ball={id:6,graphics:92,itemPickup:'johto_3_7:6'},other={id:7,graphics:92,itemPickup:'johto_3_7:7'};r.map={...mapData('johto_3_7'),objects:[ball,other]};r.hits=[{kind:'npc',id:6,map:r.map.id},{kind:'npc',id:7,map:r.map.id}];
+ r.setItemPickups(['johto_3_7:6',7,null]);assert.equal(r.objectVisible(ball),false);assert.equal(r.objectVisible(other),true);assert.deepEqual(r.hits.map(h=>h.id),[7]);r.setItemPickups([]);assert.equal(r.objectVisible(ball),true);r.setItemPickups(['johto_3_7:6']);r.resetSession();assert.equal(r.itemPickups.size,0);assert.equal(r.objectVisible(ball),true);
+});

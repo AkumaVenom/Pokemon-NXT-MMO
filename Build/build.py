@@ -62,9 +62,12 @@ SOURCE_DATA_FILES = {
     "world.json", "adventure.json", "adventure_rom.json", "kanto_dialogue.json", "johto_dialogue.json", "centers.json",
     "interior_repairs.json", "interior_maps.json",
     "interior_navigation.json", "learnsets.json",
-    "encounters_firered.json", "encounters_crystal.json", "encounter_bindings.json", "species_additions.json", "varieties.json", "battle_mechanics.json",
+    "encounters_firered.json", "encounters_crystal.json", "encounter_bindings.json", "species_additions.json", "varieties.json", "battle_mechanics.json", "item_mechanics.json",
 }
 REQUIRED_SOURCE = (
+    "Server/nxt/items.py", "Server/data/item_mechanics.json", "Tools/item_rules.py",
+    "Tools/extract_item_mechanics.py", "Tools/publish_item_mechanics.py",
+    "Tests/test_item_mechanics.py", "Tests/check_items_browser.py", "Docs/ITEM_GAMEPLAY.md",
     "Server/nxt/varieties.py", "Server/data/varieties.json", "Tools/publish_varieties.py",
     "Tools/import_variety_assets.py", "Client/app/varieties.js", "Tests/test_varieties.py", "Tests/check_varieties.mjs",
     "Server/nxt/encounters.py", "Server/nxt/field_moves.py",

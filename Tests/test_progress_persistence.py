@@ -236,6 +236,7 @@ class ProgressPersistenceTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_capture_xp_level_money_and_pp_survive_without_logout_save(self):
         self.content.rng.random = lambda: 0.0
+        native_shake_range = self.content.rng.randrange; self.content.rng.randrange = lambda *args: 0 if args==(65536,) else native_shake_range(*args)
         await self.world.start_wild(self.player, ('fr_129', 2))
         battle = self.world.battles[self.player.battle]
         await self.world.dispatch(self.player, {'op': 'battle', 'id': battle.id,
@@ -269,6 +270,7 @@ class ProgressPersistenceTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_battle_save_failure_spends_no_ball_and_grants_no_capture(self):
         self.content.rng.random = lambda: 0.0
+        native_shake_range = self.content.rng.randrange; self.content.rng.randrange = lambda *args: 0 if args==(65536,) else native_shake_range(*args)
         inventory_before = copy.deepcopy(self.player.state['items'])
         await self.world.start_wild(self.player, ('fr_129', 2))
         # Seeing a species is its own valid checkpoint, preceding this failed turn.

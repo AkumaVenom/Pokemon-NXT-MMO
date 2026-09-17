@@ -159,6 +159,7 @@ class WorldTests(unittest.IsolatedAsyncioTestCase):
    with self.assertRaises(RequestError):await self.w.dispatch(self.a,{'op':'party','party':party})
  async def test_wild_capture_persists_and_consumes_ball(self):
   await self.w.start_wild(self.a,('fr_129',2));b=self.w.battles[self.a.battle];self.c.rng.random=lambda:0.0
+  native_shake_range = self.c.rng.randrange; self.c.rng.randrange = lambda *args: 0 if args==(65536,) else native_shake_range(*args)
   await self.w.dispatch(self.a,{'op':'battle','id':b.id,'action':'capture','item':'pokeball'});self.assertEqual(len(self.a.state['creatures']),2);self.assertEqual(self.a.state['items']['pokeball'],19);self.assertEqual(self.db.load(self.a.id),self.a.state);self.assertIsNone(self.a.battle)
  async def test_capture_full_collection_spends_no_ball(self):
   self.w.s=dataclasses.replace(self.s,max_owned=1);await self.w.start_wild(self.a,('fr_129',2));b=self.w.battles[self.a.battle]

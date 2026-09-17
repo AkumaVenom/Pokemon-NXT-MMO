@@ -12,6 +12,7 @@ from __future__ import annotations
 import copy, hashlib, math, time, uuid
 from .security import RequestError, require, integer
 from .varieties import variety_key
+from .items import ItemSystem, held_snapshot, replace_held
 
 # Type ids follow the active ROM tables. Slot 9 remains Mystery/???; Fairy 18
 # is an NXT extension used by explicitly authored later content.
@@ -69,8 +70,14 @@ def _stable_u32(mon):
  h=hashlib.sha256(str(mon.get('uid','')).encode()).digest();return int.from_bytes(h[:4],'little')
 
 class Battle:
- def __init__(self,content,kind,players,names,rosters,items,turn_seconds=45,audio_source='kanto',terrain='plain'):
+ def __init__(self,content,kind,players,names,rosters,items,turn_seconds=45,audio_source='kanto',terrain='plain',caught_species=None):
   self.c=content;self.id=str(uuid.uuid4());self.kind=kind;self.players=players;self.names=names;self.rosters=copy.deepcopy(rosters);self.items=copy.deepcopy(items)
+  self.item_system=getattr(content,'item_system',None)
+  if self.item_system is None or self.item_system.c is not content:self.item_system=ItemSystem(content)
+  for roster in self.rosters:
+   for mon in roster:self.item_system.ensure_mon(mon)
+  self.caught_species=[set(v) for v in caught_species] if caught_species is not None else [{m['species'] for m in roster} for roster in self.rosters]
+  self.tera_used=[False,False];self.tera={};self.tera_original={}
   self.active=[next((i for i,m in enumerate(r) if m['hp']>0),0) for r in self.rosters];self.stages={};self.volatile={};self.side=[self._new_side(),self._new_side()]
   self.choice={};self.turn=1;self.turn_seconds=turn_seconds;self.deadline=time.monotonic()+turn_seconds;self.ended=False;self.winner=None;self.caught=None;self.rewarded=False
   self.logs=[f'{names[1]} appeared!' if kind=='wild' else f'{names[0]} vs {names[1]}.'];self.seeded=set();self.protected=set();self.experience_events=[];self.experience_awarded=set();self.participants={}
@@ -88,11 +95,13 @@ class Battle:
   q=copy.deepcopy(m);v=self.vol(m)
   if 'movesOverride' in v:q['moves']=copy.deepcopy(v['movesOverride'])
   if v.get('speciesOverride') in self.c.species:q['species']=v['speciesOverride']
-  return self.c.public_mon(q,private)
+  result=self.c.public_mon(q,private);result['battleTypes']=self.types(m);result['terastallized']=m['uid'] in self.tera
+  return result
  def name(self,m):return self.c.varieties.display_name(m)
  def mon(self,side):return self.rosters[side][self.active[side]]
  def tiers(self,m):return self.stages.setdefault(m['uid'],[0]*7)
  def types(self,m):
+  if m['uid'] in self.tera:return [self.tera[m['uid']]]
   v=self.vol(m)
   if 'types' in v:return list(v['types'])
   if self.ability(m)==59 and self.c.species[m['species']]['name']=='Castform':
@@ -101,7 +110,7 @@ class Battle:
  def ability(self,m):
   if 'ability' in self.vol(m):return self.vol(m)['ability']
   abilities=self.c.species[m['species']].get('abilities',[0,0]);a0=abilities[0] if abilities else 0;a1=abilities[1] if len(abilities)>1 else 0
-  return a1 if a1 and (_stable_u32(m)&1) else a0
+  return a1 if a1 and (m.get('abilitySlot',_stable_u32(m)&1)&1) else a0
  def gender(self,m):
   ratio=int(self.c.species[m['species']].get('genderRatio',255));p=_stable_u32(m)&0xff
   if ratio==255:return 'genderless'
@@ -176,7 +185,7 @@ class Battle:
    if v.get('torment') and v.get('lastMove')==mid:continue
    if v.get('tauntTurns',0)>0 and move.get('power',0)==0:continue
    choice=v.get('choiceMove')
-   if mon.get('heldItemId')==CHOICE_BAND and choice and mid!=choice:continue
+   if self.item_system.held(mon).get('choice') and choice and mid!=choice:continue
    foe=self.mon(1-self._side_of(mon)) if self._side_of(mon) is not None else None
    if foe and self.vol(foe).get('imprison') and any(q['id']==mid for q in self._moves(foe)):continue
    slots.append(i)
@@ -192,16 +201,21 @@ class Battle:
    slot=integer(data.get('slot'),-1,3,'Move slot');usable=self.usable(m);require((slot in usable) or (slot==-1 and not usable),'That move is unavailable or has no PP.')
    action={'action':'attack','slot':slot}
    if data.get('uid') is not None:action['uid']=data.get('uid')
+   if data.get('tera'):
+    require(data.get('tera') is True and self.kind!='duel' and self.items[side].get('teraorb',0)>0 and not self.tera_used[side],'Terastallization is unavailable for this battle.')
+    action['tera']=True
   elif kind=='switch':
    require(not self._trapped(side),'This Pokemon cannot switch out right now.');uid=data.get('uid');idx=next((i for i,q in enumerate(self.rosters[side]) if q['uid']==uid),-1)
    require(idx>=0 and idx!=self.active[side] and self.rosters[side][idx]['hp']>0,'Select a healthy party member other than your active Pokemon.');action={'action':'switch','index':idx}
   elif kind in ('capture','item'):
-   require(self.kind!='duel','Items are disabled in friendly duels.');item=data.get('item');require(item in self.c.items and self.items[side].get(item,0)>0,'You do not have that item.')
+   require(self.kind!='duel','Items are disabled in friendly duels.');item=data.get('item');require(isinstance(item,str) and item in self.c.items and self.items[side].get(item,0)>0,'You do not have that item.')
    if kind=='capture':require(self.kind=='wild' and 'capture' in self.c.items[item],'You can only capture wild Pokemon with a Poke Ball.')
-   else:require('heal' in self.c.items[item] and m['hp']<self.maxhp(m),'That healing item cannot be used now.')
+   else:self.item_system.battle_action(self,side,item,data,preview=True)
    action={'action':kind,'item':item}
+   for field in ('uid','slot','expectedMove'):
+    if field in data:action[field]=data[field]
   elif kind=='run':
-   require(self.kind!='trainer','You cannot run from a trainer battle.');require(not self._trapped(side) or self.ability(m)==50,'This Pokemon cannot escape right now.');action={'action':'run'}
+   require(self.kind!='trainer','You cannot run from a trainer battle.');require(not self._trapped(side) or self.ability(m)==50 or self.item_system.held(m).get('alwaysRun'),'This Pokemon cannot escape right now.');action={'action':'run'}
   else:raise RequestError('Unknown battle action.')
   self.choice[side]=action
   if self.kind=='duel' and kind=='run' and 1-side not in self.choice:
@@ -219,7 +233,7 @@ class Battle:
   return True
 
  def view(self,side):
-  return {'id':self.id,'kind':self.kind,'source':self.audio_source,'turn':self.turn,'you':self._public_mon(self.mon(side)),'opponent':self._public_mon(self.mon(1-side),False),'opponentName':self.names[1-side],'party':[self._public_mon(m) for m in self.rosters[side]],'opponentRemaining':sum(m['hp']>0 for m in self.rosters[1-side]),'waiting':side in self.choice,'canRun':self.kind!='trainer' and not self._trapped(side),'seconds':max(0,int(self.deadline-time.monotonic())),'usable':self.usable(self.mon(side)),'log':self.logs[-22:],'ended':self.ended,'result':self.result(side),'weather':self.weather_active(),'audio':self.audio_view(side)}
+  return {'id':self.id,'kind':self.kind,'source':self.audio_source,'turn':self.turn,'you':self._public_mon(self.mon(side)),'opponent':self._public_mon(self.mon(1-side),False),'opponentName':self.names[1-side],'party':[self._public_mon(m) for m in self.rosters[side]],'opponentRemaining':sum(m['hp']>0 for m in self.rosters[1-side]),'waiting':side in self.choice,'canRun':self.kind!='trainer' and (not self._trapped(side) or self.ability(self.mon(side))==50 or bool(self.item_system.held(self.mon(side)).get('alwaysRun'))),'seconds':max(0,int(self.deadline-time.monotonic())),'usable':self.usable(self.mon(side)),'items':copy.deepcopy(self.items[side]),'captureModifiers':{key:self.item_system.multiplier(key,self,side) for key,n in self.items[side].items() if n>0 and key in self.c.items and 'capture' in self.c.items[key]},'canTera':self.kind!='duel' and self.items[side].get('teraorb',0)>0 and not self.tera_used[side],'teraType':self.c.species[self.mon(side)['species']]['types'][0],'log':self.logs[-22:],'ended':self.ended,'result':self.result(side),'weather':self.weather_active(),'audio':self.audio_view(side)}
 
  def _priority(self,s):
   a=self.choice[s];m=self.mon(s);priority={'forfeit':11,'run':10,'switch':6,'capture':5,'item':5}.get(a['action'],0)
@@ -228,7 +242,7 @@ class Battle:
    # Pursuit strikes a switching target before the switch.
    if move.get('effect')==128 and self.choice.get(1-s,{}).get('action')=='switch':priority=7
   # Quick Claw is a same-priority ordering effect in Gen III.
-  quick=1 if m.get('heldItemId')==QUICK_CLAW and self.c.rng.random()<.2 else 0
+  quick=1 if self.item_system.held_code(m)==QUICK_CLAW and self.c.rng.random()<.2 else 0
   speed=self._stat(s,3)
   return priority,quick,speed,self.c.rng.random()
 
@@ -239,6 +253,9 @@ class Battle:
 
  def resolve(self):
   require(len(self.choice)==2,'Waiting for both trainers.');self.protected=set();self.logs=[];self.experience_events=[];self._record_participant();self.reset_audio();self.damage_this_turn={};self.damaged_this_turn=set();self.acted_this_turn=set()
+  for side,action in self.choice.items():
+   if action.get('tera'):
+    mon=self.mon(side);self.tera_original[mon['uid']]=list(self.c.species[mon['species']]['types']);self.tera[mon['uid']]=self.tera_original[mon['uid']][0];self.tera_used[side]=True;self.logs.append(f'{self.name(mon)} Terastallized!');self.audio('stat_change',side,species=mon['species'],stat='tera')
   order=sorted((0,1),key=self._priority,reverse=True)
   for side in order:
    if self.ended:break
@@ -252,7 +269,9 @@ class Battle:
     continue
    if k=='switch':self._switch(side,a['index']);self.acted_this_turn.add(m['uid']);continue
    if k=='item':
-    item=a['item'];self.items[side][item]-=1;old=m['hp'];m['hp']=min(self.maxhp(m),m['hp']+self.c.items[item]['heal']);self.logs.append(f'{self.name(m)} recovered {m["hp"]-old} HP.');self.audio('recover',side,species=m['species'],item=item,amount=m['hp']-old);continue
+    try:self.item_system.battle_action(self,side,a['item'],a)
+    except RequestError as error:self.logs.append(str(error)) # No-effect revalidation never spends the item.
+    continue
    if k=='capture':
     self._capture(side,a['item']);continue
    # If the target fainted earlier this turn, a normal attack has no target.
@@ -266,7 +285,7 @@ class Battle:
 
  def _try_run(self,side):
   m=self.mon(side);enemy=self.mon(1-side);self.run_attempts+=1
-  if self.ability(m)==50 or self._stat(side,3)>self._stat(1-side,3):success=True
+  if self.item_system.held(m).get('alwaysRun') or self.ability(m)==50 or self._stat(side,3)>self._stat(1-side,3):success=True
   else:
    odds=min(255,(self._stat(side,3)*128//max(1,self._stat(1-side,3)))+30*self.run_attempts)
    success=self.c.rng.randrange(256)<odds
@@ -275,10 +294,23 @@ class Battle:
   self.logs.append("Couldn't escape!");return False
 
  def _capture(self,side,item):
-  enemy=self.mon(1-side);self.items[side][item]-=1;hp=self.maxhp(enemy);sp=self.c.species[enemy['species']];bonus=2 if enemy['status'] in ('sleep','freeze') else 1.5 if enemy['status'] else 1
-  chance=min(1,((3*hp-2*enemy['hp'])*sp['catchRate']*self.c.items[item]['capture']*bonus)/(3*hp*255));self.audio('capture_throw',side,item=item,species=enemy['species'])
-  if self.c.rng.random()<chance:self.caught=copy.deepcopy(enemy);self.caught['originalTrainer']=self.names[side];self.ended=True;self.winner=side;self.logs.append(f'Gotcha! {self.name(enemy)} was caught!');self.audio('capture_success',side,species=enemy['species'])
-  else:self.logs.append(f'{self.name(enemy)} broke free!');self.audio('capture_fail',side,species=enemy['species'])
+  enemy=self.mon(1-side);self.items[side][item]-=1;hp=self.maxhp(enemy);sp=self.c.species[enemy['species']]
+  multiplier=self.item_system.multiplier(item,self,side);tenths=int(round(multiplier*10))
+  odds=((sp['catchRate']*tenths//10)*(3*hp-2*enemy['hp']))//max(1,3*hp)
+  if enemy['status'] in ('sleep','freeze'):odds*=2
+  elif enemy['status']:odds=odds*15//10
+  self.audio('capture_throw',side,item=item,species=enemy['species'])
+  master=self.item_system.rule(item).get('ballRule')=='masterball';shakes=0
+  if master or odds>254:shakes=4
+  elif odds>0:
+   threshold=1048560//max(1,math.isqrt(math.isqrt(16711680//odds)))
+   for _ in range(4):
+    if self.c.rng.randrange(65536)>=threshold:break
+    shakes+=1
+  if shakes==4:
+   self.caught=copy.deepcopy(enemy);self.caught['originalTrainer']=self.names[side];self.caught['captureBall']=item;self.ended=True;self.winner=side
+   self.logs.append(f'Gotcha! {self.name(enemy)} was caught!');self.audio('capture_success',side,species=enemy['species'])
+  else:self.logs.append(f'{self.name(enemy)} broke free after {shakes} shake'+('s!' if shakes!=1 else '!'));self.audio('capture_fail',side,species=enemy['species'],shakes=shakes)
 
  def _attack_action(self,side,a):
   m=self.mon(side);slot=a.get('slot',-1);mid=165 if slot<0 else self._moves(m)[slot]['id'];move=self.c.moves[str(mid)]
@@ -296,7 +328,7 @@ class Battle:
   continuation=self.vol(m).get('multiTurnPP')==mid
   if slot>=0 and not continuation:
    targeted=move.get('target')!=16;cost=2 if targeted and self.ability(self.mon(1-side))==46 else 1;entries=self._moves(m);entries[slot]['pp']=max(0,entries[slot]['pp']-cost)
-   if m.get('heldItemId')==CHOICE_BAND and not self.vol(m).get('choiceMove'):self.vol(m)['choiceMove']=mid
+   if self.item_system.held(m).get('choice') and not self.vol(m).get('choiceMove'):self.vol(m)['choiceMove']=mid
   self.logs.append(f'{self.name(m)} used {move["name"]}!');self.audio('move',side,species=m['species'],move=mid,moveType=move['type']);self.last_move[side]=mid;self.last_move_target[side]=self.mon(1-side)['uid'];self.vol(m)['lastMove']=mid
   self._execute_move(side,mid,move,a,depth=0)
   self._consume_item_if_needed(side);self._consume_item_if_needed(1-side)
@@ -635,7 +667,8 @@ class Battle:
   if effect==119:v['furyCutter']=min(5,v.get('furyCutter',0)+1)
   else:
    if effect!=119:v.pop('furyCutter',None)
-  if effect==105 and not m.get('heldItemId') and enemy.get('heldItemId') and self.ability(enemy)!=60:m['heldItemId']=self._remove_item(enemy)
+  if effect==105 and not m.get('heldItemId') and enemy.get('heldItemId') and self.ability(enemy)!=60:
+   value=held_snapshot(enemy);self._remove_item(enemy);replace_held(m,value)
   if effect==129:
    self.side[side]['spikes']=0;v.pop('leechSeedSource',None);v.pop('wrapTurns',None);v.pop('trappedBy',None)
   if effect==169 and m['status'] in ('poison','toxic','burn','paralysis'):pass
@@ -670,7 +703,7 @@ class Battle:
   if effect==159:self._advance_repeat(v,'uproarTurns')
   # Hyper Beam/recharge; Shell Bell and contact abilities/items.
   if effect==80:v['recharge']=True
-  if m.get('heldItemId')==SHELL_BELL and m['hp']>0:self._heal(side,max(1,total//8),quiet=True)
+  if self.item_system.held_code(m)==SHELL_BELL and m['hp']>0:self._heal(side,max(1,total//8),quiet=True)
   self._contact_effects(side,move)
 
  def _power_type(self,side,move,effect):
@@ -722,6 +755,9 @@ class Battle:
   critical=self._critical(side,move,effect)
   ai,di=(1,2) if physical else (4,5);atk=self._stat(side,ai,crit_attacker=critical);defn=self._stat(1-side,di,crit_defender=critical)
   if effect==7:defn=max(1,defn//2)
+  held=self.item_system.held(m)
+  if held.get('boostType')==typ:
+   num,den=held.get('boost',[1,1]);power=power*num//den
   # Field/move/ability power modifiers.
   weather=self.weather_active()
   if weather=='sun':power=power*3//2 if typ==10 else power//2 if typ==11 else power
@@ -741,6 +777,9 @@ class Battle:
    if physical and self.side[1-side]['reflect']>0:raw=max(1,raw//2)
    if not physical and self.side[1-side]['lightScreen']>0:raw=max(1,raw//2)
   stab=1.5 if typ in self.types(m) else 1
+  if m['uid'] in self.tera:
+   original=self.tera_original[m['uid']];tera_type=self.tera[m['uid']]
+   stab=2 if typ==tera_type and typ in original else 1.5 if typ==tera_type or typ in original else 1
   damage=max(1,int(raw*stab*mult*(2 if critical else 1)*self.c.rng.randint(85,100)/100)) if mult else 0
   return damage,critical,mult,physical
 
@@ -764,7 +803,7 @@ class Battle:
   level=0
   if effect in HIGH_CRIT_EFFECTS:level+=1
   if self.vol(m).get('focusEnergy'):level+=2
-  item=m.get('heldItemId',0)
+  item=self.item_system.held_code(m)
   if item==SCOPE_LENS:level+=1
   if item==LUCKY_PUNCH and self.c.species[m['species']]['name']=='Chansey':level+=2
   if item==STICK and "Farfetch" in self.c.species[m['species']]['name']:level+=2
@@ -784,10 +823,13 @@ class Battle:
   # Foresight identifies the foe and ignores its evasion stage.
   target_evasion=0 if ev.get('foresight') else self.tiers(enemy)[6]
   diff=self.tiers(m)[0]-target_evasion;accuracy*=accuracy_stage(diff)
+  held=self.item_system.held(m);target_held=self.item_system.held(enemy)
+  num,den=held.get('accuracy',[1,1]);accuracy=accuracy*num/den
+  num,den=target_held.get('evasion',[1,1]);accuracy=accuracy*num/den
   if self.ability(m)==14:accuracy*=1.3
   if self.ability(m)==55 and move.get('category',0)==0:accuracy*=.8
   if self.ability(enemy)==8 and self.weather_active()=='sand':accuracy*=.8
-  if enemy.get('heldItemId')==BRIGHTPOWDER:accuracy*=.9
+  if self.item_system.held_code(enemy)==BRIGHTPOWDER:accuracy*=.9
   return self.c.rng.randrange(100)<max(1,min(100,int(accuracy)))
 
  def _semi_blocked(self,side,move):
@@ -808,7 +850,7 @@ class Battle:
   m=self.mon(side);override=self.vol(m).get('statsOverride');base=override[index] if override and index>0 else self.c.stats(m)[index];tier_index={1:1,2:2,3:3,4:4,5:5}[index];n=self.tiers(m)[tier_index]
   if crit_attacker and n<0:n=0
   if crit_defender and n>0:n=0
-  val=base*stage(n);a=self.ability(m);item=m.get('heldItemId',0);name=self.c.species[m['species']]['name']
+  val=base*stage(n);a=self.ability(m);item=self.item_system.held_code(m);name=self.c.species[m['species']]['name']
   if index==1:
    if m['status']=='burn' and a!=62:val*=.5
    if a in (37,74):val*=2
@@ -830,6 +872,7 @@ class Battle:
   elif index==5:
    if item==DEEPSEA_SCALE and name=='Clamperl':val*=2
    if item==SOUL_DEW and name in ('Latios','Latias'):val*=1.5
+  num,den=self.item_system.held(m).get('stats',{}).get(str(index),[1,1]);val=val*num/den
   return max(1,int(val))
 
  def _damage(self,source_side,target_side,damage,move=None,physical=None,critical=False,effectiveness=1,direct=True,reason=None):
@@ -842,8 +885,9 @@ class Battle:
   actual=min(target['hp'],max(0,int(damage)))
   if actual<=0:return 0
   # Focus Band can leave its holder at 1 HP.
-  if actual>=target['hp'] and target.get('heldItemId')==FOCUS_BAND and target['hp']>1 and self.c.rng.random()<.1:actual=target['hp']-1
-  if self.vol(target).get('endure') and actual>=target['hp'] and target['hp']>1:actual=target['hp']-1
+  if actual>=target['hp'] and self.item_system.held_code(target)==FOCUS_BAND and self.c.rng.random()<.1:
+   actual=target['hp']-1;self.logs.append(f'{self.name(target)} hung on with its Focus Band!')
+  if self.vol(target).get('endure') and actual>=target['hp']:actual=target['hp']-1
   target['hp']=max(0,target['hp']-actual)
   if move and move.get('type')==10 and target.get('status')=='freeze':
    target['status']='';target['sleep']=0;self.logs.append(f'{self.name(target)} thawed out!');self.audio('status_clear',target_side,species=target['species'],status='freeze')
@@ -952,7 +996,7 @@ class Battle:
 
  def _white_herb(self,side):
   m=self.mon(side)
-  if m.get('heldItemId')!=WHITE_HERB:return
+  if self.item_system.held_code(m)!=WHITE_HERB:return
   t=self.tiers(m)
   if any(x<0 for x in t):
    self._remove_item(m,True)
@@ -962,11 +1006,11 @@ class Battle:
 
  def _remove_item(self,m,recyclable=False):
   item=m.get('heldItemId',0)
-  if item and recyclable:self.vol(m)['lastItem']=item
-  if item:m['heldItemId']=0
+  if item and recyclable:self.vol(m)['lastItem']=item;self.vol(m)['lastItemData']=held_snapshot(m)
+  if item:replace_held(m,{'heldItemId':0})
   return item
  def _consume_item_if_needed(self,side):
-  m=self.mon(side);item=m.get('heldItemId',0);v=self.vol(m);hp=m['hp'];maxhp=self.maxhp(m)
+  m=self.mon(side);item=self.item_system.held_code(m);v=self.vol(m);hp=m['hp'];maxhp=self.maxhp(m)
   if not item or hp<=0:return
   status_cures={CHERI:'paralysis',CHESTO:'sleep',PECHA:('poison','toxic'),RAWST:'burn',ASPEAR:'freeze'}
   if item==LUM and (m['status'] or v.get('confusionTurns')):
@@ -978,7 +1022,7 @@ class Battle:
   if item==MENTAL_HERB and v.get('attractSource'):v.pop('attractSource',None);self._remove_item(m,True);return
   if item==LEPPA:
    slot=next((q for q in self._moves(m) if q.get('pp',0)==0),None)
-   if slot:slot['pp']=min(self.c.moves[str(slot['id'])]['pp'],10);self._remove_item(m,True);return
+   if slot:slot['pp']=min(self.c.pp_max(slot),10);self._remove_item(m,True);return
   heal=0
   if hp*2<=maxhp:
    if item==BERRY_JUICE:heal=20
@@ -1006,7 +1050,7 @@ class Battle:
    elif a==49:self._apply_status(side,'burn',source_side=1-side)
    elif a==27:self._apply_status(side,self.c.rng.choice(['sleep','poison','paralysis']),source_side=1-side)
    elif a==56:self._attract(1-side,None,target_side=side)
-  if m.get('heldItemId')==KINGS_ROCK and move.get('flags',0)&FLAG_KINGS_ROCK and self.c.rng.random()<.1:self._flinch(1-side)
+  if self.item_system.held_code(m)==KINGS_ROCK and move.get('flags',0)&FLAG_KINGS_ROCK and self.c.rng.random()<.1:self._flinch(1-side)
 
  def _trapped(self,side):
   m=self.mon(side);v=self.vol(m);enemy=self.mon(1-side);ea=self.ability(enemy)
@@ -1118,7 +1162,7 @@ class Battle:
  def _trick(self,side):
   a=self.mon(side);b=self.mon(1-side)
   if self.ability(a)==60 or self.ability(b)==60 or not (a.get('heldItemId') or b.get('heldItemId')):return self._fail(side)
-  a['heldItemId'],b['heldItemId']=b.get('heldItemId',0),a.get('heldItemId',0);self.logs.append('The held items were switched!')
+  ah,bh=held_snapshot(a),held_snapshot(b);replace_held(a,bh);replace_held(b,ah);self.logs.append('The held items were switched!')
  def _skill_swap(self,side):
   a=self.mon(side);b=self.mon(1-side);aa=self.ability(a);bb=self.ability(b)
   if (not aa and not bb) or aa==25 or bb==25:return self._fail(side)
@@ -1130,7 +1174,7 @@ class Battle:
  def _recycle(self,side):
   m=self.mon(side);v=self.vol(m)
   if m.get('heldItemId') or not v.get('lastItem'):return self._fail(side)
-  m['heldItemId']=v.pop('lastItem');self.logs.append(f'{self.name(m)} recycled its item!')
+  item=v.pop('lastItem');replace_held(m,v.pop('lastItemData',{'heldItemId':item}));self.logs.append(f'{self.name(m)} recycled its item!')
  def _swallow(self,side):
   m=self.mon(side);v=self.vol(m);n=v.get('stockpile',0)
   if not n:return self._fail(side)
@@ -1274,7 +1318,7 @@ class Battle:
     self._direct_hp_loss(side,max(1,self.maxhp(m)//16),'binding');v['wrapTurns']-=1
     if v['wrapTurns']<=0:v.pop('wrapTurns',None);v.pop('trappedBy',None);v.pop('wrappedBy',None)
    if m['hp']>0 and v.get('ingrain'):self._heal(side,max(1,self.maxhp(m)//16),quiet=True)
-   if m['hp']>0 and m.get('heldItemId')==LEFTOVERS:self._heal(side,max(1,self.maxhp(m)//16),quiet=True)
+   if m['hp']>0 and self.item_system.held_code(m)==LEFTOVERS:self._heal(side,max(1,self.maxhp(m)//16),quiet=True)
    if m['hp']>0 and self.ability(m)==3:self._change_stage(side,3,1,source_side=side)
    if m['hp']>0 and self.ability(m)==61 and m['status'] and self.c.rng.randrange(3)==0:
     old=m['status'];m['status']='';m['sleep']=0;self.logs.append(f'{self.name(m)} shed its {old}!')

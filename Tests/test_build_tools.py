@@ -20,6 +20,13 @@ spec.loader.exec_module(builder)
 
 
 class SourceSelectionTests(unittest.TestCase):
+    def test_item_runtime_and_rom_free_sidecar_are_required_in_source_rebuilds(self):
+        self.assertIn("item_mechanics.json", builder.SOURCE_DATA_FILES)
+        for name in ("Server/nxt/items.py", "Server/data/item_mechanics.json", "Tools/item_rules.py", "Tools/extract_item_mechanics.py", "Tools/publish_item_mechanics.py", "Tests/test_item_mechanics.py", "Tests/check_items_browser.py", "Docs/ITEM_GAMEPLAY.md"):
+            self.assertIn(name, builder.REQUIRED_SOURCE)
+            self.assertTrue(builder.is_source_file(PurePosixPath(name)))
+            self.assertTrue((ROOT/name).is_file())
+
     def test_regional_dialogue_sidecars_and_extractors_are_required_and_preserved(self):
         for name in ("kanto_dialogue.json", "johto_dialogue.json"):
             path = "Server/data/" + name
