@@ -62,7 +62,7 @@ SOURCE_DATA_FILES = {
     "world.json", "adventure.json", "adventure_rom.json", "kanto_dialogue.json", "johto_dialogue.json", "centers.json",
     "interior_repairs.json", "interior_maps.json",
     "interior_navigation.json", "learnsets.json",
-    "encounters_firered.json", "encounters_crystal.json", "encounter_bindings.json", "species_additions.json", "varieties.json",
+    "encounters_firered.json", "encounters_crystal.json", "encounter_bindings.json", "species_additions.json", "varieties.json", "battle_mechanics.json",
 }
 REQUIRED_SOURCE = (
     "Server/nxt/varieties.py", "Server/data/varieties.json", "Tools/publish_varieties.py",
@@ -79,7 +79,9 @@ REQUIRED_SOURCE = (
     "Server/server.py", "Server/nxt/store.py", "Server/data/world.json", "Server/requirements.txt",
     "Server/nxt/tls.py", "Server/setup_online.py", "Server/setup_online_gui.py",
     "Server/2b - Configure Online Hosting.cmd", "Tests/test_online_setup.py", "Tests/test_tls_network.py",
-    "Tools/repack_content.py", "Tools/verify_audio.py", "Tests/test_core.py", "Tests/test_network.py",
+    "Tools/repack_content.py", "Tools/verify_audio.py", "Tools/publish_battle_mechanics.py", "Tools/extract_battle_mechanics.py",
+    "Server/data/battle_mechanics.json", "Tests/test_battle_rom_mechanics.py", "Docs/GBA_BATTLE_SYSTEM.md", "Docs/GBA_BATTLE_SYSTEM_TEST_REPORT.md",
+    "Tests/test_core.py", "Tests/test_network.py",
     "Server/nxt/admin_console.py", "Server/nxt/admin_registry.py", "Server/nxt/admin_policy.py", "Server/nxt/admin_store.py",
     "Tests/test_admin_console.py", "Tests/test_admin_network.py", "Tests/test_sqlite_lifecycle.py", "Server/launcher/main_test.go",
     "Docs/LOCAL_ADMIN_CONSOLE.md", "Docs/LOCAL_ADMIN_PROPOSAL_AUDIT.json",

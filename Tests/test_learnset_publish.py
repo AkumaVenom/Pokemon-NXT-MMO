@@ -12,6 +12,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'Tools'))
 from publish_learnsets import apply
+from publish_battle_mechanics import assemble as apply_battle_mechanics
 
 
 def read(relative):
@@ -117,7 +118,17 @@ class PublishedLearnsetTests(unittest.TestCase):
         self.assertEqual(len(self.world['moves']), 361)
         for key, variant in self.audit['moveOverrides'].items():
             with self.subTest(move=key):
-                self.assertEqual(self.world['moves'][key], variant)
+                published = self.world['moves'][key]
+                # The learnset publisher owns the recovered Sigma identity fields,
+                # while v0.6.8 deliberately layers ROM-audited battle metadata
+                # (flags/effect name/provenance) onto every published move.  Keep
+                # the original override contract exact without rejecting those
+                # additive battle fields.
+                for field, value in variant.items():
+                    self.assertEqual(published.get(field), value, field)
+                self.assertEqual(published['flags'], variant['sourceFlags'])
+                self.assertEqual(published['battleProvenance']['source'], 'johto')
+                self.assertEqual(published['battleProvenance']['sourceMoveId'], variant['sourceMoveId'])
                 self.assertEqual(variant['id'], 1024 + variant['sourceMoveId'])
                 self.assertEqual(variant['source'], 'johto')
         # Names do not authorize a Fairy conversion absent source engine proof.
@@ -151,9 +162,14 @@ class PublishedLearnsetTests(unittest.TestCase):
 
     def test_republication_does_not_remap_variants_a_second_time(self):
         # Exclude map grids and assets: this is an in-memory publication check.
-        reduced = copy.deepcopy({key: self.world[key] for key in ['species', 'moves', 'adventureRom', 'learnsets']})
+        reduced = copy.deepcopy({key: self.world[key] for key in ['species', 'moves', 'adventureRom', 'learnsets', 'battleMechanics']})
         before = copy.deepcopy(reduced)
         apply(reduced, ROOT)
+        # Normal v0.6.8 publication deliberately reapplies the ROM battle
+        # layer after learnsets rebuild the Sigma alias records.  Exercise the
+        # same ordered pipeline here so the idempotency contract matches the
+        # actual build.
+        apply_battle_mechanics(reduced, ROOT)
         self.assertEqual(reduced, before)
 
 

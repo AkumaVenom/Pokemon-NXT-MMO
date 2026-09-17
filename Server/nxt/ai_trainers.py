@@ -1342,15 +1342,38 @@ class AutonomousTrainers:
         usable = battle.usable(mon)
         if not usable:
             return -1
+
+        # ``Battle.usable`` indexes the *current battle move list*, not always
+        # the persistent creature list. Transform replaces the battler's moves
+        # for the remainder of the battle and Mimic can also install a temporary
+        # override. Indexing ``mon['moves']`` here therefore crashes whenever an
+        # autonomous battler transforms from a short native move list (Ditto is
+        # the common case) into a foe with more move slots. Always score the same
+        # authoritative move view that the battle engine validated.
+        active_moves = battle._moves(mon)
+        attacker_types = battle.types(mon)
+        defender_types = battle.types(enemy)
         scored = []
         for slot in usable:
-            move = self.c.moves[str(mon['moves'][slot]['id'])]
+            # ``usable`` and ``active_moves`` are produced by the same Battle
+            # state, but keep this guard so malformed transient state can never
+            # turn one autonomous battle into a world-tick exception.
+            if slot < 0 or slot >= len(active_moves):
+                continue
+            entry = active_moves[slot]
+            move = self.c.moves.get(str(entry.get('id')))
+            if not move:
+                continue
             power = move.get('power', 0) or 0
-            mult = matchup(move.get('type', 0), self.c.species[enemy['species']]['types']) if power else .2
-            stab = 1.35 if move.get('type') in self.c.species[mon['species']]['types'] else 1.0
+            mult = matchup(move.get('type', 0), defender_types) if power else .2
+            stab = 1.35 if move.get('type') in attacker_types else 1.0
             score = max(1, power) * max(.05, mult) * stab + self.c.rng.random() * 12
             scored.append((score, slot))
-        return max(scored)[1]
+
+        # Under normal invariants every usable slot is scored. Falling back to
+        # the first already-validated slot is safer than raising from the 10 Hz
+        # world tick if a future temporary-move mechanic changes that invariant.
+        return max(scored)[1] if scored else usable[0]
 
     def _wild_action(self, bot, battle):
         mon = battle.mon(0)
@@ -1392,7 +1415,8 @@ class AutonomousTrainers:
         battle = Battle(
             self.c, 'wild', [bot['id'], None], [bot['username'], 'Wild ' + self.c.varieties.display_name(enemy)],
             [party, [enemy]], [copy.deepcopy(state.get('items', {})), {}],
-            self.s.int('gameplay', 'battle_turn_seconds'), audio_source=m['id'].split('_', 1)[0])
+            self.s.int('gameplay', 'battle_turn_seconds'), audio_source=m['id'].split('_', 1)[0],
+            terrain=self.w.battle_terrain(state))
         exp_awards = collections.Counter()
         turns = 0
         while not battle.ended and turns < 64:
@@ -1761,7 +1785,8 @@ class AutonomousTrainers:
                 self.c.heal(m)
             b = Battle(
                 self.c, 'duel', [p.id, None], [p.username, bot_name], [self.w.party(p), roster], [{}, {}],
-                self.s.int('gameplay', 'battle_turn_seconds'), audio_source=p.state['map'].split('_', 1)[0])
+                self.s.int('gameplay', 'battle_turn_seconds'), audio_source=p.state['map'].split('_', 1)[0],
+                terrain=self.w.battle_terrain(p.state))
             b.ai_trainer_id = ai_id
             self.w.battles[b.id] = b
             p.battle = b.id

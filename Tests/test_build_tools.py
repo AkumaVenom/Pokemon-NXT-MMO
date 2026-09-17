@@ -31,6 +31,17 @@ class SourceSelectionTests(unittest.TestCase):
             self.assertIn(path, builder.REQUIRED_SOURCE)
             self.assertTrue(builder.is_source_file(PurePosixPath(path)))
 
+    def test_rom_battle_sidecar_publishers_and_regressions_are_required(self):
+        path = "Server/data/battle_mechanics.json"
+        self.assertIn("battle_mechanics.json", builder.SOURCE_DATA_FILES)
+        self.assertIn(path, builder.REQUIRED_SOURCE)
+        self.assertTrue(builder.is_source_file(PurePosixPath(path)))
+        self.assertTrue((ROOT / path).is_file())
+        for source in ("Tools/publish_battle_mechanics.py", "Tools/extract_battle_mechanics.py",
+                       "Tests/test_battle_rom_mechanics.py", "Docs/GBA_BATTLE_SYSTEM.md", "Docs/GBA_BATTLE_SYSTEM_TEST_REPORT.md"):
+            self.assertIn(source, builder.REQUIRED_SOURCE)
+            self.assertTrue(builder.is_source_file(PurePosixPath(source)))
+
     def test_regional_encounter_republish_sidecars_are_required_and_preserved(self):
         names = ("encounters_firered.json", "encounters_crystal.json", "encounter_bindings.json", "species_additions.json")
         for name in names:

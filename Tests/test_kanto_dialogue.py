@@ -42,7 +42,7 @@ class PublishedKantoDialogueTests(unittest.TestCase):
         cls.entries = {key: entry for key, entry in cls.world["npcDialogue"]["entries"].items() if key.startswith("kanto_")}
 
     def test_reviewed_firered_provenance_and_release_version_are_published(self):
-        self.assertEqual(self.world["version"], "0.6.7-alpha")
+        self.assertEqual(self.world["version"], "0.6.8-alpha")
         self.assertEqual(self.world["npcDialogue"]["format"], 2)
         self.assertEqual(self.sidecar["source"]["sha256"], FIRERED_SHA)
         self.assertEqual(self.sidecar["source"]["size"], 16777216)

@@ -66,6 +66,31 @@ class World:
   for cb in self.extension_hooks.get(event,[]):
    try:cb(self,**context)
    except Exception:log.exception('Extension hook failed: %s',event)
+ def battle_terrain(self,state):
+  """Resolve FRLG battle terrain from the player's authoritative current tile.
+
+  Nature Power, Secret Power and Camouflage use the GBA terrain table. The
+  imported map behavior byte is preferred over names; map type and reviewed
+  names are only conservative fallbacks for maps without a diagnostic tile.
+  """
+  m=self.c.maps[state['map']];name=m.get('name','').lower();kind=int(m.get('mapType',0))
+  if kind==5:return 'underwater'
+  x=state.get('x');y=state.get('y');width=int(m.get('width',0));height=int(m.get('height',0));behavior=m.get('behavior',[])
+  tile=None
+  if type(x) is int and type(y) is int and 0<=x<width and 0<=y<height and len(behavior)>=width*height:tile=int(behavior[y*width+x])
+  if tile in (0x02,0xD1):return 'grass'
+  if tile in (0x08,0x2B):return 'cave'
+  if tile==0x0C:return 'mountain'
+  if tile==0x10:return 'pond'
+  if tile in (0x11,0x12,0x13,0x15,0x16,0x17,0x1A,0x1B):return 'water'
+  if tile in (0x19,0x22):return 'underwater'
+  if tile==0x21:return 'sand'
+  if state.get('surf'):return 'water'
+  if kind==4 or any(x in name for x in ('cave','tunnel','cavern','rock tunnel','mt. moon','victory road','ice path','dark cave','union cave','whirl islands','slowpoke well')):return 'cave'
+  if any(x in name for x in ('mountain','mt. silver','mt. ember')):return 'mountain'
+  if any(x in name for x in ('beach','desert','sand')):return 'sand'
+  if kind in (8,9,14) or any(x in name for x in ('center','mart','gym','house','lab','tower','gate','building','department store','game corner','dojo','museum','school','radio tower')):return 'building'
+  return 'plain'
  def initial(self,name,home,starter,appearance):
   require(isinstance(home,str) and home in self.c.data['homes'],'Select Kanto or Johto.');require(isinstance(starter,str) and starter in self.c.data['starters'],'Select a valid starter.');require(type(appearance) is int and appearance in (0,7),'Invalid trainer appearance.')
   key=self.c.data['homes'][home];m=self.c.maps[key];mon=self.c.new_mon(starter,5,name)
@@ -213,7 +238,7 @@ class World:
    require(bool(slots),'No wild encounters here. Try the grass, a cave floor, or an eligible Surf area on this map.')
    key,level=select_encounter(slots,self.c.rng)
   else:key,level=forced # Internal test/extension hook only; never accepted from a client packet.
-  enemy=self.c.new_mon(key,level,variety=self.c.varieties.roll(key));state=copy.deepcopy(p.state);self.adventure.observe(state,[key]);self.c.varieties.observe(state,[enemy]);await self.commit(p,state);b=Battle(self.c,'wild',[p.id,None],[p.username,'Wild '+self.c.varieties.display_name(enemy)],[self.party(p),[enemy]],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0]);self.battles[b.id]=b;p.battle=b.id;p.last_encounter=time.monotonic();p.send('battle',battle=b.view(0))
+  enemy=self.c.new_mon(key,level,variety=self.c.varieties.roll(key));state=copy.deepcopy(p.state);self.adventure.observe(state,[key]);self.c.varieties.observe(state,[enemy]);await self.commit(p,state);b=Battle(self.c,'wild',[p.id,None],[p.username,'Wild '+self.c.varieties.display_name(enemy)],[self.party(p),[enemy]],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0],terrain=self.battle_terrain(p.state));self.battles[b.id]=b;p.battle=b.id;p.last_encounter=time.monotonic();p.send('battle',battle=b.view(0))
  async def battle_action(self,p,d):
   require(p.battle in self.battles,'You are not in a battle.');b=self.battles[p.battle];require(d.get('id')==b.id,'That battle has ended.');side=b.players.index(p.id)
   if d.get('action')=='capture':require(len(p.state['creatures'])<self.s.max_owned,'Your collection is full. Make room before capturing.')
@@ -251,6 +276,8 @@ class World:
        if count>before_items.get(item,0) and self.c.items.get(item,{}).get('keyItem'):b.logs.append('Received '+self.c.items[item]['name']+'! It was placed in your Key Items and saved to this character.')
       b.logs.append('First victory recorded. Your reward and badge progress were saved.' if first else 'Rematch complete. First-victory rewards and EXP are not awarded again.')
      elif not b.caught:state['money']=min(2_000_000_000,state['money']+(120 if b.kind=='trainer' else 25))
+     if b.payday:
+      coins=max(0,int(b.payday));state['money']=min(2_000_000_000,state['money']+coins);b.logs.append(f'Picked up {coins} in Pay Day coins.')
      b.rewarded=True
     self.adventure.observe(state,[m['species'] for m in state['creatures']],caught=True);self.c.varieties.observe(state,state['creatures'],caught=True)
     if b.ended and b.winner==1:
@@ -270,7 +297,11 @@ class World:
     b.ended=True;b.winner=None;b.caught=None;b.logs=['Database save failed. This turn was not applied. The battle has been safely closed.'];newstates={};audio_committed=False;b.reset_audio();b.audio('abort',reason='save_failed')
   if b.ended and audio_committed:
    if getattr(b,'ai_trainer_id',None):await self.autonomous.finish_human_battle(b)
-   b.audio('battle_end')
+   # Combat owns the single battle_end event. Rewards are appended by World
+   # only after a durable commit, so keep that existing result cue last without
+   # manufacturing a duplicate or changing its stable event id.
+   endings=[e for e in b.audio_events if e.get('cue')=='battle_end']
+   if endings:b.audio_events[:]=[e for e in b.audio_events if e.get('cue')!='battle_end']+endings
   for side,pid in enumerate(b.players):
    p=self.players.get(pid)
    if not p:continue
@@ -293,7 +324,7 @@ class World:
   require(inv['kind']!='trade' or not (p.trade_blocked or q.trade_blocked),'Trading is restricted for one of these accounts.')
   if inv['kind']=='challenge':
    require(all(any(m['hp']>0 for m in self.party(t)) for t in (q,p)),'Both trainers need at least one healthy Pokemon.')
-   b=Battle(self.c,'duel',[q.id,p.id],[q.username,p.username],[self.party(q),self.party(p)],[{},{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=p.state['map'].split('_',1)[0]);self.battles[b.id]=b;q.battle=b.id;p.battle=b.id;q.send('battle',battle=b.view(0));p.send('battle',battle=b.view(1))
+   b=Battle(self.c,'duel',[q.id,p.id],[q.username,p.username],[self.party(q),self.party(p)],[{},{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=p.state['map'].split('_',1)[0],terrain=self.battle_terrain(p.state));self.battles[b.id]=b;q.battle=b.id;p.battle=b.id;q.send('battle',battle=b.view(0));p.send('battle',battle=b.view(1))
   else:
    tid=str(uuid.uuid4());t={'id':tid,'players':[q.id,p.id],'offers':{q.id:{'pokemon':[],'items':{},'money':0},p.id:{'pokemon':[],'items':{},'money':0}},'ready':set(),'confirmed':set(),'revision':0,'deadline':time.monotonic()+self.s.int('gameplay','trade_timeout_seconds')};self.trades[tid]=t;q.trade=tid;p.trade=tid;self.send_trade(t)
  def trade_digest(self,t):return hashlib.sha256(json.dumps(t['offers'],sort_keys=True,separators=(',',':')).encode()).hexdigest()
@@ -390,7 +421,7 @@ class World:
    enemy=self.c.new_mon(event['species'],event['level'],variety=event.get('variety','normal'))
    if event.get('moves'):enemy['moves']=[{'id':mid,'pp':self.c.moves[str(mid)]['pp']} for mid in event['moves']]
    state=copy.deepcopy(p.state);self.adventure.observe(state,[enemy['species']]);self.c.varieties.observe(state,[enemy]);await self.commit(p,state)
-   b=Battle(self.c,'wild',[p.id,None],[p.username,'Wild '+self.c.varieties.display_name(enemy)],[self.party(p),[enemy]],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0]);b.story_event=event['id'];b.story_map=m['id'];b.story_npc=o['id'];self.battles[b.id]=b;p.battle=b.id;p.last_encounter=time.monotonic();p.send('battle',battle=b.view(0));return
+   b=Battle(self.c,'wild',[p.id,None],[p.username,'Wild '+self.c.varieties.display_name(enemy)],[self.party(p),[enemy]],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0],terrain=self.battle_terrain(p.state));b.story_event=event['id'];b.story_map=m['id'];b.story_npc=o['id'];self.battles[b.id]=b;p.battle=b.id;p.last_encounter=time.monotonic();p.send('battle',battle=b.view(0));return
   require(action in (None,'talk'),'This object only supports its story interaction.')
   if done:message='The strange tree is gone. Route 36 is permanently clear for your character.'
   elif not badge_earned:message='This odd tree will not budge. Defeat '+event['leader']+' in '+event['city']+' and earn the '+event['requiredBadgeName']+' before dealing with it.'
@@ -415,11 +446,11 @@ class World:
    if action=='battle':
     self.adventure.can_challenge(p.state,trainer);require(any(mon['hp']>0 for mon in self.party(p)),'Your party needs healing.');team=[]
     for member in trainer['team']:
-     enemy=self.c.new_mon(member['species'],member['level'],trainer['name'],variety='normal');iv=max(0,min(255,int(member.get('iv',0))))*31//255;enemy.update(ivs=[iv]*6,nature=0,shiny=False);self.c.heal(enemy);moves=[mid for mid in member.get('moves',[]) if str(mid) in self.c.moves]
+     enemy=self.c.new_mon(member['species'],member['level'],trainer['name'],variety='normal');iv=max(0,min(255,int(member.get('iv',0))))*31//255;enemy.update(ivs=[iv]*6,nature=0,shiny=False,heldItemId=max(0,int(member.get('heldItemId',0) or 0)));self.c.heal(enemy);moves=[mid for mid in member.get('moves',[]) if str(mid) in self.c.moves]
      if moves:enemy['moves']=[{'id':mid,'pp':self.c.moves[str(mid)]['pp']} for mid in moves[:4]]
      team.append(enemy)
     require(bool(team),'This trainer team is unavailable.');state=copy.deepcopy(p.state);self.adventure.observe(state,[mon['species'] for mon in team]);self.c.varieties.observe(state,team);await self.commit(p,state)
-    b=Battle(self.c,'trainer',[p.id,None],[p.username,trainer['name']],[self.party(p),team],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0]);b.adventure_trainer=trainer;self.battles[b.id]=b;p.battle=b.id;p.send('battle',battle=b.view(0));return
+    b=Battle(self.c,'trainer',[p.id,None],[p.username,trainer['name']],[self.party(p),team],[p.state['items'],{}],self.s.int('gameplay','battle_turn_seconds'),audio_source=m['id'].split('_',1)[0],terrain=self.battle_terrain(p.state));b.adventure_trainer=trainer;self.battles[b.id]=b;p.battle=b.id;p.send('battle',battle=b.view(0));return
    require(action in (None,'talk'),'Choose a trainer interaction.');defeated=trainer['id'] in p.state['adventure']['trainers'];gym=self.adventure.gym(trainer);summary=', '.join(f'{self.c.species[t["species"]]["name"]} Lv. {t["level"]}' for t in trainer['team']);message=('Gym challenge. ' if gym else 'Trainer challenge. ')+summary+(' Rematch: no repeat EXP, money or badge rewards.' if defeated else 'Your first victory earns a permanent record and a reward.');p.send('dialog',title=trainer['name'],message=message,actions=['battle'],npc=nid);return
   require(action in (None,'talk'),'This character does not offer that service.')
   if o['graphics']==68:p.send('dialog',title='Poke Mart',message=rom_message or 'Welcome! Purchase supplies for your adventure from the Bag panel.',actions=['shop'],npc=nid)

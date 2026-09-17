@@ -58,7 +58,12 @@ class Content:
    if str(mid) in self.moves and mid not in ids:
     if len(ids)==4:ids.pop(0)
     ids.append(mid)
-  mon={'uid':str(uuid.uuid4()),'species':key,'level':level,'exp':self.xp(level,s['growth']),'ivs':[self.rng.randrange(32) for _ in range(6)],'nature':self.rng.randrange(25),'originalTrainer':owner,'variety':variety,'shiny':variety=='shiny','status':'','sleep':0,'moves':[{'id':mid,'pp':self.moves[str(mid)]['pp']} for mid in ids[-4:]]}
+  personality=self.rng.randrange(1<<32)
+  held=0
+  if owner=='Wild':
+   common,rare=(s.get('heldItems') or [0,0])[:2];roll=self.rng.randrange(100)
+   held=rare if rare and roll<5 else common if common and roll<55 else 0
+  mon={'uid':str(uuid.uuid4()),'species':key,'level':level,'exp':self.xp(level,s['growth']),'ivs':[self.rng.randrange(32) for _ in range(6)],'nature':self.rng.randrange(25),'personality':personality,'friendship':int(s.get('baseFriendship',70)),'heldItemId':held,'originalTrainer':owner,'variety':variety,'shiny':variety=='shiny','status':'','sleep':0,'moves':[{'id':mid,'pp':self.moves[str(mid)]['pp']} for mid in ids[-4:]]}
   mon['hp']=self.stats(mon)[0];self.growth.ensure(mon);self.growth.stamp_move_namespace(mon);return mon
  def gain_xp(self,mon,amount):
   self.growth.ensure(mon);s=self.species[mon['species']];old=mon['level'];oldhp=self.stats(mon)[0];hp=mon['hp']

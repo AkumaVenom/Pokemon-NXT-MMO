@@ -1,7 +1,7 @@
-"""Renamed Sigma moves retain their source identity and bounded ROM effects.
+"""ROM-backed FireRed/Sigma move records keep source identity and mechanics.
 
-These exercise real turn resolution with deterministic damage/RNG. They verify
-the shipped alpha interpretation of the audited table, not full ROM emulation.
+These exercise real turn resolution with deterministic damage/RNG. Sigma aliases
+retain their native table records while canonical IDs use FireRed Rev-1 records.
 """
 from __future__ import annotations
 
@@ -17,7 +17,6 @@ sys.path.insert(0, str(ROOT / 'Server'))
 from nxt.combat import Battle
 from nxt.varieties import Varieties
 from nxt.content import Content
-from nxt.security import RequestError
 
 
 class SigmaMoveTests(unittest.TestCase):
@@ -56,7 +55,11 @@ class SigmaMoveTests(unittest.TestCase):
                 self.assertIn(int(key), learned)
                 self.assertEqual(move['id'], 1024 + move['sourceMoveId'])
                 self.assertEqual(move['source'], 'johto')
-                self.assertEqual(self.c.moves.get(key), move)
+                runtime = self.c.moves[key]
+                for field, value in move.items():
+                    self.assertEqual(runtime[field], value)
+                self.assertEqual(runtime['battleProvenance']['source'], 'johto')
+                self.assertEqual(runtime['battleProvenance']['sourceMoveId'], move['sourceMoveId'])
                 battle = self.battle(int(key))
                 self.assertEqual(battle.usable(battle.mon(0)), [0])
                 self.turn(battle)
@@ -85,18 +88,35 @@ class SigmaMoveTests(unittest.TestCase):
         self.assertEqual(self.c.moves['210']['name'], 'Fury Cutter')
         self.assertEqual(self.c.moves['210']['power'], 10)
 
-    def test_terastallize_uses_source_special_category_and_priority(self):
+    def test_terastallize_uses_source_hidden_power_mechanics_and_priority(self):
         battle = self.battle(1261)
+        move = self.c.moves['1261']
+        self.assertEqual(move['effect'], 135)
+        self.assertEqual(move['priority'], 1)
+        resolved_type, resolved_power = battle._power_type(0, move, move['effect'])
+        self.assertIn(resolved_type, set(range(1, 9)) | set(range(10, 18)))
+        self.assertGreaterEqual(resolved_power, 30)
+        self.assertLessEqual(resolved_power, 70)
+
         lead_uid = battle.mon(0)['uid']
         self.c.stats = lambda m: [500, 20, 100, 1 if m['uid'] == lead_uid else 200, 200, 100]
         battle.mon(0)['status'] = 'burn'
+        before = battle.mon(1)['hp']
         self.turn(battle)
-        self.assertEqual(battle.mon(1)['hp'], 393)
-        self.assertEqual(self.c.moves['1261']['priority'], 1)
+        burned_damage = before - battle.mon(1)['hp']
+
+        clean = self.battle(1261)
+        # Hidden Power's native type and power derive from IVs; hold those
+        # constant so this comparison isolates Gen-III burn/category behavior.
+        clean.mon(0)['ivs'] = battle.mon(0)['ivs'][:]
+        clean_uid = clean.mon(0)['uid']
+        self.c.stats = lambda m: [500, 20, 100, 1 if m['uid'] == clean_uid else 200, 200, 100]
+        before = clean.mon(1)['hp']
+        self.turn(clean)
+        self.assertEqual(burned_damage, before - clean.mon(1)['hp'])
         self.assertEqual(next(e for e in battle.audio_events if e['cue'] == 'move')['side'], 0)
-        self.assertEqual(battle.mon(0)['species'], 'fr_1')
         self.assertEqual(self.c.moves['237']['name'], 'Hidden Power')
-        self.assertEqual(self.c.moves['237']['power'], 1)
+        self.assertEqual(self.c.moves['237']['effect'], 135)
 
     def test_special_hits_preserve_native_type_nine_and_category(self):
         for mid in (1318, 1319):
@@ -178,13 +198,18 @@ class SigmaMoveTests(unittest.TestCase):
                 self.assertFalse(any(e['cue'] == 'recover' for e in battle.audio_events))
                 self.assertIn('But it failed!', battle.logs)
 
-    def test_native_variants_do_not_enable_canonical_status_names(self):
-        for mid in (294, 297, 346):
-            with self.subTest(move=mid):
-                battle = self.battle(mid)
-                self.assertEqual(battle.usable(battle.mon(0)), [])
-                with self.assertRaises(RequestError):
-                    battle.choose(0, {'action': 'attack', 'slot': 0})
+    def test_canonical_tail_glow_featherdance_and_water_sport_are_enabled(self):
+        tail_glow = self.battle(294)
+        self.turn(tail_glow)
+        self.assertEqual(tail_glow.tiers(tail_glow.mon(0))[4], 2)
+
+        featherdance = self.battle(297)
+        self.turn(featherdance)
+        self.assertEqual(featherdance.tiers(featherdance.mon(1))[1], -2)
+
+        water_sport = self.battle(346)
+        self.turn(water_sport)
+        self.assertTrue(water_sport.vol(water_sport.mon(0)).get('waterSport'))
 
 
 if __name__ == '__main__':

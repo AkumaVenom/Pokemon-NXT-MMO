@@ -1,5 +1,17 @@
 # Pokemon NXT MMO
 
+### GBA battle system completion — ROM-backed FireRed/Sigma move mechanics
+
+The **0.6.8-alpha GBA Battle System Completion** replaces the earlier partial singles move-effect layer with a server-authoritative Gen-III implementation driven by reviewed FireRed Rev 1 and Ultra Shiny Gold Sigma 1.5.0 battle metadata. `Tools/extract_battle_mechanics.py` hash-verifies both source ROMs and statically publishes **361 selectable move records** — all 354 canonical FireRed moves plus 7 separately identified Sigma aliases — representing **198 active move-effect IDs** in NXT's published move corpus. The ROMs remain development inputs only and are not shipped or required for a normal build.
+
+Executed battle-system validation is recorded in `Docs/GBA_BATTLE_SYSTEM_TEST_REPORT.md`.
+
+**0.6.8 autonomous-battle hotfix:** autonomous attack selection now reads the battle engine's current temporary move view after Transform/Mimic instead of indexing only the creature's persistent move list. This fixes the reported `IndexError` that could make the 10 Hz world tick log repeated failures when a one-move Ditto transformed into a four-move opponent. Bot persistence/performance architecture and all player battle mechanics remain unchanged. See `Docs/GBA_BATTLE_SYSTEM.md` and `Docs/GBA_BATTLE_SYSTEM_TEST_REPORT.md`.
+
+The runtime now covers the active move-effect families used by that corpus, including status/volatile state, stat stages, weather/screens, multi-hit/fixed/variable/OHKO damage, recoil/drain, two-turn/repeating moves, copy/call moves, Protect/Endure/Substitute, Future Sight/Wish/Yawn, terrain-driven Nature Power/Secret Power/Camouflage, Hidden Power, held-item interactions and the reviewed Sigma aliases. Source-specific corrections include FireRed Psywave and Present distributions, strict OHKO threshold, lower-level wild Roar/Whirlwind behavior, copy/call exclusions and exact rounded accuracy stages. NXT remains a singles MMO rather than a cycle-perfect GBA emulator: doubles-only Follow Me/Helping Hand cleanly fail, and 491 hack-expanded Sigma identities have an explicitly unresolved exact Low Kick weight rather than a guessed ROM mapping. See `Docs/GBA_BATTLE_SYSTEM.md`.
+
+All accepted v0.6.7 Kanto dialogue, v0.6.6 Johto dialogue/portal repairs, v0.6.5 Sudowoodo progression and v0.6.4 autonomous-trainer performance/evolution behavior are preserved. No database wipe, account reset or bot reset is required.
+
 ### Kanto / FireRed NPC dialogue restoration — reviewed Rev 1 GBA talk text
 
 The **0.6.7-alpha Kanto FireRed NPC Dialogue Restoration** adds **642 validated static dialogue bindings for ordinary Kanto NPCs** recovered from the exact reviewed FireRed Rev 1 ROM. The audit covers all **1,620 visible FireRed object events** and narrows publication to **669 ordinary person-NPC objects**; 498 item/Pokémon/field actors, 413 resolved trainer bindings and 40 trainer-type objects are deliberately excluded. Trainers and Gym Leaders therefore keep NXT's existing Pokémon species/level preview and battle action, while all 20 Kanto Pokémon Center nurses and the audited Poké Mart clerks retain their services and now use their FireRed greeting where available.
@@ -20,7 +32,7 @@ The **0.6.5-alpha Route 36 Sudowoodo Story** update turns the existing odd-tree 
 
 This update is additive to the accepted **0.6.4-alpha Autonomous Trainer Performance Hardening** baseline. The 2,000-bot population, in-memory authority, batched persistence, ranked/off-screen simulation, captures, travel and bot evolution remain unchanged. The movement hot path evaluates environmental blockers in one bounded object pass so the new story collision does not reintroduce whole-object-list scan amplification for human or autonomous movement. See `Docs/ROUTE36_SUDOWOODO.md` and `Docs/ROUTE36_SUDOWOODO_TEST_REPORT.md` for the progression, security/persistence contract and executed validation.
 
-## 0.6.7-alpha · Kanto FireRed NPC Dialogue Restoration · Build tools 1.4.1
+## 0.6.8-alpha · GBA Battle System Completion · Build tools 1.4.1
 
 **Preserved Windows/build and performance corrections:** the ordinary-user Windows source builder still closes temporary SQLite probe connections correctly, retains CRLF launcher contracts and schema-3 lease protection. The accepted 0.6.4 autonomous-performance architecture remains intact; this release adds no SQL schema bump and requires no bot or player reset.
 
@@ -30,7 +42,7 @@ Use `help`, `who`, `help givepokemon`, `team TrainerName` and `species Pikachu` 
 
 **Chat commands are intentionally excluded**, including announce, broadcast, mute and whisper. Unsupported gameplay systems are not exposed as pretend commands. See **`Docs/LOCAL_ADMIN_CONSOLE.md`** for the complete command reference, configuration, safety model, examples, upgrade and rollback instructions; **`Docs/LOCAL_ADMIN_PROPOSAL_AUDIT.md`** maps every proposal row to its implementation or explicit exclusion. Current executed checks are recorded in **`Docs/LOCAL_ADMIN_TEST_REPORT.md`**.
 
-**Upgrade:** back up the database and configured deployment, stop the old server, then deploy matching rebuilt Client and Server. Schema 3 remains authoritative; this update adds no new SQL schema version. The preserved 0.6.4 performance migration keeps its idempotent activity index, and the preserved 0.6.5 update adds only character-save story/key-item fields. Versions 0.6.6 and 0.6.7 add immutable regional dialogue content only and no new save/database fields. Existing Plain Badge owners receive the SquirtBottle additively when their save is validated; accounts without the badge are unchanged until they defeat Whitney. Existing accounts, autonomous identities, bot Pokémon, ratings, rivalries and activity history are preserved. Preserve your configurations and certificates; do not rerun MySQL setup for this update.
+**Upgrade:** back up the database and configured deployment, stop the old server, then deploy matching rebuilt Client and Server. Schema 3 remains authoritative; this update adds no new SQL schema version. The preserved 0.6.4 performance migration keeps its idempotent activity index, and the preserved 0.6.5 update adds only character-save story/key-item fields. Versions 0.6.6 and 0.6.7 add immutable regional dialogue content. Version 0.6.8 adds battle metadata/runtime behavior and additive per-Pokémon fields for newly created creatures without changing SQL schema; older saved Pokémon remain compatible through stable/default fallbacks. Existing Plain Badge owners receive the SquirtBottle additively when their save is validated; accounts without the badge are unchanged until they defeat Whitney. Existing accounts, autonomous identities, bot Pokémon, ratings, rivalries and activity history are preserved. Preserve your configurations and certificates; do not rerun MySQL setup for this update.
 
 The accepted **1.3.4 standard-user Windows build correction is preserved**: the variety publisher tests use isolated real sprite copies, not privileged links. No Developer Mode, elevated console, dependency downgrade or skipped variety checks is needed. Its historical repair guide is `Docs/WINDOWS_BUILD_FIX_1.3.4.md`.
 
@@ -64,7 +76,7 @@ The previous update corrected level-up learning across all 876 then-published Po
 
 **Cyndaquil learns Ember at level 12 in both supplied ROMs.** Its summary now shows the complete native level-up list and next move. Open a Pokémon from **P → Party & storage**, then use **Move Reminder** to recover eligible current-species moves. Replacing a move requires your confirmation. See `Docs/LEARNSET_GUIDE.md`, `Docs/LEARNSET_ROM_AUDIT.md` and `Docs/LEARNSET_TEST_REPORT.md`.
 
-**Download all FOUR full-source ZIPs, Parts 1–4. Extract every part into the same destination so the identically named `Pokemon_NXT_MMO_v0.6.7-alpha_Source_KantoFireRedNpcDialogue` folders merge, then run `BUILD_ALL.bat`.** These are ordinary mergeable ZIPs, not byte-split volumes: do not concatenate them. All four parts are required and together contain the complete source and assets. No previous pack, original ROM, images.rar, Pillow, FFmpeg or audio renderer is needed for a normal build.
+**Download all FOUR full-source ZIPs, Parts 1–4. Extract every part into the same destination so the identically named `Pokemon_NXT_MMO_v0.6.8-alpha_Source_GbaBattleSystemCompletion` folders merge, then run `BUILD_ALL.bat`.** These are ordinary mergeable ZIPs, not byte-split volumes: do not concatenate them. All four parts are required and together contain the complete source and assets. No previous pack, original ROM, images.rar, Pillow, FFmpeg or audio renderer is needed for a normal build.
 
 ### Play the adventure
 

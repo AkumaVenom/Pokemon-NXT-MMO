@@ -1,11 +1,17 @@
 # Pokemon NXT MMO — automatic all-in-one source build
 
 
-**Download all FOUR source ZIPs:** `Pokemon_NXT_MMO_v0.6.7-alpha_Source_KantoFireRedNpcDialogue_Part1.zip`, `Part2.zip`, `Part3.zip` and `Part4.zip` (all share the same prefix). Extract each ordinary ZIP into the same destination, merging the identically named `Pokemon_NXT_MMO_v0.6.7-alpha_Source_KantoFireRedNpcDialogue` folders. Do not concatenate the ZIP files. Run `BUILD_ALL.bat` only after all four parts are extracted. The four parts contain the complete source and assets; no earlier source pack or optional patch is required.
+**Download all FOUR source ZIPs:** `Pokemon_NXT_MMO_v0.6.8-alpha_Source_GbaBattleSystemCompletion_AutonomousBattleHotfix_Part1.zip`, `Part2.zip`, `Part3.zip` and `Part4.zip` (all share the same prefix). Extract each ordinary ZIP into the same destination, merging the identically named `Pokemon_NXT_MMO_v0.6.8-alpha_Source_GbaBattleSystemCompletion` folders. Do not concatenate the ZIP files. Run `BUILD_ALL.bat` only after all four parts are extracted. The four parts contain the complete source and assets; no earlier source pack or optional patch is required.
 
-Gameplay **0.6.7-alpha** · Build tools **1.4.1** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
+Gameplay **0.6.8-alpha** · Build tools **1.4.1** · Online setup **1.2.2** · MySQL setup **1.1.0** · World startup fix **1.1.2**
 
 The full source includes the extracted FireRed and Sigma music, sound effects and cries. `BUILD_ALL.bat` verifies and packages these files; it does not extract them again. **No ROM, FFmpeg or C++ audio-renderer build is needed for a normal build.**
+
+## GBA battle system completion · 0.6.8-alpha
+
+The authoritative singles battle runtime now consumes the bundled ROM-audited battle metadata for all **354 canonical FireRed moves plus 7 reviewed Sigma aliases**. All 361 published moves are executable through the same server turn resolver; the active effect corpus covers 198 source effect IDs. The release adds exact reviewed handling for important Gen-III edge cases such as Psywave, Present, OHKO thresholds, lower-level wild Roar/Whirlwind, copy/call restrictions, Protect/Endure chaining and terrain-driven Nature Power/Secret Power/Camouflage.
+
+The supplied FireRed/Sigma ROMs are **not required for a normal build and are not included**. `Server/data/battle_mechanics.json` contains the reviewed generated metadata and provenance. This remains a server-authoritative single-battle MMO rather than a cycle-perfect cartridge emulator; explicit limitations are documented in `Docs/GBA_BATTLE_SYSTEM.md`, with executed validation in `Docs/GBA_BATTLE_SYSTEM_TEST_REPORT.md`. No SQL schema bump, player reset or bot reset is required.
 
 ## Kanto / FireRed NPC dialogue restoration · 0.6.7-alpha
 
@@ -31,7 +37,7 @@ This release is built directly on the accepted 0.6.4 long-uptime autonomous-perf
 
 ## Windows build repair · 1.4.1
 
-**Windows build correction (1.4.1):** Explicitly close temporary SQLite probe connections; this fixes the reported `WinError 32` in the schema/lease regression without disabling it or changing the server. See `Docs/WINDOWS_BUILD_FIX_1.4.1.md` and its test report. That historical repair remains preserved; current gameplay uses schema 3 and the current 0.6.7 content pack.
+**Windows build correction (1.4.1):** Explicitly close temporary SQLite probe connections; this fixes the reported `WinError 32` in the schema/lease regression without disabling it or changing the server. See `Docs/WINDOWS_BUILD_FIX_1.4.1.md` and its test report. That historical repair remains preserved; current gameplay uses schema 3 and the current 0.6.8 content pack.
 
 ## Autonomous trainer performance hardening · 0.6.4-alpha
 
@@ -43,13 +49,13 @@ Start the built world server as usual, then type `help` in its interactive termi
 
 Back up the existing database before this update. Schema 3 remains authoritative and this gameplay update requires no new schema bump. Existing human accounts, autonomous identities, Pokémon, ratings, rivalries and histories are upgraded in place.
 
-The earlier **build-tools 1.3.4 Windows symlink-privilege correction remains included**. Its isolated sprite-copy tests stay active. Current gameplay is **0.6.7-alpha**, build tools **1.4.1**, with a newly published matching content pack. Historical repair instructions are in `Docs/WINDOWS_BUILD_FIX_1.3.4.md`; do not apply that old repair over this complete release.
+The earlier **build-tools 1.3.4 Windows symlink-privilege correction remains included**. Its isolated sprite-copy tests stay active. Current gameplay is **0.6.8-alpha**, build tools **1.4.1**, with a newly published matching content pack. Historical repair instructions are in `Docs/WINDOWS_BUILD_FIX_1.3.4.md`; do not apply that old repair over this complete release.
 
 ## Varieties and regional encounter/Cut updates
 
 Version 0.3.5 adds five persistent cosmetic varieties, server-controlled rarity, collection/dex presentation and replicated follower sparkles. All player-side battle Pokémon use horizontally flipped front sprites. Read `Docs/POKEMON_VARIETIES.md` and its test report for the full 251-species coverage and additional-form limits. The supplied converted fronts are already included; no images.rar, Pillow, image converter, new art download or back-sprite collection is needed for a normal build.
 
-The accepted 0.3.4 FireRed/Crystal encounter resolver and independent regional Cut licenses remain: Misty/Cascade for Kanto and Bugsy/Hive for Johto. Personal tree clearing remains saved per character. See `Docs/REGIONAL_ENCOUNTERS_AND_CUT.md`. Old release guides describe their historical package counts; this 0.6.7 source is supplied in **four** parts.
+The accepted 0.3.4 FireRed/Crystal encounter resolver and independent regional Cut licenses remain: Misty/Cascade for Kanto and Bugsy/Hive for Johto. Personal tree clearing remains saved per character. See `Docs/REGIONAL_ENCOUNTERS_AND_CUT.md`. Old release guides describe their historical package counts; this 0.6.8 source is supplied in **four** parts.
 
 ## Battle screen correction
 

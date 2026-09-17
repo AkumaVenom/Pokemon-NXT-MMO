@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.6.8-alpha hotfix · Autonomous Battle Move-View Compatibility · 2026-09-17
+
+- Fix a world-tick exception in autonomous wild battles introduced by the completed temporary-move mechanics. `Battle.usable()` correctly returns slots from the current battle move view, including Transform/Mimic overrides, but the bot attack scorer still indexed the shorter persistent `mon['moves']` list. A Ditto that transformed from its one saved move into a foe with four moves could therefore raise `IndexError` and repeatedly fail the periodic tick service.
+- Make autonomous move selection score the same authoritative current move view validated by the battle engine, including transformed battle typing for STAB/effectiveness heuristics. Add a legal-slot fallback so future temporary-move mechanics cannot turn a valid autonomous move set into a world-tick exception.
+- Add a deterministic regression reproducing the exact one-move Ditto -> four-move transformed state and requiring the AI to select a legal transformed slot without touching the persistent move list. Existing 361-move execution, autonomous batching/evolution/world-life, player battles and persistence remain unchanged.
+- No database schema change, content reset, bot reset or player-save migration. Gameplay version remains `0.6.8-alpha`; this is a server/runtime hotfix to the accepted GBA Battle System Completion release.
+
+## 0.6.8-alpha · GBA Battle System Completion · 2026-09-17
+
+- Add a hash-pinned static battle extractor for the reviewed FireRed Rev 1 and Ultra Shiny Gold Sigma 1.5.0 ROMs. Publish 361 auditable move records (354 canonical FireRed + 7 reviewed Sigma aliases), 198 active effect IDs and battle-source metadata for all 877 published species without shipping or executing ROM code.
+- Replace the partial singles resolver with a server-authoritative Gen-III-style move engine covering the active published effect families: ordinary/multi-hit/fixed/variable/OHKO damage, stat/status/volatile effects, screens/weather, trapping/residuals, two-turn/repeating moves, copy/call families, Protect/Endure/Substitute, Future Sight/Wish/Yawn, Baton Pass, item-interaction moves, terrain-driven moves and the existing Sigma aliases.
+- Correct source-specific edge mechanics including FireRed rounded accuracy stages, Psywave's rejection/10%-step distribution, Present byte thresholds, strict OHKO comparison, lower-level wild Roar/Whirlwind check, Protect/Endure chain cap, move-copy/call exclusions, Charge persistence, Thunder paralysis, Foresight and dynamic Hidden Power/Weather Ball type propagation.
+- Publish ROM-backed species battle metadata for gender ratio, base friendship, abilities, wild held-item fields and reviewed weights. Newly created Pokémon store a stable personality and source friendship/held item; existing saves remain compatible without a schema reset.
+- Preserve the v0.6.4 autonomous performance architecture and pass battle terrain into autonomous and human-vs-bot battles without adding database work to the movement/tick hot path. Preserve v0.6.5 Sudowoodo, v0.6.6 dialogue/portal fixes and v0.6.7 Kanto dialogue.
+- Add `Docs/GBA_BATTLE_SYSTEM.md` and a dedicated ROM-mechanics regression suite, including an execution smoke for every published move. Explicitly retain singles-only Follow Me/Helping Hand failure and the audited unresolved-weight fallback for 491 Sigma hack-expanded identities rather than inventing unsupported source data.
+
 ## 0.6.7-alpha · Kanto FireRed NPC Dialogue Restoration · 2026-09-17
 
 - Add 642 validated static dialogue bindings for ordinary Kanto NPCs extracted from the exact reviewed FireRed Rev 1 ROM (`729041b940afe031302d630fdbe57c0c145f3f7b6d9b8eca5e98678d0ca4d059`, 16,777,216 bytes). The source ROM is never packaged or required at runtime.
